@@ -97,18 +97,20 @@ public class GitBrainSystemViewModel {
     }
     
     public func getSystemStatus() async -> [String: Any] {
+        let coderStatus = await coderViewModel.coder.getStatus()
+        let overseerStatus = await overseerViewModel.overseer.getStatus()
         return [
             "name": system.name,
             "version": system.version,
             "brainstate_base": system.brainstateBase,
             "is_running": isRunning,
-            "coder_status": await coderViewModel.coder.getStatus(),
-            "overseer_status": await overseerViewModel.overseer.getStatus()
+            "coder_status": coderStatus.toAnyDict(),
+            "overseer_status": overseerStatus.toAnyDict()
         ]
     }
     
     public func getMessageCount(roleName: String) async -> Int {
-        return try? await communication.getMessageCount(for: roleName) ?? 0
+        return (try? await communication.getMessageCount(for: roleName)) ?? 0
     }
     
     public func cleanup() async {

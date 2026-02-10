@@ -1,8 +1,8 @@
 import Foundation
 
 public protocol MemoryStoreProtocol: Sendable {
-    func set(_ key: String, value: Any) async
-    func get(_ key: String, defaultValue: Any?) async -> Any?
+    func set(_ key: String, value: SendableContent) async
+    func get(_ key: String, defaultValue: SendableContent?) async -> SendableContent?
     func delete(_ key: String) async -> Bool
     func exists(_ key: String) async -> Bool
     func getTimestamp(_ key: String) async -> Date?
@@ -12,7 +12,7 @@ public protocol MemoryStoreProtocol: Sendable {
 
 public actor MemoryStore: MemoryStoreProtocol {
     private struct StoredValue {
-        let value: Any
+        let value: SendableContent
         let timestamp: Date
     }
     
@@ -20,11 +20,11 @@ public actor MemoryStore: MemoryStoreProtocol {
     
     public init() {}
     
-    public func set(_ key: String, value: Any) async {
+    public func set(_ key: String, value: SendableContent) async {
         storage[key] = StoredValue(value: value, timestamp: Date())
     }
     
-    public func get(_ key: String, defaultValue: Any? = nil) async -> Any? {
+    public func get(_ key: String, defaultValue: SendableContent? = nil) async -> SendableContent? {
         return storage[key]?.value ?? defaultValue
     }
     

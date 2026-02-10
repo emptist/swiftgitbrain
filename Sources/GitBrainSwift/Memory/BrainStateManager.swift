@@ -1,11 +1,11 @@
 import Foundation
 
 public protocol BrainStateManagerProtocol: Sendable {
-    func createBrainState(aiName: String, role: RoleType, initialState: [String: Any]?) async throws -> BrainState
+    func createBrainState(aiName: String, role: RoleType, initialState: SendableContent?) async throws -> BrainState
     func loadBrainState(aiName: String) async throws -> BrainState?
     func saveBrainState(_ brainState: BrainState) async throws
-    func updateBrainState(aiName: String, key: String, value: Any) async throws -> Bool
-    func getBrainStateValue(aiName: String, key: String, defaultValue: Any?) async throws -> Any?
+    func updateBrainState(aiName: String, key: String, value: SendableContent) async throws -> Bool
+    func getBrainStateValue(aiName: String, key: String, defaultValue: SendableContent?) async throws -> SendableContent?
     func deleteBrainState(aiName: String) async throws -> Bool
     func listBrainStates() async throws -> [String]
     func backupBrainState(aiName: String, backupSuffix: String?) async throws -> String?
@@ -21,13 +21,13 @@ public actor BrainStateManager: BrainStateManagerProtocol {
         self.fileManager = FileManager.default
     }
     
-    public func createBrainState(aiName: String, role: RoleType, initialState: [String: Any]? = nil) async throws -> BrainState {
+    public func createBrainState(aiName: String, role: RoleType, initialState: SendableContent? = nil) async throws -> BrainState {
         let brainState = BrainState(
             aiName: aiName,
             role: role,
             version: "1.0.0",
             lastUpdated: ISO8601DateFormatter().string(from: Date()),
-            state: initialState ?? [:]
+            state: initialState?.toAnyDict() ?? [:]
         )
         
         try await saveBrainState(brainState)
@@ -56,22 +56,25 @@ public actor BrainStateManager: BrainStateManagerProtocol {
         try data.write(to: brainStatePath)
     }
     
-    public func updateBrainState(aiName: String, key: String, value: Any) async throws -> Bool {
+    public func updateBrainState(aiName: String, key: String, value: SendableContent) async throws -> Bool {
         guard var brainState = try await loadBrainState(aiName: aiName) else {
             return false
         }
         
-        brainState.updateState(key: key, value: value)
+        brainState.updateState(key: key, value: value.toAnyDict())
         try await saveBrainState(brainState)
         return true
     }
     
-    public func getBrainStateValue(aiName: String, key: String, defaultValue: Any? = nil) async throws -> Any? {
+    public func getBrainStateValue(aiName: String, key: String, defaultValue: SendableContent? = nil) async throws -> SendableContent? {
         guard let brainState = try await loadBrainState(aiName: aiName) else {
             return defaultValue
         }
         
-        return brainState.getState(key: key, defaultValue: defaultValue)
+        if let value = brainState.getState(key: key, defaultValue: defaultValue?.toAnyDict()) {
+            return SendableContent(value)
+        }
+        return defaultValue
     }
     
     public func deleteBrainState(aiName: String) async throws -> Bool {

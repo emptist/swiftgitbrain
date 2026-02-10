@@ -6,9 +6,9 @@ public enum Logger {
     private static let category = "GitBrain"
     
     #if DEBUG
-    private static let logLevel: LogLevel = .debug
+    private nonisolated(unsafe) static var logLevel: LogLevel = .debug
     #else
-    private static let logLevel: LogLevel = .info
+    private nonisolated(unsafe) static var logLevel: LogLevel = .info
     #endif
     
     public static func debug(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
@@ -38,7 +38,7 @@ public enum Logger {
     public static func fault(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .fault else { return }
         let logger = OSLog(subsystem: subsystem, category: category)
-        logger.fault("\(message)", file: file, function: function, line: line)
+        logger.critical("\(message)", file: file, function: function, line: line)
     }
     
     public static func log(_ level: LogLevel, _ message: String, file: String = #file, function: String = #function, line: Int = #line) {

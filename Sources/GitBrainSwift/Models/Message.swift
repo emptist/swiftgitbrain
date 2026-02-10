@@ -1,11 +1,29 @@
 import Foundation
 
+public struct SendableContent: Codable, Sendable {
+    public let data: [String: String]
+    
+    public init(_ dict: [String: Any]) {
+        self.data = dict.reduce(into: [:]) { result, pair in
+            if let value = pair.value as? String {
+                result[pair.key] = value
+            }
+        }
+    }
+    
+    public func toAnyDict() -> [String: Any] {
+        return data.reduce(into: [String: Any]()) { dict, pair in
+            dict[pair.key] = pair.value
+        }
+    }
+}
+
 public struct Message: Codable, Identifiable, Sendable {
     public let id: String
     public let fromAI: String
     public let toAI: String
     public let messageType: MessageType
-    public let content: [String: Any]
+    public let content: SendableContent
     public let timestamp: String
     public let priority: Int
     public let metadata: [String: String]
@@ -24,7 +42,7 @@ public struct Message: Codable, Identifiable, Sendable {
         self.fromAI = fromAI
         self.toAI = toAI
         self.messageType = messageType
-        self.content = content
+        self.content = SendableContent(content)
         self.timestamp = timestamp
         self.priority = priority
         self.metadata = metadata
@@ -49,9 +67,9 @@ public struct Message: Codable, Identifiable, Sendable {
         messageType = try container.decode(MessageType.self, forKey: .messageType)
         
         let contentData = try container.decode([String: String].self, forKey: .content)
-        content = contentData.reduce(into: [String: Any]()) { dict, pair in
+        content = SendableContent(contentData.reduce(into: [String: Any]()) { dict, pair in
             dict[pair.key] = pair.value
-        }
+        })
         
         timestamp = try container.decode(String.self, forKey: .timestamp)
         priority = try container.decode(Int.self, forKey: .priority)
@@ -64,14 +82,7 @@ public struct Message: Codable, Identifiable, Sendable {
         try container.encode(fromAI, forKey: .fromAI)
         try container.encode(toAI, forKey: .toAI)
         try container.encode(messageType, forKey: .messageType)
-        
-        let stringContent = content.reduce(into: [String: String]()) { dict, pair in
-            if let value = pair.value as? String {
-                dict[pair.key] = value
-            }
-        }
-        try container.encode(stringContent, forKey: .content)
-        
+        try container.encode(content.data, forKey: .content)
         try container.encode(timestamp, forKey: .timestamp)
         try container.encode(priority, forKey: .priority)
         try container.encode(metadata, forKey: .metadata)

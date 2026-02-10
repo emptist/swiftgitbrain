@@ -16,7 +16,7 @@ public actor OverseerAI: BaseRole {
     public init(
         system: SystemConfig,
         roleConfig: RoleConfig,
-        communication: any MaildirCommunicationProtocol,
+        communication: any CommunicationProtocol,
         memoryManager: any BrainStateManagerProtocol,
         memoryStore: any MemoryStoreProtocol,
         knowledgeBase: any KnowledgeBaseProtocol
@@ -30,22 +30,22 @@ public actor OverseerAI: BaseRole {
     }
     
     public func initialize() async throws {
-        let initialized = try await getBrainStateValue(key: "initialized", defaultValue: false) as? Bool ?? false
+        let initialized = try await getBrainStateValue(key: "initialized", defaultValue: SendableContent(["value": false]))?.toAnyDict()["value"] as? Bool ?? false
         
         if !initialized {
-            try await updateBrainState(key: "initialized", value: true)
-            try await updateBrainState(key: "review_queue", value: [])
-            try await updateBrainState(key: "review_history", value: [])
-            try await updateBrainState(key: "approved_tasks", value: [])
-            try await updateBrainState(key: "rejected_tasks", value: [])
-            try await updateBrainState(key: "review_criteria", value: [
+            try await updateBrainState(key: "initialized", value: SendableContent(["value": true]))
+            try await updateBrainState(key: "review_queue", value: SendableContent(["value": []]))
+            try await updateBrainState(key: "review_history", value: SendableContent(["value": []]))
+            try await updateBrainState(key: "approved_tasks", value: SendableContent(["value": []]))
+            try await updateBrainState(key: "rejected_tasks", value: SendableContent(["value": []]))
+            try await updateBrainState(key: "review_criteria", value: SendableContent([
                 "code_quality": true,
                 "correctness": true,
                 "best_practices": true,
                 "documentation": true,
                 "testing": true
-            ])
-            try await updateBrainState(key: "strictness", value: "medium")
+            ]))
+            try await updateBrainState(key: "strictness", value: SendableContent(["value": "medium"]))
         }
     }
     
@@ -62,38 +62,46 @@ public actor OverseerAI: BaseRole {
         }
     }
     
-    public func handleTask(_ task: [String: Any]) async {
+    public func handleTask(_ task: SendableContent) async {
     }
     
-    public func handleFeedback(_ feedback: [String: Any]) async {
+    public func handleFeedback(_ feedback: SendableContent) async {
     }
     
-    public func handleApproval(_ approval: [String: Any]) async {
+    public func handleApproval(_ approval: SendableContent) async {
     }
     
-    public func handleRejection(_ rejection: [String: Any]) async {
+    public func handleRejection(_ rejection: SendableContent) async {
     }
     
-    public func handleHeartbeat(_ heartbeat: [String: Any]) async {
-        guard let state = heartbeat["state"] as? [String: Any] else {
+    public func handleHeartbeat(_ heartbeat: SendableContent) async {
+        let heartbeatDict = heartbeat.toAnyDict()
+        guard let state = heartbeatDict["state"] as? [String: Any] else {
             return
         }
         
         for (key, value) in state {
-            await saveMemory(key: "heartbeat_\(key)", value: value)
+            let wrappedValue: [String: Any]
+            if let dictValue = value as? [String: Any] {
+                wrappedValue = dictValue
+            } else {
+                wrappedValue = ["value": value]
+            }
+            await saveMemory(key: "heartbeat_\(key)", value: SendableContent(wrappedValue))
         }
     }
     
     private func handleCodeSubmission(_ message: Message) async {
-        guard let taskID = message.content["task_id"] as? String else {
+        let contentDict = message.content.toAnyDict()
+        guard let taskID = contentDict["task_id"] as? String else {
             return
         }
         
         let reviewItem: [String: Any] = [
             "task_id": taskID,
-            "code": message.content["code"] as? String ?? "",
-            "language": message.content["language"] as? String ?? "swift",
-            "files": message.content["files"] as? [String] ?? [],
+            "code": contentDict["code"] as? String ?? "",
+            "language": contentDict["language"] as? String ?? "swift",
+            "files": contentDict["files"] as? [String] ?? [],
             "from_ai": message.fromAI,
             "message_id": message.id,
             "timestamp": message.timestamp,
@@ -101,23 +109,24 @@ public actor OverseerAI: BaseRole {
         ]
         
         reviewQueue.append(reviewItem)
-        try? await updateBrainState(key: "review_queue", value: reviewQueue)
+        try? await updateBrainState(key: "review_queue", value: SendableContent(["value": reviewQueue]))
     }
     
     private func handleStatusUpdate(_ message: Message) async {
-        guard let status = message.content["status"] as? String else {
+        let contentDict = message.content.toAnyDict()
+        guard let status = contentDict["status"] as? String else {
             return
         }
         
         try? await addKnowledge(
             category: "status_updates",
             key: message.id,
-            value: [
+            value: SendableContent([
                 "from_ai": message.fromAI,
                 "status": status,
-                "details": message.content["details"] as? [String: Any] ?? [:],
+                "details": contentDict["details"] as? [String: Any] ?? [:],
                 "timestamp": message.timestamp
-            ]
+            ])
         )
     }
     
@@ -125,32 +134,32 @@ public actor OverseerAI: BaseRole {
         try? await addKnowledge(
             category: "unknown_messages",
             key: message.id,
-            value: [
+            value: SendableContent([
                 "message_type": message.messageType.rawValue,
                 "from": message.fromAI,
-                "content": message.content,
+                "content": message.content.toAnyDict(),
                 "timestamp": message.timestamp
-            ]
+            ])
         )
     }
     
-    public func reviewCode(taskID: String) async -> [String: Any]? {
+    public func reviewCode(taskID: String) async -> SendableContent? {
         guard let index = reviewQueue.firstIndex(where: { ($0["task_id"] as? String) == taskID }) else {
             return nil
         }
         
         let reviewItem = reviewQueue[index]
         reviewItem["status"] = "reviewing"
-        try? await updateBrainState(key: "review_queue", value: reviewQueue)
+        try? await updateBrainState(key: "review_queue", value: SendableContent(["value": reviewQueue]))
         
         let reviewResult = await performReview(reviewItem)
         
         reviewQueue.remove(at: index)
         reviewHistory.append(reviewResult)
-        try? await updateBrainState(key: "review_queue", value: reviewQueue)
-        try? await updateBrainState(key: "review_history", value: reviewHistory)
+        try? await updateBrainState(key: "review_queue", value: SendableContent(["value": reviewQueue]))
+        try? await updateBrainState(key: "review_history", value: SendableContent(["value": reviewHistory]))
         
-        return reviewResult
+        return SendableContent(reviewResult)
     }
     
     private func performReview(_ reviewItem: [String: Any]) async -> [String: Any] {
@@ -172,10 +181,10 @@ public actor OverseerAI: BaseRole {
         
         if approved {
             approvedTasks.append(reviewResult)
-            try? await updateBrainState(key: "approved_tasks", value: approvedTasks)
+            try? await updateBrainState(key: "approved_tasks", value: SendableContent(["value": approvedTasks]))
         } else {
             rejectedTasks.append(reviewResult)
-            try? await updateBrainState(key: "rejected_tasks", value: rejectedTasks)
+            try? await updateBrainState(key: "rejected_tasks", value: SendableContent(["value": rejectedTasks]))
         }
         
         return reviewResult
@@ -303,7 +312,7 @@ public actor OverseerAI: BaseRole {
         return try await sendMessage(message)
     }
     
-    public func getCapabilities() -> [String] {
+    public func getCapabilities() async -> [String] {
         return [
             "review_code",
             "approve_code",
@@ -316,15 +325,15 @@ public actor OverseerAI: BaseRole {
         ]
     }
     
-    public func getStatus() async -> [String: Any] {
-        return [
+    public func getStatus() async -> SendableContent {
+        return SendableContent([
             "role": "OverseerAI",
             "review_queue_count": reviewQueue.count,
             "review_history_count": reviewHistory.count,
             "approved_tasks_count": approvedTasks.count,
             "rejected_tasks_count": rejectedTasks.count,
-            "capabilities": getCapabilities()
-        ]
+            "capabilities": await getCapabilities()
+        ])
     }
 }
 

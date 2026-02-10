@@ -1,19 +1,19 @@
 import Foundation
 
 public protocol KnowledgeBaseProtocol: Sendable {
-    func addKnowledge(category: String, key: String, value: [String: Any], metadata: [String: Any]?) async throws
-    func getKnowledge(category: String, key: String) async throws -> [String: Any]?
-    func updateKnowledge(category: String, key: String, value: [String: Any], metadata: [String: Any]?) async throws -> Bool
+    func addKnowledge(category: String, key: String, value: SendableContent, metadata: SendableContent?) async throws
+    func getKnowledge(category: String, key: String) async throws -> SendableContent?
+    func updateKnowledge(category: String, key: String, value: SendableContent, metadata: SendableContent?) async throws -> Bool
     func deleteKnowledge(category: String, key: String) async throws -> Bool
     func listCategories() async throws -> [String]
     func listKeys(category: String) async throws -> [String]
-    func searchKnowledge(category: String, query: String) async throws -> [[String: Any]]
+    func searchKnowledge(category: String, query: String) async throws -> [SendableContent]
 }
 
 public actor KnowledgeBase: KnowledgeBaseProtocol {
-    private struct KnowledgeItem {
-        let value: [String: Any]
-        let metadata: [String: Any]
+    private struct KnowledgeItem: Sendable {
+        let value: SendableContent
+        let metadata: SendableContent
         let timestamp: Date
     }
     
@@ -34,12 +34,12 @@ public actor KnowledgeBase: KnowledgeBaseProtocol {
         return getCategoryPath(category: category).appendingPathComponent("\(key).json")
     }
     
-    public func addKnowledge(category: String, key: String, value: [String: Any], metadata: [String: Any]? = nil) async throws {
+    public func addKnowledge(category: String, key: String, value: SendableContent, metadata: SendableContent? = nil) async throws {
         try fileManager.createDirectory(at: getCategoryPath(category: category), withIntermediateDirectories: true)
         
         let item = KnowledgeItem(
             value: value,
-            metadata: metadata ?? [:],
+            metadata: metadata ?? SendableContent([:]),
             timestamp: Date()
         )
         
@@ -52,8 +52,8 @@ public actor KnowledgeBase: KnowledgeBaseProtocol {
         encoder.outputFormatting = .prettyPrinted
         
         let itemData: [String: Any] = [
-            "value": value,
-            "metadata": metadata ?? [:],
+            "value": value.data,
+            "metadata": metadata?.data ?? [:],
             "timestamp": ISO8601DateFormatter().string(from: item.timestamp)
         ]
         
@@ -61,7 +61,7 @@ public actor KnowledgeBase: KnowledgeBaseProtocol {
         try data.write(to: getItemPath(category: category, key: key))
     }
     
-    public func getKnowledge(category: String, key: String) async throws -> [String: Any]? {
+    public func getKnowledge(category: String, key: String) async throws -> SendableContent? {
         if let item = inMemoryStorage[category]?[key] {
             return item.value
         }
@@ -73,23 +73,32 @@ public actor KnowledgeBase: KnowledgeBaseProtocol {
         
         let data = try Data(contentsOf: itemPath)
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let value = json["value"] as? [String: Any] else {
+              let valueData = json["value"] as? [String: String] else {
             return nil
         }
+        
+        let value = SendableContent(valueData.reduce(into: [String: Any]()) { dict, pair in
+            dict[pair.key] = pair.value
+        })
+        
+        let metadataData = json["metadata"] as? [String: String] ?? [:]
+        let metadata = SendableContent(metadataData.reduce(into: [String: Any]()) { dict, pair in
+            dict[pair.key] = pair.value
+        })
         
         if inMemoryStorage[category] == nil {
             inMemoryStorage[category] = [:]
         }
         inMemoryStorage[category]?[key] = KnowledgeItem(
             value: value,
-            metadata: json["metadata"] as? [String: Any] ?? [:],
+            metadata: metadata,
             timestamp: ISO8601DateFormatter().date(from: json["timestamp"] as? String ?? "") ?? Date()
         )
         
         return value
     }
     
-    public func updateKnowledge(category: String, key: String, value: [String: Any], metadata: [String: Any]? = nil) async throws -> Bool {
+    public func updateKnowledge(category: String, key: String, value: SendableContent, metadata: SendableContent? = nil) async throws -> Bool {
         guard try await getKnowledge(category: category, key: key) != nil else {
             return false
         }
@@ -136,13 +145,13 @@ public actor KnowledgeBase: KnowledgeBaseProtocol {
             .sorted()
     }
     
-    public func searchKnowledge(category: String, query: String) async throws -> [[String: Any]] {
+    public func searchKnowledge(category: String, query: String) async throws -> [SendableContent] {
         let keys = try await listKeys(category: category)
-        var results: [[String: Any]] = []
+        var results: [SendableContent] = []
         
         for key in keys {
             if let value = try await getKnowledge(category: category, key: key) {
-                let valueString = JSONSerialization.data(withJSONObject: value)
+                let valueString = try JSONSerialization.data(withJSONObject: value.data)
                 if let valueStr = String(data: valueString, encoding: .utf8) {
                     if valueStr.localizedCaseInsensitiveContains(query) {
                         results.append(value)
