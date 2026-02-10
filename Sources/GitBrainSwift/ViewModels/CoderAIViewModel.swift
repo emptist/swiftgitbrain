@@ -20,7 +20,7 @@ public class CoderAIViewModel {
         self.currentTask = nil
         self.taskHistory = []
         self.codeHistory = []
-        self.capabilities = coder.getCapabilities()
+        self.capabilities = []
     }
     
     public func initialize() async throws {
@@ -32,6 +32,7 @@ public class CoderAIViewModel {
         }
         
         try await coder.initialize()
+        capabilities = await coder.getCapabilities()
         status = "Initialized"
     }
     
@@ -63,7 +64,7 @@ public class CoderAIViewModel {
         status = "Implementing task..."
         
         if let result = await coder.implementTask() {
-            currentTask = result.data
+            currentTask = result.toAnyDict()
             status = "Task implemented"
         } else {
             errorMessage = "No current task to implement"
@@ -87,37 +88,50 @@ public class CoderAIViewModel {
     
     public func refreshStatus() async {
         let coderStatus = await coder.getStatus()
-        currentTask = coderStatus.data["current_task"] as? [String: Any]
-        taskHistory = coderStatus.data["task_history"] as? [[String: Any]] ?? []
-        codeHistory = coderStatus.data["code_history"] as? [[String: Any]] ?? []
-        capabilities = coderStatus.data["capabilities"] as? [String] ?? []
-        status = coderStatus.data["role"] as? String ?? "CoderAI"
+        let coderStatusDict = coderStatus.toAnyDict()
+        currentTask = coderStatusDict["current_task"] as? [String: Any]
+        taskHistory = coderStatusDict["task_history"] as? [[String: Any]] ?? []
+        codeHistory = coderStatusDict["code_history"] as? [[String: Any]] ?? []
+        capabilities = coderStatusDict["capabilities"] as? [String] ?? []
+        status = coderStatusDict["role"] as? String ?? "CoderAI"
     }
     
     public func getBrainStateValue(key: String) async -> Any? {
-        return try? await coder.getBrainStateValue(key: key)
+        if let result = try? await coder.getBrainStateValue(key: key, defaultValue: nil) {
+            return result.toAnyDict()
+        }
+        return nil
     }
     
     public func saveMemory(key: String, value: Any) async {
-        await coder.saveMemory(key: key, value: value)
+        let wrappedValue: [String: Any]
+        if let dictValue = value as? [String: Any] {
+            wrappedValue = dictValue
+        } else {
+            wrappedValue = ["value": value]
+        }
+        await coder.saveMemory(key: key, value: SendableContent(wrappedValue))
     }
     
     public func loadMemory(key: String) async -> Any? {
-        return await coder.loadMemory(key: key)
+        if let result = await coder.loadMemory(key: key, defaultValue: nil) {
+            return result.toAnyDict()
+        }
+        return nil
     }
     
     public func addKnowledge(category: String, key: String, value: [String: Any]) async throws {
-        try await coder.addKnowledge(category: category, key: key, value: value)
+        try await coder.addKnowledge(category: category, key: key, value: SendableContent(value))
     }
     
     public func getKnowledge(category: String, key: String) async throws -> [String: Any]? {
-        let taskData = try await coder.getKnowledge(category: category, key: key)
-        return taskData?.data
+        let result = try await coder.getKnowledge(category: category, key: key)
+        return result?.toAnyDict()
     }
     
     public func searchKnowledge(category: String, query: String) async throws -> [[String: Any]] {
-        let taskDataResults = try await coder.searchKnowledge(category: category, query: query)
-        return taskDataResults.map { $0.data }
+        let results = try await coder.searchKnowledge(category: category, query: query)
+        return results.map { $0.toAnyDict() }
     }
     
     public func cleanup() async {

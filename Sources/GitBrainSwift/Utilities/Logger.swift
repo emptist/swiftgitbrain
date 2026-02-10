@@ -6,39 +6,34 @@ public enum GitBrainLogger {
     private static let category = "GitBrain"
     
     #if DEBUG
-    private static let logLevel: LogLevel = .debug
+    private nonisolated(unsafe) static var logLevel: LogLevel = .debug
     #else
-    private static let logLevel: LogLevel = .info
+    private nonisolated(unsafe) static var logLevel: LogLevel = .info
     #endif
     
     public static func debug(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .debug else { return }
-        let logger = os.Logger(subsystem: subsystem, category: category)
-        logger.debug("\(message)")
+        os_log("%{public}@", dso: #dsohandle, log: OSLog(subsystem: subsystem, category: category), type: .info, message)
     }
     
     public static func info(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .info else { return }
-        let logger = os.Logger(subsystem: subsystem, category: category)
-        logger.info("\(message)")
+        os_log("%{public}@", dso: #dsohandle, log: OSLog(subsystem: subsystem, category: category), type: .info, message)
     }
     
     public static func warning(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .warning else { return }
-        let logger = os.Logger(subsystem: subsystem, category: category)
-        logger.warning("\(message)")
+        os_log("%{public}@", dso: #dsohandle, log: OSLog(subsystem: subsystem, category: category), type: .default, message)
     }
     
     public static func error(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .error else { return }
-        let logger = os.Logger(subsystem: subsystem, category: category)
-        logger.error("\(message)")
+        os_log("%{public}@", dso: #dsohandle, log: OSLog(subsystem: subsystem, category: category), type: .error, message)
     }
     
     public static func fault(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .fault else { return }
-        let logger = os.Logger(subsystem: subsystem, category: category)
-        logger.critical("\(message)")
+        os_log("%{public}@", dso: #dsohandle, log: OSLog(subsystem: subsystem, category: category), type: .fault, message)
     }
     
     public static func log(_ level: LogLevel, _ message: String, file: String = #file, function: String = #function, line: Int = #line) {

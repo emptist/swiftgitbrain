@@ -108,22 +108,22 @@ public struct OverseerAI: @unchecked Sendable, BaseRole {
     }
     
     public func initialize() async throws {
-        let initialized = try await getBrainStateValue(key: "initialized", defaultValue: false) as? Bool ?? false
+        let initialized = try await getBrainStateValue(key: "initialized", defaultValue: SendableContent(["value": false]))?.toAnyDict()["value"] as? Bool ?? false
         
         if !initialized {
-            try await updateBrainState(key: "initialized", value: TaskData(["initialized": true]))
-            try await updateBrainState(key: "review_queue", value: TaskData(["review_queue": []]))
-            try await updateBrainState(key: "review_history", value: TaskData(["review_history": []]))
-            try await updateBrainState(key: "approved_tasks", value: TaskData(["approved_tasks": []]))
-            try await updateBrainState(key: "rejected_tasks", value: TaskData(["rejected_tasks": []]))
-            try await updateBrainState(key: "review_criteria", value: TaskData([
+            try await updateBrainState(key: "initialized", value: SendableContent(["value": true]))
+            try await updateBrainState(key: "review_queue", value: SendableContent(["value": []]))
+            try await updateBrainState(key: "review_history", value: SendableContent(["value": []]))
+            try await updateBrainState(key: "approved_tasks", value: SendableContent(["value": []]))
+            try await updateBrainState(key: "rejected_tasks", value: SendableContent(["value": []]))
+            try await updateBrainState(key: "review_criteria", value: SendableContent([
                 "code_quality": true,
                 "correctness": true,
                 "best_practices": true,
                 "documentation": true,
                 "testing": true
             ]))
-            try await updateBrainState(key: "strictness", value: TaskData(["strictness": "medium"]))
+            try await updateBrainState(key: "strictness", value: SendableContent(["value": "medium"]))
         }
     }
     
@@ -140,100 +140,105 @@ public struct OverseerAI: @unchecked Sendable, BaseRole {
         }
     }
     
-    public func handleTask(_ task: TaskData) async {
+    public func handleTask(_ task: SendableContent) async {
     }
     
-    public func handleFeedback(_ feedback: TaskData) async {
+    public func handleFeedback(_ feedback: SendableContent) async {
     }
     
-    public func handleApproval(_ approval: TaskData) async {
+    public func handleApproval(_ approval: SendableContent) async {
     }
     
-    public func handleRejection(_ rejection: TaskData) async {
+    public func handleRejection(_ rejection: SendableContent) async {
     }
     
-    public func handleHeartbeat(_ heartbeat: TaskData) async {
-        let heartbeatData = heartbeat.data
-        guard let state = heartbeatData["state"] as? [String: Any] else {
+    public func handleHeartbeat(_ heartbeat: SendableContent) async {
+        let heartbeatDict = heartbeat.toAnyDict()
+        guard let state = heartbeatDict["state"] as? [String: Any] else {
             return
         }
         
-        try? await updateBrainState(key: "last_heartbeat", value: state)
+        for (key, value) in state {
+            let wrappedValue: [String: Any]
+            if let dictValue = value as? [String: Any] {
+                wrappedValue = dictValue
+            } else {
+                wrappedValue = ["value": value]
+            }
+            await saveMemory(key: "heartbeat_\(key)", value: SendableContent(wrappedValue))
+        }
     }
     
-    public func handleUnknownMessage(_ message: Message) async {
-    }
-    
-    public func handleCodeSubmission(_ message: Message) async {
-        let codeData = message.content
-        
-        guard let taskID = codeData["task_id"] as? String,
-              let code = codeData["code"] as? String else {
+    private func handleCodeSubmission(_ message: Message) async {
+        let contentDict = message.content.toAnyDict()
+        guard let taskID = contentDict["task_id"] as? String else {
             return
         }
         
         let submission: [String: Any] = [
             "task_id": taskID,
-            "code": code,
-            "language": codeData["language"] as? String ?? "swift",
-            "files": codeData["files"] as? [String] ?? [],
-            "submitted_by": message.fromAI,
-            "submitted_at": ISO8601DateFormatter().string(from: Date()),
+            "code": contentDict["code"] as? String ?? "",
+            "language": contentDict["language"] as? String ?? "swift",
+            "files": contentDict["files"] as? [String] ?? [],
+            "from_ai": message.fromAI,
+            "message_id": message.id,
+            "timestamp": message.timestamp,
             "status": "pending"
         ]
         
-        await storage.addToReviewQueue(submission)
-        let reviewQueueValue = await storage.getReviewQueue()
-        try? await updateBrainState(key: "review_queue", value: reviewQueueValue)
+        reviewQueue.append(reviewItem)
+        try? await updateBrainState(key: "review_queue", value: SendableContent(["value": reviewQueue]))
     }
     
-    public func handleStatusUpdate(_ message: Message) async {
-        let statusData = message.content
-        
-        guard let taskID = statusData["task_id"] as? String,
-              let status = statusData["status"] as? String else {
+    private func handleStatusUpdate(_ message: Message) async {
+        let contentDict = message.content.toAnyDict()
+        guard let status = contentDict["status"] as? String else {
             return
         }
         
-        if status == "completed" {
-            await storage.updateReviewQueueStatus(taskID: taskID, status: "ready_for_review")
-            let reviewQueueValue = await storage.getReviewQueue()
-            try? await updateBrainState(key: "review_queue", value: reviewQueueValue)
-        }
+        try? await addKnowledge(
+            category: "status_updates",
+            key: message.id,
+            value: SendableContent([
+                "from_ai": message.fromAI,
+                "status": status,
+                "details": contentDict["details"] as? [String: Any] ?? [:],
+                "timestamp": message.timestamp
+            ])
+        )
     }
     
-    public nonisolated func reviewCode(taskID: String) async -> [String: Any]? {
-        return await withUnsafeContinuation { continuation in
-            Task {
-                let result = await self.reviewCodeInternal(taskID: taskID)
-                continuation.resume(returning: result)
-            }
-        }
+    private func handleUnknownMessage(_ message: Message) async {
+        try? await addKnowledge(
+            category: "unknown_messages",
+            key: message.id,
+            value: SendableContent([
+                "message_type": message.messageType.rawValue,
+                "from": message.fromAI,
+                "content": message.content.toAnyDict(),
+                "timestamp": message.timestamp
+            ])
+        )
     }
     
-    private func reviewCodeInternal(taskID: String) async -> [String: Any]? {
-        guard let reviewItemTaskData = await storage.findReviewItem(taskID: taskID) else {
+    public func reviewCode(taskID: String) async -> SendableContent? {
+        guard let index = reviewQueue.firstIndex(where: { ($0["task_id"] as? String) == taskID }) else {
             return nil
         }
         
-        let reviewItem = reviewItemTaskData.data
-        
-        await storage.updateReviewItemStatus(taskID: taskID, status: "reviewing")
-        let reviewQueueValue = await storage.getReviewQueue()
-        try? await updateBrainState(key: "review_queue", value: reviewQueueValue)
+        var reviewItem = reviewQueue[index]
+        reviewItem["status"] = "reviewing"
+        try? await updateBrainState(key: "review_queue", value: SendableContent(["value": reviewQueue]))
         
         let reviewResult = await performReview(reviewItem)
         let reviewResultTaskData = TaskData(reviewResult)
         
-        _ = await storage.removeFromReviewQueue(taskID: taskID)
-        await storage.addToReviewHistory(reviewResultTaskData)
+        reviewQueue.remove(at: index)
+        reviewHistory.append(reviewResult)
+        try? await updateBrainState(key: "review_queue", value: SendableContent(["value": reviewQueue]))
+        try? await updateBrainState(key: "review_history", value: SendableContent(["value": reviewHistory]))
         
-        let updatedReviewQueueValue = await storage.getReviewQueue()
-        let reviewHistoryValue = await storage.getReviewHistory()
-        try? await updateBrainState(key: "review_queue", value: updatedReviewQueueValue)
-        try? await updateBrainState(key: "review_history", value: reviewHistoryValue)
-        
-        return reviewResult
+        return SendableContent(reviewResult)
     }
     
     private func performReview(_ reviewItem: [String: Any]) async -> [String: Any] {
@@ -257,13 +262,11 @@ public struct OverseerAI: @unchecked Sendable, BaseRole {
         let reviewResultTaskData = TaskData(reviewResult)
         
         if approved {
-            await storage.addToApprovedTasks(reviewResultTaskData)
-            let approvedTasksValue = await storage.getApprovedTasksCount()
-            try? await updateBrainState(key: "approved_tasks", value: TaskData(["approved_tasks_count": approvedTasksValue]))
+            approvedTasks.append(reviewResult)
+            try? await updateBrainState(key: "approved_tasks", value: SendableContent(["value": approvedTasks]))
         } else {
-            await storage.addToRejectedTasks(reviewResultTaskData)
-            let rejectedTasksValue = await storage.getRejectedTasksCount()
-            try? await updateBrainState(key: "rejected_tasks", value: TaskData(["rejected_tasks_count": rejectedTasksValue]))
+            rejectedTasks.append(reviewResult)
+            try? await updateBrainState(key: "rejected_tasks", value: SendableContent(["value": rejectedTasks]))
         }
         
         return reviewResult
@@ -291,16 +294,23 @@ public struct OverseerAI: @unchecked Sendable, BaseRole {
         return comments
     }
     
-    private func shouldApprove(comments: [String]) async -> Bool {
-        let criticalComments = comments.filter { comment in
-            comment.contains("empty") || comment.contains("too short") || comment.contains("No function")
+    private func shouldApprove(comments: [[String: Any]]) async -> Bool {
+        let defaultValue = SendableContent(["value": "medium"])
+        let strictnessContent = (try? await getBrainStateValue(key: "strictness", defaultValue: defaultValue)) ?? defaultValue
+        let strictness = strictnessContent.data["value"] as? String ?? "medium"
+        
+        let hasWarnings = comments.contains { ($0["type"] as? String) == "warning" }
+        let hasErrors = comments.contains { ($0["type"] as? String) == "error" }
+        
+        if hasErrors {
+            return false
         }
         
         return criticalComments.isEmpty
     }
     
-    public func approveCode(taskID: String, coder: String = "coder") async throws -> String {
-        guard let review = await storage.findInReviewHistory(taskID: taskID) else {
+    public func approveCode(taskID: String, coder: String = "coder") async throws -> URL {
+        guard let review = reviewHistory.first(where: { ($0["task_id"] as? String) == taskID }) else {
             throw ReviewError.reviewNotFound
         }
         
@@ -316,8 +326,8 @@ public struct OverseerAI: @unchecked Sendable, BaseRole {
         return issueURL.absoluteString
     }
     
-    public func rejectCode(taskID: String, reason: String, coder: String = "coder") async throws -> String {
-        guard let review = await storage.findInReviewHistory(taskID: taskID) else {
+    public func rejectCode(taskID: String, reason: String, coder: String = "coder") async throws -> URL {
+        guard let review = reviewHistory.first(where: { ($0["task_id"] as? String) == taskID }) else {
             throw ReviewError.reviewNotFound
         }
         
@@ -333,7 +343,7 @@ public struct OverseerAI: @unchecked Sendable, BaseRole {
         return issueURL.absoluteString
     }
     
-    public func requestChanges(taskID: String, feedback: String, coder: String = "coder") async throws -> String {
+    public func requestChanges(taskID: String, feedback: String, coder: String = "coder") async throws -> URL {
         let message = MessageBuilder.createFeedbackMessage(
             fromAI: roleConfig.name,
             toAI: coder,
@@ -346,7 +356,7 @@ public struct OverseerAI: @unchecked Sendable, BaseRole {
         return issueURL.absoluteString
     }
     
-    public func assignTask(taskID: String, coder: String = "coder", description: String, taskType: String = "coding") async throws -> String {
+    public func assignTask(taskID: String, coder: String = "coder", description: String, taskType: String = "coding") async throws -> URL {
         let message = MessageBuilder.createTaskMessage(
             fromAI: roleConfig.name,
             toAI: coder,
@@ -359,19 +369,19 @@ public struct OverseerAI: @unchecked Sendable, BaseRole {
         try? await addKnowledge(
             category: "assigned_tasks",
             key: taskID,
-            value: [
+            value: SendableContent([
                 "description": description,
                 "type": taskType,
                 "assigned_to": coder,
                 "assigned_at": ISO8601DateFormatter().string(from: Date())
-            ]
+            ])
         )
         
         let issueURL = try await sendMessage(message)
         return issueURL.absoluteString
     }
     
-    public nonisolated func getCapabilities() -> [String] {
+    public func getCapabilities() async -> [String] {
         return [
             "review_code",
             "approve_code",
@@ -383,30 +393,15 @@ public struct OverseerAI: @unchecked Sendable, BaseRole {
         ]
     }
     
-    public nonisolated func getStatus() async -> TaskData {
-        return await withUnsafeContinuation { continuation in
-            Task {
-                let status = await self.getStatusInternal()
-                continuation.resume(returning: status)
-            }
-        }
-    }
-    
-    private func getStatusInternal() async -> TaskData {
-        let reviewQueueCount = await storage.getReviewQueueCount()
-        let reviewHistoryCount = await storage.getReviewHistoryCount()
-        let approvedTasksCount = await storage.getApprovedTasksCount()
-        let rejectedTasksCount = await storage.getRejectedTasksCount()
-        
-        let status: [String: Any] = [
+    public func getStatus() async -> SendableContent {
+        return SendableContent([
             "role": "OverseerAI",
-            "review_queue_count": reviewQueueCount,
-            "review_history_count": reviewHistoryCount,
-            "approved_tasks_count": approvedTasksCount,
-            "rejected_tasks_count": rejectedTasksCount,
-            "capabilities": getCapabilities()
-        ]
-        return TaskData(status)
+            "review_queue_count": reviewQueue.count,
+            "review_history_count": reviewHistory.count,
+            "approved_tasks_count": approvedTasks.count,
+            "rejected_tasks_count": rejectedTasks.count,
+            "capabilities": await getCapabilities()
+        ])
     }
 }
 

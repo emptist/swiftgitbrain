@@ -28,22 +28,22 @@ public protocol BaseRole: Sendable {
     var knowledgeBase: any KnowledgeBaseProtocol { get }
     
     func processMessage(_ message: Message) async
-    func handleTask(_ task: TaskData) async
-    func handleFeedback(_ feedback: TaskData) async
-    func handleApproval(_ approval: TaskData) async
-    func handleRejection(_ rejection: TaskData) async
-    func handleHeartbeat(_ heartbeat: TaskData) async
+    func handleTask(_ task: SendableContent) async
+    func handleFeedback(_ feedback: SendableContent) async
+    func handleApproval(_ approval: SendableContent) async
+    func handleRejection(_ rejection: SendableContent) async
+    func handleHeartbeat(_ heartbeat: SendableContent) async
     
     func sendMessage(_ message: Message) async throws -> URL
     func receiveMessages() async throws -> [Message]
-    func updateBrainState(key: String, value: Any) async throws
-    func getBrainStateValue(key: String, defaultValue: Any?) async throws -> Any?
-    func saveMemory(key: String, value: Any) async
-    func loadMemory(key: String, defaultValue: Any?) async -> Any?
-    func addKnowledge(category: String, key: String, value: [String: Any], metadata: [String: Any]?) async throws
-    func getKnowledge(category: String, key: String) async throws -> TaskData?
-    func searchKnowledge(category: String, query: String) async throws -> [TaskData]
-    func getStatus() async -> TaskData
+    func updateBrainState(key: String, value: SendableContent) async throws
+    func getBrainStateValue(key: String, defaultValue: SendableContent?) async throws -> SendableContent?
+    func saveMemory(key: String, value: SendableContent) async
+    func loadMemory(key: String, defaultValue: SendableContent?) async -> SendableContent?
+    func addKnowledge(category: String, key: String, value: SendableContent, metadata: SendableContent?) async throws
+    func getKnowledge(category: String, key: String) async throws -> SendableContent?
+    func searchKnowledge(category: String, query: String) async throws -> [SendableContent]
+    func getStatus() async -> SendableContent
     func cleanup() async
 }
 
@@ -56,32 +56,31 @@ public extension BaseRole {
         return try await communication.receiveMessages(for: roleConfig.name)
     }
     
-    func updateBrainState(key: String, value: Any) async throws {
-        try await memoryManager.updateBrainState(aiName: roleConfig.name, key: key, value: TaskData([key: value]))
+    func updateBrainState(key: String, value: SendableContent) async throws {
+        try await memoryManager.updateBrainState(aiName: roleConfig.name, key: key, value: value)
     }
     
-    func getBrainStateValue(key: String, defaultValue: Any? = nil) async throws -> Any? {
-        let result = try await memoryManager.getBrainStateValue(aiName: roleConfig.name, key: key, defaultValue: defaultValue.map { TaskData(["default": $0]) })
-        return result?.data[key] ?? result?.data["default"]
+    func getBrainStateValue(key: String, defaultValue: SendableContent? = nil) async throws -> SendableContent? {
+        return try await memoryManager.getBrainStateValue(aiName: roleConfig.name, key: key, defaultValue: defaultValue)
     }
     
-    func saveMemory(key: String, value: Any) async {
+    func saveMemory(key: String, value: SendableContent) async {
         await memoryStore.set(key, value: value)
     }
     
-    func loadMemory(key: String, defaultValue: Any? = nil) async -> Any? {
+    func loadMemory(key: String, defaultValue: SendableContent? = nil) async -> SendableContent? {
         return await memoryStore.get(key, defaultValue: defaultValue)
     }
     
-    func addKnowledge(category: String, key: String, value: [String: Any], metadata: [String: Any]? = nil) async throws {
-        try await knowledgeBase.addKnowledge(category: category, key: key, value: TaskData(value), metadata: metadata.map { TaskData($0) })
+    func addKnowledge(category: String, key: String, value: SendableContent, metadata: SendableContent? = nil) async throws {
+        try await knowledgeBase.addKnowledge(category: category, key: key, value: value, metadata: metadata)
     }
     
-    func getKnowledge(category: String, key: String) async throws -> TaskData? {
+    func getKnowledge(category: String, key: String) async throws -> SendableContent? {
         return try await knowledgeBase.getKnowledge(category: category, key: key)
     }
     
-    func searchKnowledge(category: String, query: String) async throws -> [TaskData] {
+    func searchKnowledge(category: String, query: String) async throws -> [SendableContent] {
         return try await knowledgeBase.searchKnowledge(category: category, query: query)
     }
     

@@ -1,8 +1,8 @@
 import Foundation
 
 public protocol MemoryStoreProtocol: Sendable {
-    func set(_ key: String, value: Any) async
-    func get(_ key: String, defaultValue: Any?) async -> Any?
+    func set(_ key: String, value: SendableContent) async
+    func get(_ key: String, defaultValue: SendableContent?) async -> SendableContent?
     func delete(_ key: String) async -> Bool
     func exists(_ key: String) async -> Bool
     func getTimestamp(_ key: String) async -> Date?
@@ -10,9 +10,9 @@ public protocol MemoryStoreProtocol: Sendable {
     func listKeys() async -> [String]
 }
 
-public struct MemoryStore: @unchecked Sendable, MemoryStoreProtocol {
-    private struct StoredValue: @unchecked Sendable {
-        let value: Any
+public actor MemoryStore: MemoryStoreProtocol {
+    private struct StoredValue {
+        let value: SendableContent
         let timestamp: Date
     }
     
@@ -56,16 +56,12 @@ public struct MemoryStore: @unchecked Sendable, MemoryStoreProtocol {
     
     public init() {}
     
-    public func set(_ key: String, value: Any) async {
-        let storedValue = StoredValue(value: value, timestamp: Date())
-        await storage.set(key, value: storedValue)
+    public func set(_ key: String, value: SendableContent) async {
+        storage[key] = StoredValue(value: value, timestamp: Date())
     }
     
-    public func get(_ key: String, defaultValue: Any? = nil) async -> Any? {
-        if let stored = await storage.get(key) {
-            return stored.value
-        }
-        return defaultValue
+    public func get(_ key: String, defaultValue: SendableContent? = nil) async -> SendableContent? {
+        return storage[key]?.value ?? defaultValue
     }
     
     public func delete(_ key: String) async -> Bool {

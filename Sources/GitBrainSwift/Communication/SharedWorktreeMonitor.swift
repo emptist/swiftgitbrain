@@ -22,34 +22,6 @@ public actor SharedWorktreeMonitor {
         
         isMonitoring = true
         
-        let descriptor = open(sharedWorktree.path, O_EVTONLY)
-        guard descriptor != -1 else {
-            throw MonitorError.failedToOpenWorktree
-        }
-        
-        eventStream = DispatchSource.makeFileSystemObjectSource(
-            fileDescriptor: descriptor,
-            eventMask: .write,
-            queue: .main
-        )
-        
-        eventStream?.setEventHandler { [weak self] in
-            guard let self = self else { return }
-            Task.detached {
-                await self.handleFileSystemEvent()
-            }
-        }
-        
-        eventStream?.setCancelHandler { [weak self] in
-            close(descriptor)
-            guard let self = self else { return }
-            Task.detached {
-                await self.setMonitoringStopped()
-            }
-        }
-        
-        eventStream?.resume()
-        
         task = Task {
             while isMonitoring {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)

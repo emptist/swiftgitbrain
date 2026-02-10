@@ -22,7 +22,7 @@ public class OverseerAIViewModel: @unchecked Sendable {
         self.reviewHistory = []
         self.approvedTasks = []
         self.rejectedTasks = []
-        self.capabilities = overseer.getCapabilities()
+        self.capabilities = []
     }
     
     public func initialize() async throws {
@@ -34,6 +34,7 @@ public class OverseerAIViewModel: @unchecked Sendable {
         }
         
         try await overseer.initialize()
+        capabilities = await overseer.getCapabilities()
         status = "Initialized"
     }
     
@@ -65,7 +66,8 @@ public class OverseerAIViewModel: @unchecked Sendable {
         status = "Reviewing code..."
         
         if let result = await overseer.reviewCode(taskID: taskID) {
-            status = result["approved"] as? Bool == true ? "Code approved" : "Code rejected"
+            let resultDict = result.toAnyDict()
+            status = resultDict["approved"] as? Bool == true ? "Code approved" : "Code rejected"
         } else {
             errorMessage = "Task not found in review queue"
             status = "Error"
@@ -143,38 +145,51 @@ public class OverseerAIViewModel: @unchecked Sendable {
     
     public func refreshStatus() async {
         let overseerStatus = await overseer.getStatus()
-        reviewQueue = overseerStatus.data["review_queue"] as? [[String: Any]] ?? []
-        reviewHistory = overseerStatus.data["review_history"] as? [[String: Any]] ?? []
-        approvedTasks = overseerStatus.data["approved_tasks"] as? [[String: Any]] ?? []
-        rejectedTasks = overseerStatus.data["rejected_tasks"] as? [[String: Any]] ?? []
-        capabilities = overseerStatus.data["capabilities"] as? [String] ?? []
-        status = overseerStatus.data["role"] as? String ?? "OverseerAI"
+        let overseerStatusDict = overseerStatus.toAnyDict()
+        reviewQueue = []
+        reviewHistory = overseerStatusDict["review_history"] as? [[String: Any]] ?? []
+        approvedTasks = overseerStatusDict["approved_tasks"] as? [[String: Any]] ?? []
+        rejectedTasks = overseerStatusDict["rejected_tasks"] as? [[String: Any]] ?? []
+        capabilities = overseerStatusDict["capabilities"] as? [String] ?? []
+        status = overseerStatusDict["role"] as? String ?? "OverseerAI"
     }
     
     public func getBrainStateValue(key: String) async -> Any? {
-        return try? await overseer.getBrainStateValue(key: key)
+        if let result = try? await overseer.getBrainStateValue(key: key, defaultValue: nil) {
+            return result.toAnyDict()
+        }
+        return nil
     }
     
     public func saveMemory(key: String, value: Any) async {
-        await overseer.saveMemory(key: key, value: value)
+        let wrappedValue: [String: Any]
+        if let dictValue = value as? [String: Any] {
+            wrappedValue = dictValue
+        } else {
+            wrappedValue = ["value": value]
+        }
+        await overseer.saveMemory(key: key, value: SendableContent(wrappedValue))
     }
     
     public func loadMemory(key: String) async -> Any? {
-        return await overseer.loadMemory(key: key)
+        if let result = await overseer.loadMemory(key: key, defaultValue: nil) {
+            return result.toAnyDict()
+        }
+        return nil
     }
     
     public func addKnowledge(category: String, key: String, value: [String: Any]) async throws {
-        try await overseer.addKnowledge(category: category, key: key, value: value)
+        try await overseer.addKnowledge(category: category, key: key, value: SendableContent(value))
     }
     
     public func getKnowledge(category: String, key: String) async throws -> [String: Any]? {
-        let taskData = try await overseer.getKnowledge(category: category, key: key)
-        return taskData?.data
+        let result = try await overseer.getKnowledge(category: category, key: key)
+        return result?.toAnyDict()
     }
     
     public func searchKnowledge(category: String, query: String) async throws -> [[String: Any]] {
-        let taskDataResults = try await overseer.searchKnowledge(category: category, query: query)
-        return taskDataResults.map { $0.data }
+        let results = try await overseer.searchKnowledge(category: category, query: query)
+        return results.map { $0.toAnyDict() }
     }
     
     public func cleanup() async {

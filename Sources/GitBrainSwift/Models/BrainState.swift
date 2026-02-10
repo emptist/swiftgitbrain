@@ -5,7 +5,7 @@ public struct BrainState: Codable, @unchecked Sendable {
     public let role: RoleType
     public var version: String
     public var lastUpdated: String
-    public var state: [String: Any]
+    public var state: SendableContent
     
     public init(
         aiName: String,
@@ -18,7 +18,7 @@ public struct BrainState: Codable, @unchecked Sendable {
         self.role = role
         self.version = version
         self.lastUpdated = lastUpdated
-        self.state = state
+        self.state = SendableContent(state)
     }
     
     enum CodingKeys: String, CodingKey {
@@ -37,9 +37,9 @@ public struct BrainState: Codable, @unchecked Sendable {
         lastUpdated = try container.decode(String.self, forKey: .lastUpdated)
         
         let stateData = try container.decode([String: String].self, forKey: .state)
-        state = stateData.reduce(into: [String: Any]()) { dict, pair in
+        state = SendableContent(stateData.reduce(into: [String: Any]()) { dict, pair in
             dict[pair.key] = pair.value
-        }
+        })
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -48,17 +48,13 @@ public struct BrainState: Codable, @unchecked Sendable {
         try container.encode(role, forKey: .role)
         try container.encode(version, forKey: .version)
         try container.encode(lastUpdated, forKey: .lastUpdated)
-        
-        let stringState = state.reduce(into: [String: String]()) { dict, pair in
-            if let value = pair.value as? String {
-                dict[pair.key] = value
-            }
-        }
-        try container.encode(stringState, forKey: .state)
+        try container.encode(state.data, forKey: .state)
     }
     
     public mutating func updateState(key: String, value: Any) {
-        state[key] = value
+        var stateDict = state.toAnyDict()
+        stateDict[key] = value
+        state = SendableContent(stateDict)
         lastUpdated = ISO8601DateFormatter().string(from: Date())
     }
     
@@ -70,6 +66,6 @@ public struct BrainState: Codable, @unchecked Sendable {
     }
     
     public func getState(key: String, defaultValue: Any? = nil) -> Any? {
-        return state[key] ?? defaultValue
+        return state.toAnyDict()[key] ?? defaultValue
     }
 }

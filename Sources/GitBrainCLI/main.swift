@@ -153,15 +153,18 @@ struct GitBrainCLI {
         print("✓ Daemon started")
         print("Press Ctrl+C to stop")
         
-        await withTaskCancellationHandler {
+        let task = Task {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
             }
+            await monitor.stop()
+        }
+        
+        await withTaskCancellationHandler {
+            await task.value
         } onCancel: {
             print("\nStopping daemon...")
-            Task {
-                await monitor.stop()
-            }
+            task.cancel()
         }
     }
     

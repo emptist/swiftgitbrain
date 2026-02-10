@@ -1,68 +1,105 @@
 import Foundation
 
 public protocol KnowledgeBaseProtocol: Sendable {
-    func addKnowledge(category: String, key: String, value: TaskData, metadata: TaskData?) async throws
-    func getKnowledge(category: String, key: String) async throws -> TaskData?
-    func updateKnowledge(category: String, key: String, value: TaskData, metadata: TaskData?) async throws -> Bool
+    func addKnowledge(category: String, key: String, value: SendableContent, metadata: SendableContent?) async throws
+    func getKnowledge(category: String, key: String) async throws -> SendableContent?
+    func updateKnowledge(category: String, key: String, value: SendableContent, metadata: SendableContent?) async throws -> Bool
     func deleteKnowledge(category: String, key: String) async throws -> Bool
     func listCategories() async throws -> [String]
     func listKeys(category: String) async throws -> [String]
-    func searchKnowledge(category: String, query: String) async throws -> [TaskData]
+    func searchKnowledge(category: String, query: String) async throws -> [SendableContent]
 }
 
-public struct KnowledgeBase: @unchecked Sendable, KnowledgeBaseProtocol {
-    private struct KnowledgeItem: @unchecked Sendable {
-        let value: [String: Any]
-        let metadata: [String: Any]
+public actor KnowledgeBase: KnowledgeBaseProtocol {
+    private struct KnowledgeItem: Sendable {
+        let value: SendableContent
+        let metadata: SendableContent
         let timestamp: Date
     }
     
-    private actor Storage {
-        private let base: URL
-        private let fileManager: FileManager
-        private var inMemoryStorage: [String: [String: KnowledgeItem]] = [:]
+    private let base: URL
+    private let fileManager: FileManager
+    private var inMemoryStorage: [String: [String: KnowledgeItem]] = [:]
+    
+    public init(base: URL) {
+        self.base = base
+        self.fileManager = FileManager.default
+    }
+    
+    private func getCategoryPath(category: String) -> URL {
+        return base.appendingPathComponent(category)
+    }
+    
+    private func getItemPath(category: String, key: String) -> URL {
+        return getCategoryPath(category: category).appendingPathComponent("\(key).json")
+    }
+    
+    public func addKnowledge(category: String, key: String, value: SendableContent, metadata: SendableContent? = nil) async throws {
+        try fileManager.createDirectory(at: getCategoryPath(category: category), withIntermediateDirectories: true)
         
-        init(base: URL, fileManager: FileManager) {
-            self.base = base
-            self.fileManager = fileManager
+        let item = KnowledgeItem(
+            value: value,
+            metadata: metadata ?? SendableContent([:]),
+            timestamp: Date()
+        )
+        
+        if inMemoryStorage[category] == nil {
+            inMemoryStorage[category] = [:]
+        }
+        inMemoryStorage[category]?[key] = item
+        
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        
+        let itemData: [String: Any] = [
+            "value": value.data,
+            "metadata": metadata?.data ?? [:],
+            "timestamp": ISO8601DateFormatter().string(from: item.timestamp)
+        ]
+        
+        let data = try JSONSerialization.data(withJSONObject: itemData)
+        try data.write(to: getItemPath(category: category, key: key))
+    }
+    
+    public func getKnowledge(category: String, key: String) async throws -> SendableContent? {
+        if let item = inMemoryStorage[category]?[key] {
+            return item.value
         }
         
         private func getCategoryPath(category: String) -> URL {
             return base.appendingPathComponent(category)
         }
         
-        private func getItemPath(category: String, key: String) -> URL {
-            return getCategoryPath(category: category).appendingPathComponent("\(key).json")
+        let data = try Data(contentsOf: itemPath)
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let valueData = json["value"] as? [String: String] else {
+            return nil
         }
         
-        func addKnowledge(category: String, key: String, taskData: TaskData, metadataTaskData: TaskData?) async throws {
-            let value = taskData.data
-            let metadata = metadataTaskData?.data
-            
-            try fileManager.createDirectory(at: getCategoryPath(category: category), withIntermediateDirectories: true)
-            
-            let item = KnowledgeItem(
-                value: value,
-                metadata: metadata ?? [:],
-                timestamp: Date()
-            )
-            
-            if inMemoryStorage[category] == nil {
-                inMemoryStorage[category] = [:]
-            }
-            inMemoryStorage[category]?[key] = item
-            
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .prettyPrinted
-            
-            let itemData: [String: Any] = [
-                "value": value,
-                "metadata": metadata ?? [:],
-                "timestamp": ISO8601DateFormatter().string(from: item.timestamp)
-            ]
-            
-            let data = try JSONSerialization.data(withJSONObject: itemData)
-            try data.write(to: getItemPath(category: category, key: key))
+        let value = SendableContent(valueData.reduce(into: [String: Any]()) { dict, pair in
+            dict[pair.key] = pair.value
+        })
+        
+        let metadataData = json["metadata"] as? [String: String] ?? [:]
+        let metadata = SendableContent(metadataData.reduce(into: [String: Any]()) { dict, pair in
+            dict[pair.key] = pair.value
+        })
+        
+        if inMemoryStorage[category] == nil {
+            inMemoryStorage[category] = [:]
+        }
+        inMemoryStorage[category]?[key] = KnowledgeItem(
+            value: value,
+            metadata: metadata,
+            timestamp: ISO8601DateFormatter().date(from: json["timestamp"] as? String ?? "") ?? Date()
+        )
+        
+        return value
+    }
+    
+    public func updateKnowledge(category: String, key: String, value: SendableContent, metadata: SendableContent? = nil) async throws -> Bool {
+        guard try await getKnowledge(category: category, key: key) != nil else {
+            return false
         }
         
         func getKnowledge(category: String, key: String) async throws -> TaskData? {
@@ -114,44 +151,23 @@ public struct KnowledgeBase: @unchecked Sendable, KnowledgeBaseProtocol {
             return true
         }
         
-        func listCategories() async throws -> [String] {
-            guard fileManager.fileExists(atPath: base.path) else {
-                return []
-            }
-            
-            let categories = try fileManager.contentsOfDirectory(at: base, includingPropertiesForKeys: nil)
-            return categories
-                .filter { $0.hasDirectoryPath }
-                .map { $0.lastPathComponent }
-                .sorted()
-        }
+        let files = try fileManager.contentsOfDirectory(at: categoryPath, includingPropertiesForKeys: nil)
+        return files
+            .filter { $0.pathExtension == "json" }
+            .map { $0.deletingPathExtension().lastPathComponent }
+            .sorted()
+    }
+    
+    public func searchKnowledge(category: String, query: String) async throws -> [SendableContent] {
+        let keys = try await listKeys(category: category)
+        var results: [SendableContent] = []
         
-        func listKeys(category: String) async throws -> [String] {
-            let categoryPath = getCategoryPath(category: category)
-            
-            guard fileManager.fileExists(atPath: categoryPath.path) else {
-                return []
-            }
-            
-            let files = try fileManager.contentsOfDirectory(at: categoryPath, includingPropertiesForKeys: nil)
-            return files
-                .filter { $0.pathExtension == "json" }
-                .map { $0.deletingPathExtension().lastPathComponent }
-                .sorted()
-        }
-        
-        func searchKnowledge(category: String, query: String) async throws -> [TaskData] {
-            let keys = try await listKeys(category: category)
-            var results: [TaskData] = []
-            
-            for key in keys {
-                if let taskData = try await getKnowledge(category: category, key: key) {
-                    let value = taskData.data
-                    let valueString = try JSONSerialization.data(withJSONObject: value)
-                    if let valueStr = String(data: valueString, encoding: .utf8) {
-                        if valueStr.localizedCaseInsensitiveContains(query) {
-                            results.append(taskData)
-                        }
+        for key in keys {
+            if let value = try await getKnowledge(category: category, key: key) {
+                let valueString = try JSONSerialization.data(withJSONObject: value.data)
+                if let valueStr = String(data: valueString, encoding: .utf8) {
+                    if valueStr.localizedCaseInsensitiveContains(query) {
+                        results.append(value)
                     }
                 }
             }
