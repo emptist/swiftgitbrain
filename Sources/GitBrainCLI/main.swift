@@ -137,15 +137,12 @@ struct GitBrainCLI {
         print("Shared worktree: \(sharedPath)")
         print("Monitoring roles: \(roles.joined(separator: ", "))")
         
-        let communication = SharedWorktreeCommunication(
-            sharedWorktree: URL(fileURLWithPath: sharedPath)
-        )
         let monitor = try await SharedWorktreeMonitor(
             sharedWorktree: URL(fileURLWithPath: sharedPath)
         )
         
         for role in roles {
-            monitor.registerHandler(for: role) { message in
+            await monitor.registerHandler(for: role) { message in
                 print("[\(message.fromAI) -> \(message.toAI)] [\(message.messageType.rawValue)] \(message.timestamp)")
                 print("  Content: \(message.content)")
             }
@@ -156,13 +153,16 @@ struct GitBrainCLI {
         print("✓ Daemon started")
         print("Press Ctrl+C to stop")
         
-        signal(SIGINT) { _ in
+        await withTaskCancellationHandler {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            }
+        } onCancel: {
             print("\nStopping daemon...")
-            monitor.stop()
-            exit(0)
+            Task {
+                await monitor.stop()
+            }
         }
-        
-        RunLoop.current.run()
     }
     
     private static func handleStatus(args: [String]) async throws {
