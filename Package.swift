@@ -10,6 +10,10 @@ let package = Package(
         .library(
             name: "GitBrainSwift",
             targets: ["GitBrainSwift"]
+        ),
+        .executable(
+            name: "gitbrain",
+            targets: ["GitBrainCLI"]
         )
     ],
     dependencies: [],
@@ -18,6 +22,11 @@ let package = Package(
             name: "GitBrainSwift",
             dependencies: [],
             path: "Sources/GitBrainSwift"
+        ),
+        .executableTarget(
+            name: "GitBrainCLI",
+            dependencies: ["GitBrainSwift"],
+            path: "Sources/GitBrainCLI"
         ),
         .testTarget(
             name: "GitBrainSwiftTests",
