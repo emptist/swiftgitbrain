@@ -1,20 +1,22 @@
 # GitBrainSwift
 
-A Swift Package Manager (SwiftPM) implementation of GitBrain - a lightweight AI collaboration platform using Maildir for communication and file-based brainstate memory.
+A Swift Package Manager (SwiftPM) implementation of GitBrain - a lightweight AI collaboration platform using GitHub Issues and shared Git worktrees for communication.
 
 ## Overview
 
 GitBrainSwift enables multiple AIs to work together through:
-- **Maildir-based communication**: Async message passing between AIs
+- **GitHub-based communication**: Async message passing via GitHub Issues and PRs
+- **Shared worktree communication**: Real-time file-based messaging between AIs
 - **Brainstate memory**: Persistent AI states as versioned JSON files
 - **Protocol-Oriented Programming**: Flexible and testable architecture
 - **MVVM Architecture**: Clean separation of concerns
 - **Swift Concurrency**: Safe async/await operations with Sendable protocol
-- **Cross-platform**: Supports iOS 17+, macOS 14+, tvOS 17+, watchOS 10+
+- **macOS-first**: Optimized for macOS with native APIs and features
 
 ## Features
 
-- File-based communication using Maildir format
+- GitHub Issues for persistent AI communication
+- Shared worktree for real-time collaboration
 - Persistent brainstate memory with JSON serialization
 - Protocol-oriented design for flexibility
 - Actor-based concurrency safety
@@ -23,6 +25,7 @@ GitBrainSwift enables multiple AIs to work together through:
 - In-memory store for quick access
 - SwiftUI-ready ViewModels
 - Comprehensive unit tests using Swift Testing framework
+- CLI tools for system management
 
 ## Installation
 
@@ -47,6 +50,12 @@ dependencies: [
 
 ## Quick Start
 
+### Prerequisites
+
+1. **GitHub Repository**: Create a GitHub repository for AI collaboration
+2. **GitHub Personal Access Token**: Generate a token with `repo` and `issues` permissions
+3. **Git Worktrees**: Ensure Git worktrees are available (Git 2.5+)
+
 ### Initialize GitBrain System
 
 ```swift
@@ -60,11 +69,21 @@ let system = SystemConfig(
 )
 ```
 
-### Create Communication System
+### Create GitHub Communication System
 
 ```swift
-let maildirURL = URL(fileURLWithPath: "./mailboxes")
-let communication = MaildirCommunication(maildirBase: maildirURL)
+let gitHubCommunication = GitHubCommunication(
+    owner: "your-username",
+    repo: "your-repo",
+    token: "your-github-token"
+)
+```
+
+### Create Shared Worktree Communication
+
+```swift
+let sharedWorktreeURL = URL(fileURLWithPath: "./shared-worktree")
+let sharedCommunication = SharedWorktreeCommunication(sharedWorktree: sharedWorktreeURL)
 ```
 
 ### Create Memory Manager
@@ -100,7 +119,7 @@ let coderRoleConfig = RoleConfig(
 let coder = CoderAI(
     system: system,
     roleConfig: coderRoleConfig,
-    communication: communication,
+    communication: gitHubCommunication,
     memoryManager: memoryManager,
     memoryStore: memoryStore,
     knowledgeBase: knowledgeBase
@@ -133,7 +152,7 @@ let overseerRoleConfig = RoleConfig(
 let overseer = OverseerAI(
     system: system,
     roleConfig: overseerRoleConfig,
-    communication: communication,
+    communication: gitHubCommunication,
     memoryManager: memoryManager,
     memoryStore: memoryStore,
     knowledgeBase: knowledgeBase
@@ -144,7 +163,7 @@ try await overseer.initialize()
 
 ## Usage Examples
 
-### Sending a Task
+### Sending a Task via GitHub
 
 ```swift
 let taskMessage = MessageBuilder.createTaskMessage(
@@ -159,7 +178,7 @@ let taskMessage = MessageBuilder.createTaskMessage(
 try await overseer.sendMessage(taskMessage)
 ```
 
-### Processing Messages
+### Processing GitHub Messages
 
 ```swift
 let messages = try await coder.receiveMessages()
@@ -169,7 +188,7 @@ for message in messages {
 }
 ```
 
-### Submitting Code
+### Submitting Code via Pull Request
 
 ```swift
 try await coder.submitCode(reviewer: "overseer")
@@ -227,7 +246,7 @@ GitBrainSwift follows the Model-View-ViewModel architecture:
 
 Key protocols for flexibility and testability:
 
-- `MaildirCommunicationProtocol`: Defines communication interface
+- `CommunicationProtocol`: Defines communication interface
 - `BrainStateManagerProtocol`: Defines brainstate management interface
 - `MemoryStoreProtocol`: Defines in-memory storage interface
 - `KnowledgeBaseProtocol`: Defines knowledge base interface
@@ -237,7 +256,9 @@ Key protocols for flexibility and testability:
 
 All stateful components use Swift actors for thread safety:
 
-- `MaildirCommunication`: Handles maildir operations
+- `GitHubCommunication`: Handles GitHub API operations
+- `SharedWorktreeCommunication`: Handles shared worktree messaging
+- `SharedWorktreeMonitor`: Monitors shared worktree for changes
 - `BrainStateManager`: Manages brainstate files
 - `MemoryStore`: In-memory storage
 - `KnowledgeBase`: Knowledge management
@@ -300,17 +321,50 @@ public struct SystemConfig: Codable, Sendable {
 
 ### Communication
 
-#### MaildirCommunication
+#### GitHubCommunication
 
-Handles Maildir-based messaging:
+Handles GitHub Issues for messaging:
 
 ```swift
-public actor MaildirCommunication: MaildirCommunicationProtocol {
-    public func createMailbox(name: String) async throws -> URL
-    public func sendMessage(_ message: Message) async throws -> String
-    public func receiveMessages(mailboxName: String) async throws -> [Message]
-    public func getMessageCount(mailboxName: String) async throws -> Int
-    public func clearMailbox(mailboxName: String) async throws -> Int
+public actor GitHubCommunication: CommunicationProtocol {
+    private let owner: String
+    private let repo: String
+    private let token: String
+    
+    public func sendMessage(_ message: Message, from: String, to: String) async throws -> URL
+    public func receiveMessages(for role: String) async throws -> [Message]
+    public func getMessageCount(for role: String) async throws -> Int
+    public func clearMessages(for role: String) async throws -> Int
+}
+```
+
+#### SharedWorktreeCommunication
+
+Handles shared worktree messaging:
+
+```swift
+public actor SharedWorktreeCommunication: CommunicationProtocol {
+    private let sharedWorktree: URL
+    
+    public func sendMessage(_ message: Message, from: String, to: String) async throws -> URL
+    public func receiveMessages(for role: String) async throws -> [Message]
+    public func getMessageCount(for role: String) async throws -> Int
+    public func clearMessages(for role: String) async throws -> Int
+}
+```
+
+#### SharedWorktreeMonitor
+
+Monitors shared worktree for real-time updates:
+
+```swift
+public actor SharedWorktreeMonitor {
+    private let sharedWorktree: URL
+    
+    public init(sharedWorktree: URL) async throws
+    public func start() async throws
+    public func stop()
+    public func registerHandler(for role: String, handler: @escaping (Message) async -> Void)
 }
 ```
 
@@ -327,6 +381,42 @@ public struct MessageBuilder: Sendable {
     public static func createApprovalMessage(...)
     public static func createStatusMessage(...)
     public static func createHeartbeatMessage(...)
+}
+```
+
+### Git Integration
+
+#### GitManager
+
+Manages Git operations:
+
+```swift
+public actor GitManager {
+    private let worktree: URL
+    
+    public init(worktree: URL)
+    public func add(_ files: [String]) async throws
+    public func commit(_ message: String) async throws
+    public func push() async throws
+    public func pull() async throws
+    public func sync() async throws
+    public func getStatus() async throws -> GitStatus
+}
+```
+
+#### WorktreeManager
+
+Manages Git worktrees:
+
+```swift
+public actor WorktreeManager {
+    private let repository: URL
+    
+    public init(repository: URL)
+    public static func setupSharedWorktree(repository: String, sharedPath: String) async throws -> Worktree
+    public func createWorktree(path: String, branch: String) async throws -> Worktree
+    public func listWorktrees() async throws -> [Worktree]
+    public func removeWorktree(_ path: String) async throws
 }
 ```
 
@@ -392,7 +482,7 @@ Defines the interface for AI roles:
 public protocol BaseRole: Sendable {
     var system: SystemConfig { get }
     var roleConfig: RoleConfig { get }
-    var communication: any MaildirCommunicationProtocol { get }
+    var communication: any CommunicationProtocol { get }
     var memoryManager: any BrainStateManagerProtocol { get }
     var memoryStore: any MemoryStoreProtocol { get }
     var knowledgeBase: any KnowledgeBaseProtocol { get }
@@ -454,10 +544,33 @@ public actor OverseerAI: BaseRole {
 ## Communication Flow
 
 ```
-OverseerAI ──assign──> CoderAI ──code──> OverseerAI
+OverseerAI ──GitHub Issue──> CoderAI ──Pull Request──> OverseerAI
      ↑                                    │
-     └─────────approve────────────────────┘
+     └─────────GitHub Review──────────────┘
 ```
+
+## CLI Tools
+
+GitBrainSwift includes CLI tools for system management:
+
+```bash
+# Initialize GitBrain system
+gitbrain init --owner <username> --repo <repository>
+
+# Create worktree
+gitbrain worktree create --path <path> --branch <branch>
+
+# List worktrees
+gitbrain worktree list
+
+# Sync with GitHub
+gitbrain sync
+
+# Monitor messages
+gitbrain monitor --role <role>
+```
+
+See [CLI Tools Documentation](Documentation/CLI_TOOLS.md) for more details.
 
 ## Testing
 
@@ -477,11 +590,13 @@ swift test
 - KnowledgeBase tests
 - CoderAI tests
 - OverseerAI tests
+- SharedWorktreeCommunication tests
+- GitManager tests
 
 ## Platform Support
 
+- macOS 14+ (Primary platform)
 - iOS 17+
-- macOS 14+
 - tvOS 17+
 - watchOS 10+
 
@@ -489,6 +604,17 @@ swift test
 
 - Swift 6.2+
 - Swift Package Manager
+- Git 2.5+ (for worktree support)
+- GitHub account with Personal Access Token
+
+## Documentation
+
+- [GitHub Integration Guide](Documentation/GITHUB_INTEGRATION.md)
+- [Shared Worktree Setup Guide](Documentation/SHARED_WORKTREE_SETUP.md)
+- [CoderAI Usage Guide](Documentation/CODERAI_USAGE.md)
+- [CLI Tools Documentation](Documentation/CLI_TOOLS.md)
+- [Implementation Guide](Documentation/IMPLEMENTATION_GUIDE.md)
+- [macOS-First Architecture](Documentation/MACOS_FIRST_ARCHITECTURE.md)
 
 ## License
 
@@ -496,7 +622,7 @@ MIT License
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please read our contributing guidelines and submit a Pull Request.
 
 ## Support
 
@@ -506,4 +632,5 @@ For issues and questions, please open an issue on GitHub.
 
 - Inspired by the Python GitBrain system
 - Built with Swift 6.2 and Swift Testing framework
-- Uses Maildir format for reliable file-based communication
+- Uses GitHub Issues for persistent communication
+- Uses Git worktrees for multi-AI collaboration
