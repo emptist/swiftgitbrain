@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-public enum Logger {
+public enum GitBrainLogger {
     private static let subsystem = "com.gitbrain.swift"
     private static let category = "GitBrain"
     
@@ -13,32 +13,32 @@ public enum Logger {
     
     public static func debug(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .debug else { return }
-        let logger = OSLog(subsystem: subsystem, category: category)
-        logger.debug("\(message)", file: file, function: function, line: line)
+        let logger = os.Logger(subsystem: subsystem, category: category)
+        logger.debug("\(message)")
     }
     
     public static func info(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .info else { return }
-        let logger = OSLog(subsystem: subsystem, category: category)
-        logger.info("\(message)", file: file, function: function, line: line)
+        let logger = os.Logger(subsystem: subsystem, category: category)
+        logger.info("\(message)")
     }
     
     public static func warning(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .warning else { return }
-        let logger = OSLog(subsystem: subsystem, category: category)
-        logger.warning("\(message)", file: file, function: function, line: line)
+        let logger = os.Logger(subsystem: subsystem, category: category)
+        logger.warning("\(message)")
     }
     
     public static func error(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .error else { return }
-        let logger = OSLog(subsystem: subsystem, category: category)
-        logger.error("\(message)", file: file, function: function, line: line)
+        let logger = os.Logger(subsystem: subsystem, category: category)
+        logger.error("\(message)")
     }
     
     public static func fault(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .fault else { return }
-        let logger = OSLog(subsystem: subsystem, category: category)
-        logger.fault("\(message)", file: file, function: function, line: line)
+        let logger = os.Logger(subsystem: subsystem, category: category)
+        logger.critical("\(message)")
     }
     
     public static func log(_ level: LogLevel, _ message: String, file: String = #file, function: String = #function, line: Int = #line) {
@@ -57,7 +57,6 @@ public enum Logger {
     }
     
     public static func setLogLevel(_ level: LogLevel) {
-        logLevel = level
     }
     
     public static func getLogLevel() -> LogLevel {

@@ -14,6 +14,18 @@ let package = Package(
         .executable(
             name: "gitbrain",
             targets: ["GitBrainCLI"]
+        ),
+        .executable(
+            name: "gitbrain-demo",
+            targets: ["GitBrainDemo"]
+        ),
+        .executable(
+            name: "gitbrain-github-demo",
+            targets: ["GitBrainGitHubDemo"]
+        ),
+        .executable(
+            name: "test-github-issue",
+            targets: ["TestGitHubIssue"]
         )
     ],
     dependencies: [],
@@ -27,6 +39,21 @@ let package = Package(
             name: "GitBrainCLI",
             dependencies: ["GitBrainSwift"],
             path: "Sources/GitBrainCLI"
+        ),
+        .executableTarget(
+            name: "GitBrainDemo",
+            dependencies: ["GitBrainSwift"],
+            path: "Sources/GitBrainDemo"
+        ),
+        .executableTarget(
+            name: "GitBrainGitHubDemo",
+            dependencies: ["GitBrainSwift"],
+            path: "Sources/GitBrainGitHubDemo"
+        ),
+        .executableTarget(
+            name: "TestGitHubIssue",
+            dependencies: ["GitBrainSwift"],
+            path: "Sources/TestGitHubIssue"
         ),
         .testTarget(
             name: "GitBrainSwiftTests",

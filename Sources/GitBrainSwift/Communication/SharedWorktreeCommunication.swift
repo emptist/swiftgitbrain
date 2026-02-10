@@ -1,6 +1,6 @@
 import Foundation
 
-public actor SharedWorktreeCommunication {
+public actor SharedWorktreeCommunication: CommunicationProtocol {
     private let sharedWorktree: URL
     private let fileManager: FileManager
     private let encoder: JSONEncoder

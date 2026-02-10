@@ -34,14 +34,18 @@ public actor SharedWorktreeMonitor {
         )
         
         eventStream?.setEventHandler { [weak self] in
-            Task {
-                await self?.handleFileSystemEvent()
+            guard let self = self else { return }
+            Task.detached {
+                await self.handleFileSystemEvent()
             }
         }
         
         eventStream?.setCancelHandler { [weak self] in
             close(descriptor)
-            self?.isMonitoring = false
+            guard let self = self else { return }
+            Task.detached {
+                await self.setMonitoringStopped()
+            }
         }
         
         eventStream?.resume()
@@ -60,6 +64,10 @@ public actor SharedWorktreeMonitor {
         eventStream = nil
         task?.cancel()
         task = nil
+    }
+    
+    private func setMonitoringStopped() {
+        isMonitoring = false
     }
     
     public func registerHandler(

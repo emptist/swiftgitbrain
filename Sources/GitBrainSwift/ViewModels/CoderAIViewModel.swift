@@ -63,7 +63,7 @@ public class CoderAIViewModel {
         status = "Implementing task..."
         
         if let result = await coder.implementTask() {
-            currentTask = result
+            currentTask = result.data
             status = "Task implemented"
         } else {
             errorMessage = "No current task to implement"
@@ -87,11 +87,11 @@ public class CoderAIViewModel {
     
     public func refreshStatus() async {
         let coderStatus = await coder.getStatus()
-        currentTask = coderStatus["current_task"] as? [String: Any]
-        taskHistory = coderStatus["task_history"] as? [[String: Any]] ?? []
-        codeHistory = coderStatus["code_history"] as? [[String: Any]] ?? []
-        capabilities = coderStatus["capabilities"] as? [String] ?? []
-        status = coderStatus["role"] as? String ?? "CoderAI"
+        currentTask = coderStatus.data["current_task"] as? [String: Any]
+        taskHistory = coderStatus.data["task_history"] as? [[String: Any]] ?? []
+        codeHistory = coderStatus.data["code_history"] as? [[String: Any]] ?? []
+        capabilities = coderStatus.data["capabilities"] as? [String] ?? []
+        status = coderStatus.data["role"] as? String ?? "CoderAI"
     }
     
     public func getBrainStateValue(key: String) async -> Any? {
@@ -111,11 +111,13 @@ public class CoderAIViewModel {
     }
     
     public func getKnowledge(category: String, key: String) async throws -> [String: Any]? {
-        return try await coder.getKnowledge(category: category, key: key)
+        let taskData = try await coder.getKnowledge(category: category, key: key)
+        return taskData?.data
     }
     
     public func searchKnowledge(category: String, query: String) async throws -> [[String: Any]] {
-        return try await coder.searchKnowledge(category: category, query: query)
+        let taskDataResults = try await coder.searchKnowledge(category: category, query: query)
+        return taskDataResults.map { $0.data }
     }
     
     public func cleanup() async {

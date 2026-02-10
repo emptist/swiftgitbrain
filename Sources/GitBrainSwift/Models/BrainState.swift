@@ -1,6 +1,6 @@
 import Foundation
 
-public struct BrainState: Codable, Sendable {
+public struct BrainState: Codable, @unchecked Sendable {
     public let aiName: String
     public let role: RoleType
     public var version: String
@@ -59,6 +59,13 @@ public struct BrainState: Codable, Sendable {
     
     public mutating func updateState(key: String, value: Any) {
         state[key] = value
+        lastUpdated = ISO8601DateFormatter().string(from: Date())
+    }
+    
+    public mutating func updateState(taskData: TaskData) {
+        for (key, value) in taskData.data {
+            state[key] = value
+        }
         lastUpdated = ISO8601DateFormatter().string(from: Date())
     }
     

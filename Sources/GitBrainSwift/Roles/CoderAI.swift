@@ -1,6 +1,6 @@
 import Foundation
 
-public actor CoderAI: BaseRole {
+public struct CoderAI: @unchecked Sendable, BaseRole {
     public let system: SystemConfig
     public let roleConfig: RoleConfig
     public let communication: any CommunicationProtocol
@@ -8,14 +8,56 @@ public actor CoderAI: BaseRole {
     public let memoryStore: any MemoryStoreProtocol
     public let knowledgeBase: any KnowledgeBaseProtocol
     
-    private var currentTask: [String: Any]?
-    private var taskHistory: [[String: Any]] = []
-    private var codeHistory: [[String: Any]] = []
+    private actor Storage {
+        var currentTask: [String: Any]?
+        var taskHistory: [[String: Any]] = []
+        var codeHistory: [[String: Any]] = []
+        
+        func setCurrentTask(_ task: [String: Any]) {
+            currentTask = task
+        }
+        
+        func getCurrentTask() -> TaskData? {
+            return currentTask.map { TaskData($0) }
+        }
+        
+        func updateCurrentTask(key: String, value: Any) {
+            if currentTask != nil {
+                currentTask?[key] = value
+            }
+        }
+        
+        func addToTaskHistory(_ item: TaskData) {
+            taskHistory.append(item.data)
+        }
+        
+        func getTaskHistory() -> TaskData {
+            return TaskData(["task_history": taskHistory])
+        }
+        
+        func getTaskHistoryCount() -> Int {
+            return taskHistory.count
+        }
+        
+        func addToCodeHistory(_ item: TaskData) {
+            codeHistory.append(item.data)
+        }
+        
+        func getCodeHistory() -> TaskData {
+            return TaskData(["code_history": codeHistory])
+        }
+        
+        func getCodeHistoryCount() -> Int {
+            return codeHistory.count
+        }
+    }
+    
+    private let storage = Storage()
     
     public init(
         system: SystemConfig,
         roleConfig: RoleConfig,
-        communication: any MaildirCommunicationProtocol,
+        communication: any CommunicationProtocol,
         memoryManager: any BrainStateManagerProtocol,
         memoryStore: any MemoryStoreProtocol,
         knowledgeBase: any KnowledgeBaseProtocol
@@ -32,60 +74,127 @@ public actor CoderAI: BaseRole {
         let initialized = try await getBrainStateValue(key: "initialized", defaultValue: false) as? Bool ?? false
         
         if !initialized {
-            try await updateBrainState(key: "initialized", value: true)
-            try await updateBrainState(key: "current_task", value: NSNull())
-            try await updateBrainState(key: "task_history", value: [])
-            try await updateBrainState(key: "code_history", value: [])
-            try await updateBrainState(key: "preferred_language", value: "swift")
-            try await updateBrainState(key: "coding_style", value: "clean")
+            try await updateBrainState(key: "initialized", value: TaskData(["initialized": true]))
+            try await updateBrainState(key: "current_task", value: TaskData([:]))
+            try await updateBrainState(key: "task_history", value: TaskData(["task_history": []]))
+            try await updateBrainState(key: "code_history", value: TaskData(["code_history": []]))
+            try await updateBrainState(key: "preferred_language", value: TaskData(["preferred_language": "swift"]))
+            try await updateBrainState(key: "coding_style", value: TaskData(["coding_style": "clean"]))
         }
     }
     
     public func processMessage(_ message: Message) async {
         switch message.messageType {
         case .task:
-            await handleTask(message.content)
+            await handleTask(TaskData(message.content))
         case .feedback:
-            await handleFeedback(message.content)
+            await handleFeedback(TaskData(message.content))
         case .approval:
-            await handleApproval(message.content)
+            await handleApproval(TaskData(message.content))
         case .rejection:
-            await handleRejection(message.content)
+            await handleRejection(TaskData(message.content))
         case .heartbeat:
-            await handleHeartbeat(message.content)
+            await handleHeartbeat(TaskData(message.content))
         default:
             await handleUnknownMessage(message)
         }
     }
     
-    public func handleTask(_ task: [String: Any]) async {
-        guard let taskID = task["task_id"] as? String,
-              let description = task["description"] as? String else {
+    public func handleTask(_ task: TaskData) async {
+        let taskData = task.data
+        guard let taskID = taskData["task_id"] as? String,
+              let description = taskData["description"] as? String else {
             return
         }
         
-        let taskType = task["type"] as? String ?? "coding"
-        
-        currentTask = [
+        let newTask: [String: Any] = [
             "task_id": taskID,
             "description": description,
-            "type": taskType,
-            "status": "in_progress",
-            "started_at": ISO8601DateFormatter().string(from: Date())
+            "status": "assigned",
+            "assigned_at": ISO8601DateFormatter().string(from: Date())
         ]
         
-        try? await updateBrainState(key: "current_task", value: currentTask ?? [:])
-        
-        taskHistory.append(currentTask ?? [:])
-        try? await updateBrainState(key: "task_history", value: taskHistory)
-        
-        try? await sendStatusUpdate(status: "Started task: \(taskID)")
+        await storage.setCurrentTask(newTask)
+        let currentTaskValue = await storage.getCurrentTask()
+        try? await updateBrainState(key: "current_task", value: currentTaskValue ?? TaskData([:]))
     }
     
-    public func implementTask() async -> [String: Any]? {
-        guard let currentTask = currentTask else {
+    public func handleFeedback(_ feedback: TaskData) async {
+        let feedbackData = feedback.data
+        guard let taskID = feedbackData["task_id"] as? String,
+              let feedbackText = feedbackData["feedback"] as? String else {
+            return
+        }
+        
+        let actionRequired = feedbackData["action_required"] as? Bool ?? false
+        
+        let feedbackRecord: [String: Any] = [
+            "task_id": taskID,
+            "feedback": feedbackText,
+            "action_required": actionRequired,
+            "received_at": ISO8601DateFormatter().string(from: Date())
+        ]
+        
+        let feedbackRecordTaskData = TaskData(feedbackRecord)
+        
+        await storage.addToTaskHistory(feedbackRecordTaskData)
+        let taskHistoryValue = await storage.getTaskHistory()
+        try? await updateBrainState(key: "task_history", value: taskHistoryValue)
+        
+        if actionRequired {
+            await applyFeedback(taskID: taskID, feedback: feedbackText)
+        }
+    }
+    
+    public func handleApproval(_ approval: TaskData) async {
+        let approvalData = approval.data
+        guard let taskID = approvalData["task_id"] as? String else {
+            return
+        }
+        
+        await storage.updateCurrentTask(key: "status", value: "approved")
+        let currentTaskValue = await storage.getCurrentTask()
+        try? await updateBrainState(key: "current_task", value: currentTaskValue ?? TaskData([:]))
+    }
+    
+    public func handleRejection(_ rejection: TaskData) async {
+        let rejectionData = rejection.data
+        guard let taskID = rejectionData["task_id"] as? String else {
+            return
+        }
+        
+        await storage.updateCurrentTask(key: "status", value: "rejected")
+        let currentTaskValue = await storage.getCurrentTask()
+        try? await updateBrainState(key: "current_task", value: currentTaskValue ?? TaskData([:]))
+    }
+    
+    public func handleHeartbeat(_ heartbeat: TaskData) async {
+        let heartbeatData = heartbeat.data
+        guard let state = heartbeatData["state"] as? [String: Any] else {
+            return
+        }
+        
+        try? await updateBrainState(key: "last_heartbeat", value: state)
+    }
+    
+    public func handleUnknownMessage(_ message: Message) async {
+    }
+    
+    public nonisolated func implementTask() async -> TaskData? {
+        return await withUnsafeContinuation { continuation in
+            Task {
+                let result = await self.implementTaskInternal()
+                continuation.resume(returning: result)
+            }
+        }
+    }
+    
+    private func implementTaskInternal() async -> TaskData? {
+        guard let currentTaskTaskData = await storage.getCurrentTask() else {
             return nil
         }
+        
+        let currentTask = currentTaskTaskData.data
         
         guard let taskID = currentTask["task_id"] as? String,
               let description = currentTask["description"] as? String else {
@@ -102,18 +211,22 @@ public actor CoderAI: BaseRole {
             "description": "Implementation for task: \(description)"
         ]
         
-        codeHistory.append(codeSubmission)
-        try? await updateBrainState(key: "code_history", value: codeHistory)
+        let codeSubmissionTaskData = TaskData(codeSubmission)
         
-        self.currentTask?["status"] = "completed"
-        self.currentTask?["completed_at"] = ISO8601DateFormatter().string(from: Date())
-        try? await updateBrainState(key: "current_task", value: self.currentTask ?? [:])
+        await storage.addToCodeHistory(codeSubmissionTaskData)
+        let codeHistoryValue = await storage.getCodeHistory()
+        try? await updateBrainState(key: "code_history", value: codeHistoryValue)
         
-        return codeSubmission
+        await storage.updateCurrentTask(key: "status", value: "completed")
+        await storage.updateCurrentTask(key: "completed_at", value: ISO8601DateFormatter().string(from: Date()))
+        let currentTaskValue = await storage.getCurrentTask()
+        try? await updateBrainState(key: "current_task", value: currentTaskValue ?? TaskData([:]))
+        
+        return codeSubmissionTaskData
     }
     
     public func submitCode(reviewer: String = "overseer") async throws -> String {
-        guard let currentTask = currentTask else {
+        guard let currentTask = await storage.getCurrentTask() else {
             return ""
         }
         
@@ -124,116 +237,42 @@ public actor CoderAI: BaseRole {
         let message = MessageBuilder.createCodeMessage(
             fromAI: roleConfig.name,
             toAI: reviewer,
-            taskID: codeSubmission["task_id"] as? String ?? "",
-            code: codeSubmission["code"] as? String ?? "",
-            language: codeSubmission["language"] as? String ?? "swift",
-            files: codeSubmission["files"] as? [String] ?? []
+            taskID: codeSubmission["task_id"] ?? "",
+            code: codeSubmission["code"] ?? "",
+            language: codeSubmission["language"] ?? "swift",
+            files: codeSubmission["files"] ?? []
         )
         
-        return try await sendMessage(message)
+        let issueURL = try await sendMessage(message)
+        return issueURL.absoluteString
     }
     
-    public func handleFeedback(_ feedback: [String: Any]) async {
-        guard let taskID = feedback["task_id"] as? String,
-              let feedbackText = feedback["feedback"] as? String else {
-            return
-        }
-        
-        let actionRequired = feedback["action_required"] as? Bool ?? false
-        
-        try? await addKnowledge(
-            category: "feedback",
-            key: taskID,
-            value: [
-                "feedback": feedbackText,
-                "action_required": actionRequired,
-                "timestamp": ISO8601DateFormatter().string(from: Date())
-            ]
-        )
-        
-        if actionRequired {
-            await applyFeedback(feedback: feedbackText)
-        }
-    }
-    
-    public func handleApproval(_ approval: [String: Any]) async {
-        guard let taskID = approval["task_id"] as? String else {
-            return
-        }
-        
-        let tasksCompleted = (try? await getBrainStateValue(key: "tasks_completed", defaultValue: 0) as? Int) ?? 0
-        try? await updateBrainState(key: "tasks_completed", value: tasksCompleted + 1)
-        
-        currentTask = nil
-        try? await updateBrainState(key: "current_task", value: NSNull())
-        
-        try? await sendStatusUpdate(status: "Task \(taskID) approved and completed")
-    }
-    
-    public func handleRejection(_ rejection: [String: Any]) async {
-        guard let taskID = rejection["task_id"] as? String else {
-            return
-        }
-        
-        let reason = rejection["reason"] as? String ?? ""
-        
-        currentTask?["status"] = "rejected"
-        try? await updateBrainState(key: "current_task", value: currentTask ?? [:])
-        
-        try? await addKnowledge(
-            category: "rejections",
-            key: taskID,
-            value: [
-                "reason": reason,
-                "timestamp": ISO8601DateFormatter().string(from: Date())
-            ]
-        )
-        
-        try? await sendStatusUpdate(status: "Task \(taskID) rejected: \(reason)")
-    }
-    
-    public func handleHeartbeat(_ heartbeat: [String: Any]) async {
-        guard let state = heartbeat["state"] as? [String: Any] else {
-            return
-        }
-        
-        for (key, value) in state {
-            await saveMemory(key: "heartbeat_\(key)", value: value)
-        }
-    }
-    
-    private func handleUnknownMessage(_ message: Message) async {
-        try? await addKnowledge(
-            category: "unknown_messages",
-            key: message.id,
-            value: [
-                "message_type": message.messageType.rawValue,
-                "from": message.fromAI,
-                "content": message.content,
-                "timestamp": message.timestamp
-            ]
-        )
+    private func applyFeedback(taskID: String, feedback: String) async {
     }
     
     private func generateCode(description: String) async -> String {
         let language = (try? await getBrainStateValue(key: "preferred_language", defaultValue: "swift") as? String) ?? "swift"
         
-        if language == "swift" {
-            return await generateSwiftCode(description: description)
-        } else if language == "python" {
+        switch language.lowercased() {
+        case "python":
             return await generatePythonCode(description: description)
-        } else {
-            return "// Code for: \(description)\n// Language: \(language)\n"
+        case "javascript", "js":
+            return await generateJavaScriptCode(description: description)
+        case "swift":
+            return await generateSwiftCode(description: description)
+        default:
+            return await generateSwiftCode(description: description)
         }
     }
     
     private func generateSwiftCode(description: String) async -> String {
-        var code = """/"\(description)"/
+        let code = """
+// \(description)
 
 import Foundation
 
 func main() {
-    // Implementation
+    // Implementation for: \(description)
 }
 
 main()
@@ -242,10 +281,11 @@ main()
     }
     
     private func generatePythonCode(description: String) async -> String {
-        var code = """/"\(description)"/
+        let code = """
+# \(description)
 
 def main():
-    # Implementation
+    # Implementation for: \(description)
     pass
 
 if __name__ == "__main__":
@@ -254,42 +294,20 @@ if __name__ == "__main__":
         return code
     }
     
-    private func applyFeedback(feedback: String) async {
-        try? await addKnowledge(
-            category: "improvements",
-            key: "latest",
-            value: [
-                "feedback": feedback,
-                "applied": true,
-                "timestamp": ISO8601DateFormatter().string(from: Date())
-            ]
-        )
+    private func generateJavaScriptCode(description: String) async -> String {
+        let code = """
+// \(description)
+
+function main() {
+    // Implementation for: \(description)
+}
+
+main();
+"""
+        return code
     }
     
-    private func sendStatusUpdate(status: String) async throws {
-        guard let overseer = findOverseer() else {
-            return
-        }
-        
-        let message = MessageBuilder.createStatusMessage(
-            fromAI: roleConfig.name,
-            toAI: overseer,
-            status: status
-        )
-        
-        _ = try await sendMessage(message)
-    }
-    
-    private func findOverseer() -> String? {
-        for (roleName, roleConfig) in system.roles {
-            if roleConfig.roleType == .overseer {
-                return roleName
-            }
-        }
-        return nil
-    }
-    
-    public func getCapabilities() -> [String] {
+    public nonisolated func getCapabilities() -> [String] {
         return [
             "write_code",
             "implement_features",
@@ -302,13 +320,27 @@ if __name__ == "__main__":
         ]
     }
     
-    public func getStatus() async -> [String: Any] {
-        return [
+    public nonisolated func getStatus() async -> TaskData {
+        return await withUnsafeContinuation { continuation in
+            Task {
+                let status = await self.getStatusInternal()
+                continuation.resume(returning: status)
+            }
+        }
+    }
+    
+    private func getStatusInternal() async -> TaskData {
+        let currentTaskValue = await storage.getCurrentTask()
+        let taskHistoryCount = await storage.getTaskHistoryCount()
+        let codeHistoryCount = await storage.getCodeHistoryCount()
+        
+        let status: [String: Any] = [
             "role": "CoderAI",
-            "current_task": currentTask,
-            "task_history_count": taskHistory.count,
-            "code_history_count": codeHistory.count,
+            "current_task": currentTaskValue ?? [:],
+            "task_history_count": taskHistoryCount,
+            "code_history_count": codeHistoryCount,
             "capabilities": getCapabilities()
         ]
+        return TaskData(status)
     }
 }

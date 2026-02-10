@@ -1,0 +1,34 @@
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+
+# Xcode
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+*.xctest
+*.swiftmodule
+*.swiftdoc
+
+# Temporary files
+*.tmp
+*.temp
+demo_brainstates/
+demo_brainstates_github/

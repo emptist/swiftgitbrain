@@ -3,7 +3,7 @@ import Combine
 import Observation
 
 @Observable
-public class GitBrainSystemViewModel {
+public class GitBrainSystemViewModel: @unchecked Sendable {
     public private(set) var system: SystemConfig
     public private(set) var communication: any CommunicationProtocol
     public private(set) var memoryManager: BrainStateManager
@@ -29,7 +29,8 @@ public class GitBrainSystemViewModel {
             roleType: .coder,
             enabled: true,
             mailbox: "coder",
-            brainstateFile: "coder_state.json"
+            brainstateFile: "coder_state.json",
+            capabilities: []
         )
         
         let overseerRoleConfig = system.getRoleConfig(roleName: "overseer") ?? RoleConfig(
@@ -37,7 +38,8 @@ public class GitBrainSystemViewModel {
             roleType: .overseer,
             enabled: true,
             mailbox: "overseer",
-            brainstateFile: "overseer_state.json"
+            brainstateFile: "overseer_state.json",
+            capabilities: []
         )
         
         let memoryStore = MemoryStore()
@@ -108,7 +110,11 @@ public class GitBrainSystemViewModel {
     }
     
     public func getMessageCount(roleName: String) async -> Int {
-        return try? await communication.getMessageCount(for: roleName) ?? 0
+        do {
+            return try await communication.getMessageCount(for: roleName)
+        } catch {
+            return 0
+        }
     }
     
     public func cleanup() async {

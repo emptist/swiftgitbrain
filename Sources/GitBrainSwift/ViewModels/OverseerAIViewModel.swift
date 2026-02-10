@@ -3,7 +3,7 @@ import Combine
 import Observation
 
 @Observable
-public class OverseerAIViewModel {
+public class OverseerAIViewModel: @unchecked Sendable {
     public private(set) var overseer: OverseerAI
     public private(set) var reviewQueue: [[String: Any]]
     public private(set) var reviewHistory: [[String: Any]]
@@ -143,12 +143,12 @@ public class OverseerAIViewModel {
     
     public func refreshStatus() async {
         let overseerStatus = await overseer.getStatus()
-        reviewQueue = []
-        reviewHistory = overseerStatus["review_history"] as? [[String: Any]] ?? []
-        approvedTasks = overseerStatus["approved_tasks"] as? [[String: Any]] ?? []
-        rejectedTasks = overseerStatus["rejected_tasks"] as? [[String: Any]] ?? []
-        capabilities = overseerStatus["capabilities"] as? [String] ?? []
-        status = overseerStatus["role"] as? String ?? "OverseerAI"
+        reviewQueue = overseerStatus.data["review_queue"] as? [[String: Any]] ?? []
+        reviewHistory = overseerStatus.data["review_history"] as? [[String: Any]] ?? []
+        approvedTasks = overseerStatus.data["approved_tasks"] as? [[String: Any]] ?? []
+        rejectedTasks = overseerStatus.data["rejected_tasks"] as? [[String: Any]] ?? []
+        capabilities = overseerStatus.data["capabilities"] as? [String] ?? []
+        status = overseerStatus.data["role"] as? String ?? "OverseerAI"
     }
     
     public func getBrainStateValue(key: String) async -> Any? {
@@ -168,11 +168,13 @@ public class OverseerAIViewModel {
     }
     
     public func getKnowledge(category: String, key: String) async throws -> [String: Any]? {
-        return try await overseer.getKnowledge(category: category, key: key)
+        let taskData = try await overseer.getKnowledge(category: category, key: key)
+        return taskData?.data
     }
     
     public func searchKnowledge(category: String, query: String) async throws -> [[String: Any]] {
-        return try await overseer.searchKnowledge(category: category, query: query)
+        let taskDataResults = try await overseer.searchKnowledge(category: category, query: query)
+        return taskDataResults.map { $0.data }
     }
     
     public func cleanup() async {

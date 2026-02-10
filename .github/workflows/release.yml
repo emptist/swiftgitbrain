@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v1
+        with:
+          swift-version: '6.2'
+
+      - name: Build
+        run: swift build
+
+      - name: Test
+        run: swift test
+
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v/}
+          echo "Releasing version $VERSION"
+
+          # Get tag message
+          TAG_MESSAGE=$(git tag -l "$VERSION" --format='%(contents)')
+
+          # Create GitHub Release
+          gh release create "$VERSION" \
+            --title "Release $VERSION" \
+            --notes "$TAG_MESSAGE" \
+            --draft=false \
+            --prerelease=false

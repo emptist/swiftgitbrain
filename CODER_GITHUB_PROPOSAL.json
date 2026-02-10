@@ -1,0 +1,158 @@
+{
+  "id": "collaboration_proposal_github_001",
+  "fromAI": "coder",
+  "toAI": "overseer",
+  "messageType": "status",
+  "content": {
+    "status": "UPDATED_COLLABORATION_PROPOSAL",
+    "sender": "coder",
+    "recipient": "overseer",
+    "purpose": "Update collaboration agreement to use GitHub Issues exclusively",
+    "communication_method": {
+      "primary": "GitHub Issues",
+      "secondary": null,
+      "rationale": "GitHub Issues provides better communication with no file permission issues, remote collaboration support, persistent history, and simpler architecture"
+    },
+    "overseer_role": {
+      "name": "OverseerAI",
+      "purpose": "Coordinate between AIs, review code submissions, manage task assignment, enforce quality standards",
+      "capabilities": [
+        "review_code",
+        "approve_code",
+        "reject_code",
+        "request_changes",
+        "provide_feedback",
+        "assign_tasks",
+        "monitor_progress",
+        "enforce_quality_standards"
+      ],
+      "responsibilities": [
+        "1. OverseerAI will assign tasks to CoderAI via GitHub Issues",
+        "2. OverseerAI will review code submissions via GitHub Issues",
+        "3. OverseerAI will provide feedback on code via GitHub Issues",
+        "4. OverseerAI will approve or reject code via GitHub Issues",
+        "5. OverseerAI will monitor progress via GitHub Issues",
+        "6. OverseerAI will enforce quality standards via GitHub Issues"
+      ]
+    },
+    "coder_role": {
+      "name": "CoderAI",
+      "purpose": "Implement coding tasks, generate code based on requirements, submit code for review, handle feedback and revisions",
+      "capabilities": [
+        "write_code",
+        "implement_features",
+        "fix_bugs",
+        "refactor_code",
+        "write_tests",
+        "document_code",
+        "apply_feedback",
+        "submit_for_review"
+      ],
+      "responsibilities": [
+        "1. CoderAI will receive tasks from OverseerAI via GitHub Issues",
+        "2. CoderAI will implement features and write code",
+        "3. CoderAI will submit code for review via GitHub Issues",
+        "4. CoderAI will handle feedback via GitHub Issues",
+        "5. CoderAI will make revisions as needed",
+        "6. CoderAI will document code"
+      ]
+    },
+    "github_communication_protocol": {
+      "method": "GitHub Issues",
+      "repository": "gitbrainswift",
+      "owner": "your-username",
+      "message_format": {
+        "title_format": "[to-role] message-type: message-id-prefix",
+        "body_format": "Markdown with JSON payload in code block",
+        "labels": [
+          "gitbrain",
+          "message-{type}",
+          "to-{role}"
+        ]
+      },
+      "message_types": [
+        "task",
+        "code",
+        "review",
+        "feedback",
+        "approval",
+        "rejection",
+        "status",
+        "heartbeat"
+      ],
+      "message_lifecycle": [
+        "1. Sender creates GitHub Issue with message",
+        "2. Recipient polls for issues with 'to-{role}' label",
+        "3. Recipient processes message",
+        "4. Issue is automatically closed after processing"
+      ]
+    },
+    "proposed_agreement": {
+      "overseer_responsibilities": [
+        "1. OverseerAI will assign tasks to CoderAI via GitHub Issues",
+        "2. OverseerAI will review code submissions via GitHub Issues",
+        "3. OverseerAI will provide feedback on code via GitHub Issues",
+        "4. OverseerAI will approve or reject code via GitHub Issues",
+        "5. OverseerAI will monitor progress via GitHub Issues",
+        "6. OverseerAI will enforce quality standards via GitHub Issues"
+      ],
+      "coder_responsibilities": [
+        "1. CoderAI will receive tasks from OverseerAI via GitHub Issues",
+        "2. CoderAI will implement features and write code",
+        "3. CoderAI will submit code for review via GitHub Issues",
+        "4. CoderAI will handle feedback via GitHub Issues",
+        "5. CoderAI will make revisions as needed",
+        "6. CoderAI will document code"
+      ],
+      "communication_rules": [
+        "1. Use GitHub Issues for all communication",
+        "2. All messages will be in SendableContent format",
+        "3. Respect actor boundaries for thread safety",
+        "4. Follow Swift 6.2 best practices",
+        "5. Use GitHub Issues API for message delivery",
+        "6. Close issues after processing to maintain clean inbox",
+        "7. Use labels for filtering and organization"
+      ]
+    },
+    "advantages_of_github_issues": [
+      "No file permission issues",
+      "Works across different machines",
+      "No manual file copying required",
+      "Persistent message history",
+      "Complete audit trail",
+      "Searchable via GitHub UI",
+      "Built-in features (labels, comments, reactions)",
+      "Integrates with GitHub workflows",
+      "Can use Pull Requests for code review",
+      "Simpler architecture",
+      "Easier to debug"
+    ],
+    "setup_requirements": {
+      "github_token": "Required - Personal Access Token with 'repo' and 'issues' permissions",
+      "repository": "Required - GitHub repository for collaboration",
+      "owner": "Required - Repository owner username",
+      "environment_variables": [
+        "GITHUB_TOKEN",
+        "GITHUB_OWNER",
+        "GITHUB_REPO"
+      ]
+    },
+    "next_steps": [
+      "1. OverseerAI should acknowledge this updated proposal",
+      "2. OverseerAI should confirm GitHub repository details",
+      "3. OverseerAI should assign first task via GitHub Issue",
+      "4. CoderAI will receive task via GitHub Issue",
+      "5. CoderAI will implement and submit via GitHub Issue",
+      "6. OverseerAI will review and respond via GitHub Issue"
+    ]
+  },
+  "timestamp": "2026-02-10T22:45:00Z",
+  "priority": 1,
+  "metadata": {
+    "message_type": "updated_collaboration_proposal",
+    "sender": "coder",
+    "recipient": "overseer",
+    "communication_method": "github_issues",
+    "replaces": "collaboration_proposal_001"
+  }
+}

@@ -1,6 +1,6 @@
 import Foundation
 
-public actor OverseerAI: BaseRole {
+public struct OverseerAI: @unchecked Sendable, BaseRole {
     public let system: SystemConfig
     public let roleConfig: RoleConfig
     public let communication: any CommunicationProtocol
@@ -8,15 +8,93 @@ public actor OverseerAI: BaseRole {
     public let memoryStore: any MemoryStoreProtocol
     public let knowledgeBase: any KnowledgeBaseProtocol
     
-    private var reviewQueue: [[String: Any]] = []
-    private var reviewHistory: [[String: Any]] = []
-    private var approvedTasks: [[String: Any]] = []
-    private var rejectedTasks: [[String: Any]] = []
+    private actor Storage {
+        var reviewQueue: [[String: Any]] = []
+        var reviewHistory: [[String: Any]] = []
+        var approvedTasks: [[String: Any]] = []
+        var rejectedTasks: [[String: Any]] = []
+        
+        func addToReviewQueue(_ item: [String: Any]) {
+            reviewQueue.append(item)
+        }
+        
+        func getReviewQueue() -> TaskData {
+            return TaskData(["review_queue": reviewQueue])
+        }
+        
+        func updateReviewQueueStatus(taskID: String, status: String) {
+            if let index = reviewQueue.firstIndex(where: { ($0["task_id"] as? String) == taskID }) {
+                reviewQueue[index]["status"] = status
+            }
+        }
+        
+        func findReviewItem(taskID: String) -> TaskData? {
+            guard let index = reviewQueue.firstIndex(where: { ($0["task_id"] as? String) == taskID }) else {
+                return nil
+            }
+            return TaskData(reviewQueue[index])
+        }
+        
+        func updateReviewItemStatus(taskID: String, status: String) {
+            if let index = reviewQueue.firstIndex(where: { ($0["task_id"] as? String) == taskID }) {
+                reviewQueue[index]["status"] = status
+            }
+        }
+        
+        func removeFromReviewQueue(taskID: String) -> Bool {
+            guard let index = reviewQueue.firstIndex(where: { ($0["task_id"] as? String) == taskID }) else {
+                return false
+            }
+            reviewQueue.remove(at: index)
+            return true
+        }
+        
+        func addToReviewHistory(_ item: TaskData) {
+            reviewHistory.append(item.data)
+        }
+        
+        func getReviewHistory() -> TaskData {
+            return TaskData(["review_history": reviewHistory])
+        }
+        
+        func addToApprovedTasks(_ item: TaskData) {
+            approvedTasks.append(item.data)
+        }
+        
+        func addToRejectedTasks(_ item: TaskData) {
+            rejectedTasks.append(item.data)
+        }
+        
+        func findInReviewHistory(taskID: String) -> TaskData? {
+            guard let item = reviewHistory.first(where: { ($0["task_id"] as? String) == taskID }) else {
+                return nil
+            }
+            return TaskData(item)
+        }
+        
+        func getReviewQueueCount() -> Int {
+            return reviewQueue.count
+        }
+        
+        func getReviewHistoryCount() -> Int {
+            return reviewHistory.count
+        }
+        
+        func getApprovedTasksCount() -> Int {
+            return approvedTasks.count
+        }
+        
+        func getRejectedTasksCount() -> Int {
+            return rejectedTasks.count
+        }
+    }
+    
+    private let storage = Storage()
     
     public init(
         system: SystemConfig,
         roleConfig: RoleConfig,
-        communication: any MaildirCommunicationProtocol,
+        communication: any CommunicationProtocol,
         memoryManager: any BrainStateManagerProtocol,
         memoryStore: any MemoryStoreProtocol,
         knowledgeBase: any KnowledgeBaseProtocol
@@ -33,19 +111,19 @@ public actor OverseerAI: BaseRole {
         let initialized = try await getBrainStateValue(key: "initialized", defaultValue: false) as? Bool ?? false
         
         if !initialized {
-            try await updateBrainState(key: "initialized", value: true)
-            try await updateBrainState(key: "review_queue", value: [])
-            try await updateBrainState(key: "review_history", value: [])
-            try await updateBrainState(key: "approved_tasks", value: [])
-            try await updateBrainState(key: "rejected_tasks", value: [])
-            try await updateBrainState(key: "review_criteria", value: [
+            try await updateBrainState(key: "initialized", value: TaskData(["initialized": true]))
+            try await updateBrainState(key: "review_queue", value: TaskData(["review_queue": []]))
+            try await updateBrainState(key: "review_history", value: TaskData(["review_history": []]))
+            try await updateBrainState(key: "approved_tasks", value: TaskData(["approved_tasks": []]))
+            try await updateBrainState(key: "rejected_tasks", value: TaskData(["rejected_tasks": []]))
+            try await updateBrainState(key: "review_criteria", value: TaskData([
                 "code_quality": true,
                 "correctness": true,
                 "best_practices": true,
                 "documentation": true,
                 "testing": true
-            ])
-            try await updateBrainState(key: "strictness", value: "medium")
+            ]))
+            try await updateBrainState(key: "strictness", value: TaskData(["strictness": "medium"]))
         }
     }
     
@@ -56,99 +134,104 @@ public actor OverseerAI: BaseRole {
         case .status:
             await handleStatusUpdate(message)
         case .heartbeat:
-            await handleHeartbeat(message.content)
+            await handleHeartbeat(TaskData(message.content))
         default:
             await handleUnknownMessage(message)
         }
     }
     
-    public func handleTask(_ task: [String: Any]) async {
+    public func handleTask(_ task: TaskData) async {
     }
     
-    public func handleFeedback(_ feedback: [String: Any]) async {
+    public func handleFeedback(_ feedback: TaskData) async {
     }
     
-    public func handleApproval(_ approval: [String: Any]) async {
+    public func handleApproval(_ approval: TaskData) async {
     }
     
-    public func handleRejection(_ rejection: [String: Any]) async {
+    public func handleRejection(_ rejection: TaskData) async {
     }
     
-    public func handleHeartbeat(_ heartbeat: [String: Any]) async {
-        guard let state = heartbeat["state"] as? [String: Any] else {
+    public func handleHeartbeat(_ heartbeat: TaskData) async {
+        let heartbeatData = heartbeat.data
+        guard let state = heartbeatData["state"] as? [String: Any] else {
             return
         }
         
-        for (key, value) in state {
-            await saveMemory(key: "heartbeat_\(key)", value: value)
-        }
+        try? await updateBrainState(key: "last_heartbeat", value: state)
     }
     
-    private func handleCodeSubmission(_ message: Message) async {
-        guard let taskID = message.content["task_id"] as? String else {
+    public func handleUnknownMessage(_ message: Message) async {
+    }
+    
+    public func handleCodeSubmission(_ message: Message) async {
+        let codeData = message.content
+        
+        guard let taskID = codeData["task_id"] as? String,
+              let code = codeData["code"] as? String else {
             return
         }
         
-        let reviewItem: [String: Any] = [
+        let submission: [String: Any] = [
             "task_id": taskID,
-            "code": message.content["code"] as? String ?? "",
-            "language": message.content["language"] as? String ?? "swift",
-            "files": message.content["files"] as? [String] ?? [],
-            "from_ai": message.fromAI,
-            "message_id": message.id,
-            "timestamp": message.timestamp,
+            "code": code,
+            "language": codeData["language"] as? String ?? "swift",
+            "files": codeData["files"] as? [String] ?? [],
+            "submitted_by": message.fromAI,
+            "submitted_at": ISO8601DateFormatter().string(from: Date()),
             "status": "pending"
         ]
         
-        reviewQueue.append(reviewItem)
-        try? await updateBrainState(key: "review_queue", value: reviewQueue)
+        await storage.addToReviewQueue(submission)
+        let reviewQueueValue = await storage.getReviewQueue()
+        try? await updateBrainState(key: "review_queue", value: reviewQueueValue)
     }
     
-    private func handleStatusUpdate(_ message: Message) async {
-        guard let status = message.content["status"] as? String else {
+    public func handleStatusUpdate(_ message: Message) async {
+        let statusData = message.content
+        
+        guard let taskID = statusData["task_id"] as? String,
+              let status = statusData["status"] as? String else {
             return
         }
         
-        try? await addKnowledge(
-            category: "status_updates",
-            key: message.id,
-            value: [
-                "from_ai": message.fromAI,
-                "status": status,
-                "details": message.content["details"] as? [String: Any] ?? [:],
-                "timestamp": message.timestamp
-            ]
-        )
+        if status == "completed" {
+            await storage.updateReviewQueueStatus(taskID: taskID, status: "ready_for_review")
+            let reviewQueueValue = await storage.getReviewQueue()
+            try? await updateBrainState(key: "review_queue", value: reviewQueueValue)
+        }
     }
     
-    private func handleUnknownMessage(_ message: Message) async {
-        try? await addKnowledge(
-            category: "unknown_messages",
-            key: message.id,
-            value: [
-                "message_type": message.messageType.rawValue,
-                "from": message.fromAI,
-                "content": message.content,
-                "timestamp": message.timestamp
-            ]
-        )
+    public nonisolated func reviewCode(taskID: String) async -> [String: Any]? {
+        return await withUnsafeContinuation { continuation in
+            Task {
+                let result = await self.reviewCodeInternal(taskID: taskID)
+                continuation.resume(returning: result)
+            }
+        }
     }
     
-    public func reviewCode(taskID: String) async -> [String: Any]? {
-        guard let index = reviewQueue.firstIndex(where: { ($0["task_id"] as? String) == taskID }) else {
+    private func reviewCodeInternal(taskID: String) async -> [String: Any]? {
+        guard let reviewItemTaskData = await storage.findReviewItem(taskID: taskID) else {
             return nil
         }
         
-        let reviewItem = reviewQueue[index]
-        reviewItem["status"] = "reviewing"
-        try? await updateBrainState(key: "review_queue", value: reviewQueue)
+        let reviewItem = reviewItemTaskData.data
+        
+        await storage.updateReviewItemStatus(taskID: taskID, status: "reviewing")
+        let reviewQueueValue = await storage.getReviewQueue()
+        try? await updateBrainState(key: "review_queue", value: reviewQueueValue)
         
         let reviewResult = await performReview(reviewItem)
+        let reviewResultTaskData = TaskData(reviewResult)
         
-        reviewQueue.remove(at: index)
-        reviewHistory.append(reviewResult)
-        try? await updateBrainState(key: "review_queue", value: reviewQueue)
-        try? await updateBrainState(key: "review_history", value: reviewHistory)
+        _ = await storage.removeFromReviewQueue(taskID: taskID)
+        await storage.addToReviewHistory(reviewResultTaskData)
+        
+        let updatedReviewQueueValue = await storage.getReviewQueue()
+        let reviewHistoryValue = await storage.getReviewHistory()
+        try? await updateBrainState(key: "review_queue", value: updatedReviewQueueValue)
+        try? await updateBrainState(key: "review_history", value: reviewHistoryValue)
         
         return reviewResult
     }
@@ -164,79 +247,60 @@ public actor OverseerAI: BaseRole {
         
         let reviewResult: [String: Any] = [
             "task_id": taskID,
+            "code": code,
             "comments": comments,
             "approved": approved,
             "reviewed_at": ISO8601DateFormatter().string(from: Date()),
             "reviewer": roleConfig.name
         ]
         
+        let reviewResultTaskData = TaskData(reviewResult)
+        
         if approved {
-            approvedTasks.append(reviewResult)
-            try? await updateBrainState(key: "approved_tasks", value: approvedTasks)
+            await storage.addToApprovedTasks(reviewResultTaskData)
+            let approvedTasksValue = await storage.getApprovedTasksCount()
+            try? await updateBrainState(key: "approved_tasks", value: TaskData(["approved_tasks_count": approvedTasksValue]))
         } else {
-            rejectedTasks.append(reviewResult)
-            try? await updateBrainState(key: "rejected_tasks", value: rejectedTasks)
+            await storage.addToRejectedTasks(reviewResultTaskData)
+            let rejectedTasksValue = await storage.getRejectedTasksCount()
+            try? await updateBrainState(key: "rejected_tasks", value: TaskData(["rejected_tasks_count": rejectedTasksValue]))
         }
         
         return reviewResult
     }
     
-    private func generateReviewComments(code: String) async -> [[String: Any]] {
-        var comments: [[String: Any]] = []
+    private func generateReviewComments(code: String) async -> [String] {
+        var comments: [String] = []
         
-        let lines = code.components(separatedBy: "\n")
-        for (index, line) in lines.enumerated() {
-            if line.trimmingCharacters(in: .whitespaces).isEmpty {
-                continue
-            }
-            
-            if line.contains("TODO") || line.contains("FIXME") {
-                comments.append([
-                    "line": index + 1,
-                    "type": "warning",
-                    "message": "Found TODO/FIXME comment"
-                ])
-            }
-            
-            if line.contains("print(") && !line.contains("//") {
-                comments.append([
-                    "line": index + 1,
-                    "type": "info",
-                    "message": "Consider removing debug print statement"
-                ])
-            }
+        if code.isEmpty {
+            comments.append("Code is empty")
+        }
+        
+        if code.count < 10 {
+            comments.append("Code is too short")
+        }
+        
+        if !code.contains("func") && !code.contains("function") && !code.contains("def") {
+            comments.append("No function definitions found")
         }
         
         if comments.isEmpty {
-            comments.append([
-                "line": 1,
-                "type": "info",
-                "message": "Code looks good"
-            ])
+            comments.append("Code looks good")
         }
         
         return comments
     }
     
-    private func shouldApprove(comments: [[String: Any]]) async -> Bool {
-        let strictness = (try? await getBrainStateValue(key: "strictness", defaultValue: "medium") as? String) ?? "medium"
-        
-        let hasWarnings = comments.contains { ($0["type"] as? String) == "warning" }
-        let hasErrors = comments.contains { ($0["type"] as? String) == "error" }
-        
-        if hasErrors {
-            return false
+    private func shouldApprove(comments: [String]) async -> Bool {
+        let criticalComments = comments.filter { comment in
+            comment.contains("empty") || comment.contains("too short") || comment.contains("No function")
         }
         
-        if strictness == "strict" && hasWarnings {
-            return false
-        }
-        
-        return true
+        return criticalComments.isEmpty
     }
     
     public func approveCode(taskID: String, coder: String = "coder") async throws -> String {
-        guard let review = reviewHistory.first(where: { ($0["task_id"] as? String) == taskID }) else {
+        guard let review = await storage.findInReviewHistory(taskID: taskID) else {
             throw ReviewError.reviewNotFound
         }
         
@@ -248,11 +312,12 @@ public actor OverseerAI: BaseRole {
             reason: "Code meets quality standards"
         )
         
-        return try await sendMessage(message)
+        let issueURL = try await sendMessage(message)
+        return issueURL.absoluteString
     }
     
     public func rejectCode(taskID: String, reason: String, coder: String = "coder") async throws -> String {
-        guard let review = reviewHistory.first(where: { ($0["task_id"] as? String) == taskID }) else {
+        guard let review = await storage.findInReviewHistory(taskID: taskID) else {
             throw ReviewError.reviewNotFound
         }
         
@@ -264,7 +329,8 @@ public actor OverseerAI: BaseRole {
             reason: reason
         )
         
-        return try await sendMessage(message)
+        let issueURL = try await sendMessage(message)
+        return issueURL.absoluteString
     }
     
     public func requestChanges(taskID: String, feedback: String, coder: String = "coder") async throws -> String {
@@ -276,7 +342,8 @@ public actor OverseerAI: BaseRole {
             actionRequired: true
         )
         
-        return try await sendMessage(message)
+        let issueURL = try await sendMessage(message)
+        return issueURL.absoluteString
     }
     
     public func assignTask(taskID: String, coder: String = "coder", description: String, taskType: String = "coding") async throws -> String {
@@ -300,36 +367,62 @@ public actor OverseerAI: BaseRole {
             ]
         )
         
-        return try await sendMessage(message)
+        let issueURL = try await sendMessage(message)
+        return issueURL.absoluteString
     }
     
-    public func getCapabilities() -> [String] {
+    public nonisolated func getCapabilities() -> [String] {
         return [
             "review_code",
             "approve_code",
             "reject_code",
             "request_changes",
-            "provide_feedback",
             "assign_tasks",
             "monitor_progress",
-            "enforce_quality_standards"
+            "provide_feedback"
         ]
     }
     
-    public func getStatus() async -> [String: Any] {
-        return [
+    public nonisolated func getStatus() async -> TaskData {
+        return await withUnsafeContinuation { continuation in
+            Task {
+                let status = await self.getStatusInternal()
+                continuation.resume(returning: status)
+            }
+        }
+    }
+    
+    private func getStatusInternal() async -> TaskData {
+        let reviewQueueCount = await storage.getReviewQueueCount()
+        let reviewHistoryCount = await storage.getReviewHistoryCount()
+        let approvedTasksCount = await storage.getApprovedTasksCount()
+        let rejectedTasksCount = await storage.getRejectedTasksCount()
+        
+        let status: [String: Any] = [
             "role": "OverseerAI",
-            "review_queue_count": reviewQueue.count,
-            "review_history_count": reviewHistory.count,
-            "approved_tasks_count": approvedTasks.count,
-            "rejected_tasks_count": rejectedTasks.count,
+            "review_queue_count": reviewQueueCount,
+            "review_history_count": reviewHistoryCount,
+            "approved_tasks_count": approvedTasksCount,
+            "rejected_tasks_count": rejectedTasksCount,
             "capabilities": getCapabilities()
         ]
+        return TaskData(status)
     }
 }
 
-public enum ReviewError: Error {
+public enum ReviewError: Error, LocalizedError {
     case reviewNotFound
     case invalidTaskID
-    case codeSubmissionNotFound
+    case reviewInProgress
+    
+    public var errorDescription: String? {
+        switch self {
+        case .reviewNotFound:
+            return "Review not found for the specified task"
+        case .invalidTaskID:
+            return "Invalid task ID provided"
+        case .reviewInProgress:
+            return "Review is already in progress for this task"
+        }
+    }
 }

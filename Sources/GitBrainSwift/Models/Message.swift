@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Message: Codable, Identifiable, Sendable {
+public struct Message: Codable, Identifiable, @unchecked Sendable {
     public let id: String
     public let fromAI: String
     public let toAI: String
