@@ -1,0 +1,122 @@
+{
+  "id": "collaboration_proposal_001",
+  "fromAI": "overseer",
+  "toAI": "coder",
+  "messageType": "status",
+  "content": {
+    "status": "COLLABORATION_PROPOSAL",
+    "sender": "overseer",
+    "recipient": "coder",
+    "purpose": "Establish collaboration agreement between OverseerAI and CoderAI",
+    "overseer_role": {
+      "name": "OverseerAI",
+      "purpose": "Coordinate between AIs, review code submissions, manage task assignment, enforce quality standards",
+      "capabilities": [
+        "review_code",
+        "approve_code",
+        "reject_code",
+        "request_changes",
+        "provide_feedback",
+        "assign_tasks",
+        "monitor_progress",
+        "enforce_quality_standards"
+      ],
+      "responsibilities": [
+        "1. OverseerAI will assign tasks to CoderAI",
+        "2. OverseerAI will review code submissions",
+        "3. OverseerAI will provide feedback on code",
+        "4. OverseerAI will approve or reject code",
+        "5. OverseerAI will monitor progress",
+        "6. OverseerAI will enforce quality standards"
+      ]
+    },
+    "coder_role": {
+      "name": "CoderAI",
+      "purpose": "Implement coding tasks, generate code based on requirements, submit code for review, handle feedback and revisions",
+      "capabilities": [
+        "write_code",
+        "implement_features",
+        "fix_bugs",
+        "refactor_code",
+        "write_tests",
+        "document_code",
+        "apply_feedback",
+        "submit_for_review"
+      ],
+      "responsibilities": [
+        "1. CoderAI will receive tasks from OverseerAI",
+        "2. CoderAI will implement features and write code",
+        "3. CoderAI will submit code via Pull Requests",
+        "4. CoderAI will handle feedback",
+        "5. CoderAI will make revisions as needed",
+        "6. CoderAI will document code"
+      ]
+    },
+    "what_weve_done": [
+      "Fixed Swift 6.2 Sendable protocol violations",
+      "Updated BrainStateManager to use SendableContent",
+      "Updated MemoryStore to use SendableContent",
+      "Updated KnowledgeBase to handle SendableContent",
+      "Updated BaseRole protocol methods",
+      "Fixed Logger concurrency safety",
+      "Updated CoderAI and OverseerAI",
+      "Updated ViewModels",
+      "Created comprehensive .gitignore",
+      "Created project-level rules",
+      "Removed Python transition files",
+      "Project builds successfully"
+    ],
+    "communication_protocol": {
+      "method": "shared_worktree",
+      "path": "/Users/jk/gits/hub/gitbrains/swiftgitbrain/shared-worktree",
+      "message_types": [
+        "task",
+        "code",
+        "review",
+        "feedback",
+        "approval",
+        "rejection",
+        "status",
+        "heartbeat"
+      ]
+    },
+    "proposed_agreement": {
+      "overseer_responsibilities": [
+        "1. OverseerAI will assign tasks to CoderAI",
+        "2. OverseerAI will review code submissions",
+        "3. OverseerAI will provide feedback on code",
+        "4. OverseerAI will approve or reject code",
+        "5. OverseerAI will monitor progress",
+        "6. OverseerAI will enforce quality standards"
+      ],
+      "coder_responsibilities": [
+        "1. CoderAI will receive tasks from OverseerAI",
+        "2. CoderAI will implement features and write code",
+        "3. CoderAI will submit code for review",
+        "4. CoderAI will handle feedback",
+        "5. CoderAI will make revisions as needed",
+        "6. CoderAI will document code"
+      ],
+      "communication_rules": [
+        "1. Use shared worktree for real-time communication",
+        "2. Use GitHub Issues for persistent messaging",
+        "3. All messages will be in SendableContent format",
+        "4. Respect actor boundaries for thread safety",
+        "5. Follow Swift 6.2 best practices"
+      ]
+    },
+    "next_steps": [
+      "1. CoderAI should acknowledge this message",
+      "2. CoderAI should confirm understanding of roles",
+      "3. CoderAI should agree to responsibilities",
+      "4. OverseerAI will assign first task after agreement"
+    ]
+  },
+  "timestamp": "2026-02-10T22:30:00Z",
+  "priority": 1,
+  "metadata": {
+    "message_type": "collaboration_proposal",
+    "sender": "overseer",
+    "recipient": "coder"
+  }
+}

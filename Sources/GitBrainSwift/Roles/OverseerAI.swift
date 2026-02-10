@@ -148,7 +148,7 @@ public actor OverseerAI: BaseRole {
             return nil
         }
         
-        let reviewItem = reviewQueue[index]
+        var reviewItem = reviewQueue[index]
         reviewItem["status"] = "reviewing"
         try? await updateBrainState(key: "review_queue", value: SendableContent(["value": reviewQueue]))
         
@@ -228,7 +228,9 @@ public actor OverseerAI: BaseRole {
     }
     
     private func shouldApprove(comments: [[String: Any]]) async -> Bool {
-        let strictness = (try? await getBrainStateValue(key: "strictness", defaultValue: "medium") as? String) ?? "medium"
+        let defaultValue = SendableContent(["value": "medium"])
+        let strictnessContent = (try? await getBrainStateValue(key: "strictness", defaultValue: defaultValue)) ?? defaultValue
+        let strictness = strictnessContent.data["value"] as? String ?? "medium"
         
         let hasWarnings = comments.contains { ($0["type"] as? String) == "warning" }
         let hasErrors = comments.contains { ($0["type"] as? String) == "error" }
@@ -244,7 +246,7 @@ public actor OverseerAI: BaseRole {
         return true
     }
     
-    public func approveCode(taskID: String, coder: String = "coder") async throws -> String {
+    public func approveCode(taskID: String, coder: String = "coder") async throws -> URL {
         guard let review = reviewHistory.first(where: { ($0["task_id"] as? String) == taskID }) else {
             throw ReviewError.reviewNotFound
         }
@@ -260,7 +262,7 @@ public actor OverseerAI: BaseRole {
         return try await sendMessage(message)
     }
     
-    public func rejectCode(taskID: String, reason: String, coder: String = "coder") async throws -> String {
+    public func rejectCode(taskID: String, reason: String, coder: String = "coder") async throws -> URL {
         guard let review = reviewHistory.first(where: { ($0["task_id"] as? String) == taskID }) else {
             throw ReviewError.reviewNotFound
         }
@@ -276,7 +278,7 @@ public actor OverseerAI: BaseRole {
         return try await sendMessage(message)
     }
     
-    public func requestChanges(taskID: String, feedback: String, coder: String = "coder") async throws -> String {
+    public func requestChanges(taskID: String, feedback: String, coder: String = "coder") async throws -> URL {
         let message = MessageBuilder.createFeedbackMessage(
             fromAI: roleConfig.name,
             toAI: coder,
@@ -288,7 +290,7 @@ public actor OverseerAI: BaseRole {
         return try await sendMessage(message)
     }
     
-    public func assignTask(taskID: String, coder: String = "coder", description: String, taskType: String = "coding") async throws -> String {
+    public func assignTask(taskID: String, coder: String = "coder", description: String, taskType: String = "coding") async throws -> URL {
         let message = MessageBuilder.createTaskMessage(
             fromAI: roleConfig.name,
             toAI: coder,
@@ -301,12 +303,12 @@ public actor OverseerAI: BaseRole {
         try? await addKnowledge(
             category: "assigned_tasks",
             key: taskID,
-            value: [
+            value: SendableContent([
                 "description": description,
                 "type": taskType,
                 "assigned_to": coder,
                 "assigned_at": ISO8601DateFormatter().string(from: Date())
-            ]
+            ])
         )
         
         return try await sendMessage(message)

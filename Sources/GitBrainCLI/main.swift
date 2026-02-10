@@ -145,7 +145,7 @@ struct GitBrainCLI {
         )
         
         for role in roles {
-            monitor.registerHandler(for: role) { message in
+            await monitor.registerHandler(for: role) { message in
                 print("[\(message.fromAI) -> \(message.toAI)] [\(message.messageType.rawValue)] \(message.timestamp)")
                 print("  Content: \(message.content)")
             }
@@ -156,13 +156,19 @@ struct GitBrainCLI {
         print("✓ Daemon started")
         print("Press Ctrl+C to stop")
         
-        signal(SIGINT) { _ in
-            print("\nStopping daemon...")
-            monitor.stop()
-            exit(0)
+        let task = Task {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            }
+            await monitor.stop()
         }
         
-        RunLoop.current.run()
+        await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            print("\nStopping daemon...")
+            task.cancel()
+        }
     }
     
     private static func handleStatus(args: [String]) async throws {

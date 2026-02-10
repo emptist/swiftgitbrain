@@ -72,7 +72,11 @@ public actor BrainStateManager: BrainStateManagerProtocol {
         }
         
         if let value = brainState.getState(key: key, defaultValue: defaultValue?.toAnyDict()) {
-            return SendableContent(value)
+            if let dictValue = value as? [String: Any] {
+                return SendableContent(dictValue)
+            } else if let sendableValue = value as? SendableContent {
+                return sendableValue
+            }
         }
         return defaultValue
     }
@@ -96,7 +100,7 @@ public actor BrainStateManager: BrainStateManagerProtocol {
         let files = try fileManager.contentsOfDirectory(at: brainstateBase, includingPropertiesForKeys: nil)
         return files
             .filter { $0.pathExtension == "json" }
-            .map { $0.deletingPathExtension().replacingOccurrences(of: "_state", with: "") }
+            .map { $0.deletingPathExtension().lastPathComponent.replacingOccurrences(of: "_state", with: "") }
     }
     
     public func backupBrainState(aiName: String, backupSuffix: String? = nil) async throws -> String? {

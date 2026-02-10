@@ -1,5 +1,10 @@
 import Foundation
 
+public enum CoderError: Error {
+    case noCurrentTask
+    case codeGenerationFailed
+}
+
 public actor CoderAI: BaseRole {
     public let system: SystemConfig
     public let roleConfig: RoleConfig
@@ -113,13 +118,13 @@ public actor CoderAI: BaseRole {
         return SendableContent(codeSubmission)
     }
     
-    public func submitCode(reviewer: String = "overseer") async throws -> String {
+    public func submitCode(reviewer: String = "overseer") async throws -> URL {
         guard let currentTask = currentTask else {
-            return ""
+            throw CoderError.noCurrentTask
         }
         
         guard let codeSubmission = await implementTask() else {
-            return ""
+            throw CoderError.codeGenerationFailed
         }
         
         let codeSubmissionDict = codeSubmission.toAnyDict()
@@ -229,7 +234,9 @@ public actor CoderAI: BaseRole {
     }
     
     private func generateCode(description: String) async -> String {
-        let language = (try? await getBrainStateValue(key: "preferred_language", defaultValue: "swift") as? String) ?? "swift"
+        let defaultValue = SendableContent(["value": "swift"])
+        let languageContent = (try? await getBrainStateValue(key: "preferred_language", defaultValue: defaultValue)) ?? defaultValue
+        let language = languageContent.data["value"] as? String ?? "swift"
         
         if language == "swift" {
             return await generateSwiftCode(description: description)
@@ -273,11 +280,11 @@ if __name__ == "__main__":
         try? await addKnowledge(
             category: "improvements",
             key: "latest",
-            value: [
+            value: SendableContent([
                 "feedback": feedback,
                 "applied": true,
                 "timestamp": ISO8601DateFormatter().string(from: Date())
-            ]
+            ])
         )
     }
     

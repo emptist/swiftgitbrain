@@ -13,32 +13,27 @@ public enum Logger {
     
     public static func debug(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .debug else { return }
-        let logger = OSLog(subsystem: subsystem, category: category)
-        logger.debug("\(message)", file: file, function: function, line: line)
+        os_log("%{public}@", dso: #dsohandle, log: OSLog(subsystem: subsystem, category: category), type: .info, message)
     }
     
     public static func info(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .info else { return }
-        let logger = OSLog(subsystem: subsystem, category: category)
-        logger.info("\(message)", file: file, function: function, line: line)
+        os_log("%{public}@", dso: #dsohandle, log: OSLog(subsystem: subsystem, category: category), type: .info, message)
     }
     
     public static func warning(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .warning else { return }
-        let logger = OSLog(subsystem: subsystem, category: category)
-        logger.warning("\(message)", file: file, function: function, line: line)
+        os_log("%{public}@", dso: #dsohandle, log: OSLog(subsystem: subsystem, category: category), type: .default, message)
     }
     
     public static func error(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .error else { return }
-        let logger = OSLog(subsystem: subsystem, category: category)
-        logger.error("\(message)", file: file, function: function, line: line)
+        os_log("%{public}@", dso: #dsohandle, log: OSLog(subsystem: subsystem, category: category), type: .error, message)
     }
     
     public static func fault(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         guard logLevel <= .fault else { return }
-        let logger = OSLog(subsystem: subsystem, category: category)
-        logger.critical("\(message)", file: file, function: function, line: line)
+        os_log("%{public}@", dso: #dsohandle, log: OSLog(subsystem: subsystem, category: category), type: .fault, message)
     }
     
     public static func log(_ level: LogLevel, _ message: String, file: String = #file, function: String = #function, line: Int = #line) {

@@ -3,7 +3,7 @@ import Foundation
 public extension URL {
     public var isDirectory: Bool {
         var isDirectory: ObjCBool = false
-        (try? resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
+        return (try? resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
     }
     
     public var exists: Bool {
