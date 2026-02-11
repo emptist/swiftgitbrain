@@ -489,6 +489,10 @@ Or remove the package dependency from your `Package.swift`.
 
 For detailed information about design decisions and architectural choices, see [DESIGN_DECISIONS.md](Documentation/DESIGN_DECISIONS.md).
 
+## Development
+
+For information on building, testing, and contributing to GitBrainSwift, see [DEVELOPMENT.md](Documentation/DEVELOPMENT.md).
+
 ## License
 
 MIT License

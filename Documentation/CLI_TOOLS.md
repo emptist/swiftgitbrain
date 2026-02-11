@@ -646,3 +646,4 @@ For issues and questions:
 - [README.md](../README.md) - Main project documentation
 - [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) - Design decisions and rationale
 - [CROSS_LANGUAGE_DEPLOYMENT.md](CROSS_LANGUAGE_DEPLOYMENT.md) - Cross-language usage examples
+- [DEVELOPMENT.md](DEVELOPMENT.md) - Building, testing, and contributing
