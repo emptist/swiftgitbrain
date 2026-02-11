@@ -77,7 +77,7 @@ Initialization complete!
 
 Next steps:
 1. Open Trae at project root for CoderAI: trae .
-2. Open Trae at GitBrain/Overseer for OverseerAI: trae ./GitBrain/Overseer
+2. Open Trae at GitBrain for OverseerAI: trae ./GitBrain
 3. Ask each AI to read GitBrain/Docs/ to understand their role
 ```
 
@@ -349,7 +349,7 @@ gitbrain init
 trae .
 
 # Open Trae for OverseerAI (in another terminal)
-trae ./GitBrain/Overseer
+trae ./GitBrain
 ```
 
 ### Sending a Task to CoderAI

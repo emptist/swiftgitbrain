@@ -113,7 +113,7 @@ Project/
 
 **Rationale**:
 - CoderAI has full project access (runs from root)
-- OverseerAI needs isolated workspace (runs from GitBrain/Overseer/)
+- OverseerAI needs isolated workspace (runs from GitBrain/)
 - Memory folder serves as shared communication channel
 - Simpler structure reduces confusion
 
@@ -125,7 +125,7 @@ Project/
 
 ```
 CoderAI (root/) ──writes──> GitBrain/Overseer/
-OverseerAI (GitBrain/Overseer/) ──reads──> GitBrain/Overseer/
+OverseerAI (GitBrain/) ──reads──> GitBrain/Overseer/
 OverseerAI ──writes──> GitBrain/Memory/
 CoderAI ──reads──> GitBrain/Memory/
 ```

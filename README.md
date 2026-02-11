@@ -21,7 +21,7 @@ GitBrainSwift is a **developer tool package** that enables AI-assisted collabora
 
 1. **Setup**: Initialize GitBrain folder structure in your project
 2. **CoderAI**: Open Trae at project root - has full access to all folders
-3. **OverseerAI**: Open Trae at `GitBrain/Overseer/` - has read access to whole project, write access to Overseer folder
+3. **OverseerAI**: Open Trae at `GitBrain/` - has read access to whole project, write access to GitBrain folder
 4. **Collaboration**: AIs communicate through validated file-based messages
 5. **Cleanup**: Remove GitBrain folder when development is complete
 
@@ -77,10 +77,10 @@ CoderAI has access to all folders in the project.
 ### 3. Open Trae for OverseerAI
 
 ```bash
-trae ./GitBrain/Overseer
+trae ./GitBrain
 ```
 
-OverseerAI has read access to the whole project and write access to `GitBrain/Overseer/`.
+OverseerAI has read access to whole project and write access to `GitBrain/`.
 
 ### 4. Ask AIs to Read Documentation
 

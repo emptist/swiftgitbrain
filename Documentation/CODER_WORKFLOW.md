@@ -27,6 +27,98 @@ As CoderAI, your role is to:
 5. **Apply changes** based on reviews
 6. **Iterate** until approval
 
+## 🧠 AI Communication Guidelines
+
+**CRITICAL: Show Your Thinking Process**
+
+When working on tasks, you MUST show your thinking process. Do NOT just complete tasks without explanation.
+
+### Required Thinking Process
+
+For every task, explain:
+
+**1. Problem Analysis**
+- What problem are you solving?
+- What are the requirements?
+- What constraints exist?
+
+**2. Approach Selection**
+- What approach did you choose?
+- Why this approach?
+- What alternatives did you consider?
+- Why did you reject other approaches?
+
+**3. Implementation Reasoning**
+- How does this code work?
+- Why is it structured this way?
+- What patterns are you following?
+- How does it fit into the architecture?
+
+**4. Trade-offs and Decisions**
+- What are the pros/cons of this approach?
+- What compromises were made?
+- What are the limitations?
+
+### Example: Good Response
+
+```markdown
+🤔 Thinking: I need to implement SendableContent type...
+
+📋 Problem Analysis:
+- Missing type definition causing build errors
+- Requirements: Thread-safe, Codable, Sendable protocol
+- Constraints: Must work with existing codebase
+
+💡 Approach Selection:
+- Approach A: Use [String: Any] dictionary
+  ❌ Rejected: Not Sendable, causes data races
+- Approach B: Create CodableAny enum wrapper
+  ✅ Selected: Type-safe, Codable, Sendable compliant
+
+🔧 Implementation Reasoning:
+- Enum with cases for each type (String, Int, etc.)
+- Each case conforms to Codable
+- Provides type-safe accessors
+- Converts to/from [String: Any] for compatibility
+
+⚖️ Trade-offs:
+- Pros: Thread-safe, type-safe, clear API
+- Cons: Additional wrapper layer (minimal overhead)
+```
+
+### When to Show Thinking
+
+**Always show thinking when:**
+- Starting a new task
+- Making design decisions
+- Choosing between alternatives
+- Implementing complex features
+- Refactoring code
+- Addressing review comments
+
+**Brief explanations for:**
+- Simple, straightforward changes
+- Minor fixes
+- Documentation updates
+
+### Communication Style
+
+**Use clear sections:**
+- 🤔 Thinking - Your thought process
+- 📋 Analysis - Problem analysis
+- 💡 Decision - Your choice and why
+- 🔧 Implementation - How you implemented it
+- ⚖️ Trade-offs - Pros and cons
+- ✅ Completed - What was done
+
+**Be transparent:**
+- Admit when you're uncertain
+- Ask questions when requirements are unclear
+- Explain your reasoning clearly
+- Show alternatives you considered
+
+This ensures OverseerAI (and humans) can understand your decisions and provide meaningful feedback.
+
 ## GitBrain Folder Structure
 
 ```
@@ -70,7 +162,7 @@ When working on a task, create educational materials:
 
 **Where to Create:**
 - **Code**: In the project source folders (e.g., `Sources/`, `Tests/`)
-- **Documentation**: In project documentation folder
+- **Documentation**: In the project documentation folder
 - **Examples**: In `Examples/` or `Demo/` folders
 
 **Example Educational Material Structure:**
@@ -104,15 +196,19 @@ Create a review request message and place it in `GitBrain/Overseer/`:
 
 ```bash
 gitbrain send overseer '{
-  "type": "code",
-  "task_id": "task-001",
-  "description": "Implementation of feature X",
-  "files": [
-    "Sources/FeatureX.swift",
-    "Tests/FeatureXTests.swift",
-    "Documentation/FeatureX.md"
-  ],
-  "changes": "Added feature X with full test coverage"
+  "type": "status",
+  "status": "completed",
+  "message": "Implementation of feature X",
+  "progress": 100,
+  "current_task": {
+    "task_id": "task-001",
+    "description": "Implementation of feature X",
+    "files": [
+      "Sources/FeatureX.swift",
+      "Tests/FeatureXTests.swift",
+      "Documentation/FeatureX.md"
+    ]
+  }
 }'
 ```
 
@@ -126,15 +222,19 @@ Create a file in `GitBrain/Overseer/` with format:
   "to": "overseer",
   "timestamp": "2026-02-11T12:00:00Z",
   "content": {
-    "type": "code",
-    "task_id": "task-001",
-    "description": "Implementation of feature X",
-    "files": [
-      "Sources/FeatureX.swift",
-      "Tests/FeatureXTests.swift",
-      "Documentation/FeatureX.md"
-    ],
-    "changes": "Added feature X with full test coverage"
+    "type": "status",
+    "status": "completed",
+    "message": "Implementation of feature X",
+    "progress": 100,
+    "current_task": {
+      "task_id": "task-001",
+      "description": "Implementation of feature X",
+      "files": [
+        "Sources/FeatureX.swift",
+        "Tests/FeatureXTests.swift",
+        "Documentation/FeatureX.md"
+      ]
+    }
   }
 }
 ```
@@ -143,8 +243,7 @@ Create a file in `GitBrain/Overseer/` with format:
 
 | Type | Purpose | When to Use |
 |------|---------|-------------|
-| `code` | Submit code for review | After implementing a feature |
-| `status` | Provide status update | When progress is made |
+| `status` | Provide status update | When progress is made or work is ready for review |
 | `feedback` | Respond to review | When addressing review comments |
 | `heartbeat` | Keep-alive message | Periodically to show activity |
 
@@ -157,9 +256,7 @@ OverseerAI will:
 
 **Where OverseerAI Places Reviews:**
 
-OverseerAI will place review messages in your designated review location. By default, this is typically:
-- `GitBrain/Reviews/` (if you create this folder)
-- Or a location specified in your initial setup
+OverseerAI will place review messages in `GitBrain/Memory/` for CoderAI to read.
 
 **Review Message Format:**
 
@@ -240,14 +337,18 @@ gitbrain check coder
 
 # 3. Resubmit
 gitbrain send overseer '{
-  "type": "code",
-  "task_id": "task-001",
-  "description": "Fixed issues from review",
-  "files": [
-    "Sources/FeatureX.swift",
-    "Tests/FeatureXTests.swift"
-  ],
-  "changes": "Added error handling and edge case tests",
+  "type": "status",
+  "status": "completed",
+  "message": "Fixed issues from review",
+  "progress": 100,
+  "current_task": {
+    "task_id": "task-001",
+    "description": "Fixed issues from review",
+    "files": [
+      "Sources/FeatureX.swift",
+      "Tests/FeatureXTests.swift"
+    ]
+  },
   "review_response": "Addressed all review comments"
 }'
 ```
@@ -275,15 +376,19 @@ Create files:
 
 ```bash
 gitbrain send overseer '{
-  "type": "code",
-  "task_id": "auth-001",
-  "description": "User authentication implementation",
-  "files": [
-    "Sources/Auth/UserAuth.swift",
-    "Tests/AuthTests.swift",
-    "Documentation/UserAuth.md"
-  ],
-  "changes": "Implemented user authentication with password hashing"
+  "type": "status",
+  "status": "completed",
+  "message": "User authentication implementation",
+  "progress": 100,
+  "current_task": {
+    "task_id": "auth-001",
+    "description": "User authentication implementation",
+    "files": [
+      "Sources/Auth/UserAuth.swift",
+      "Tests/AuthTests.swift",
+      "Documentation/UserAuth.md"
+    ]
+  }
 }'
 ```
 
@@ -343,14 +448,18 @@ Messages:
 
 ```bash
 gitbrain send overseer '{
-  "type": "code",
-  "task_id": "auth-001",
-  "description": "Fixed security and test issues",
-  "files": [
-    "Sources/Auth/UserAuth.swift",
-    "Tests/AuthTests.swift"
-  ],
-  "changes": "Replaced MD5 with bcrypt, added invalid credentials test",
+  "type": "status",
+  "status": "completed",
+  "message": "Fixed security and test issues",
+  "progress": 100,
+  "current_task": {
+    "task_id": "auth-001",
+    "description": "Fixed security and test issues",
+    "files": [
+      "Sources/Auth/UserAuth.swift",
+      "Tests/AuthTests.swift"
+    ]
+  },
   "review_response": "Addressed all review comments"
 }'
 ```
@@ -418,7 +527,7 @@ Task complete! CoderAI can now proceed to the next task.
 **Solutions:**
 - Check that OverseerAI is running
 - Verify message was placed in correct folder (`GitBrain/Overseer/`)
-- Check for review messages in your designated review location
+- Check for review messages in `GitBrain/Memory/`
 - Use `gitbrain check coder` to see all messages
 
 ### Unclear Review Comments
@@ -445,7 +554,7 @@ Task complete! CoderAI can now proceed to the next task.
 | Command | Purpose | Example |
 |----------|---------|---------|
 | `gitbrain init` | Initialize GitBrain folder | `gitbrain init` |
-| `gitbrain send overseer <json>` | Send message to OverseerAI | `gitbrain send overseer '{"type":"code",...}'` |
+| `gitbrain send overseer <json>` | Send message to OverseerAI | `gitbrain send overseer '{"type":"status",...}'` |
 | `gitbrain check coder` | Check messages from OverseerAI | `gitbrain check coder` |
 | `gitbrain clear coder` | Clear old messages | `gitbrain clear coder` |
 
@@ -455,6 +564,7 @@ Task complete! CoderAI can now proceed to the next task.
 - [CLI_TOOLS.md](CLI_TOOLS.md) - CLI tool usage
 - [DEVELOPMENT.md](DEVELOPMENT.md) - Building and testing
 - [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) - Architecture decisions
+- [OVERSEER_WORKFLOW.md](OVERSEER_WORKFLOW.md) - OverseerAI workflow guide
 
 ## Summary
 

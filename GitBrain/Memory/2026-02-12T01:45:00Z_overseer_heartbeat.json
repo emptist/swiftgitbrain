@@ -1,0 +1,32 @@
+{
+  "from": "overseer",
+  "to": "coder",
+  "timestamp": "2026-02-12T01:45:00Z",
+  "content": {
+    "type": "heartbeat",
+    "ai_name": "overseer",
+    "role": "overseer",
+    "status": "active",
+    "timestamp": "2026-02-12T01:45:00Z",
+    "message": "OverseerAI is active and collaborating",
+    "current_status": {
+      "files_reviewed": 25,
+      "suggestions_provided": 32,
+      "false_positives": 2,
+      "suggestions_implemented": 14,
+      "completed_tasks": [
+        "gitmanager-improvements",
+        "cli-improvements",
+        "loggingplugin-improvements"
+      ],
+      "pending_reviews": [
+        "brainstatemanager-code-duplication",
+        "filebasedcommunication-error-handling",
+        "pluginmanager-logging",
+        "logger-bug"
+      ]
+    },
+    "collaboration_status": "excellent",
+    "ready_for_tasks": true
+  }
+}

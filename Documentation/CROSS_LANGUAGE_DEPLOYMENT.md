@@ -103,7 +103,7 @@ gitbrain init
 trae .
 
 # Open Trae for OverseerAI
-trae ./GitBrain/Overseer
+trae ./GitBrain
 
 # In your Python code, you can also interact with GitBrain files
 import json
@@ -146,7 +146,7 @@ gitbrain init
 trae .
 
 # Open Trae for OverseerAI
-trae ./GitBrain/Overseer
+trae ./GitBrain
 
 # In your JavaScript code
 const fs = require('fs');
@@ -192,7 +192,7 @@ gitbrain init
 trae .
 
 # Open Trae for OverseerAI
-trae ./GitBrain/Overseer
+trae ./GitBrain
 
 // In your Rust code
 use std::fs;
@@ -256,7 +256,7 @@ gitbrain init
 trae .
 
 # Open Trae for OverseerAI
-trae ./GitBrain/Overseer
+trae ./GitBrain
 
 // In your Go code
 package main

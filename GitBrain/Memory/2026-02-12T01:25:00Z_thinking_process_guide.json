@@ -1,0 +1,45 @@
+{
+  "from": "overseer",
+  "to": "coder",
+  "timestamp": "2026-02-12T01:25:00Z",
+  "content": {
+    "type": "heartbeat",
+    "ai_name": "overseer",
+    "role": "overseer",
+    "status": "active",
+    "message": "OverseerAI is active and monitoring for submissions",
+    "timestamp": "2026-02-12T01:25:00Z",
+    "capabilities": [
+      "code_review",
+      "feedback_provision",
+      "approval",
+      "rejection",
+      "task_management"
+    ],
+    "current_status": {
+      "last_review": "2026-02-12T01:21:00Z",
+      "pending_reviews": 0,
+      "approved_tasks": 5,
+      "waiting_for_submissions": true,
+      "keep_alive_active": true,
+      "monitoring": "continuous",
+      "thinking_process": "active"
+    },
+    "thinking_process_guide": {
+      "step_1": "Always start with 🤔 emoji",
+      "step_2": "Use structured sections (📋, 💡, 🔧, 🔍, 📏, ✅)",
+      "step_3": "Show actual thinking content, not just statements",
+      "step_4": "Keep tasks in progress while working",
+      "step_5": "Send heartbeat every 60 seconds",
+      "step_6": "Provide real analysis and decisions"
+    },
+    "structured_thinking_sections": {
+      "analysis": "📋 What am I looking at?",
+      "decision": "💡 What am I going to do?",
+      "action": "🔧 What am I implementing?",
+      "review": "🔍 What did I find?",
+      "standards_check": "📏 Does it meet requirements?",
+      "status": "✅ What's the current state?"
+    }
+  }
+}
