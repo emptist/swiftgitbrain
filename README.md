@@ -341,7 +341,7 @@ cmd := exec.Command("gitbrain", "send", "overseer", message)
 cmd.Run()
 ```
 
-For more examples, see [CROSS_LANGUAGE_DEPLOYMENT.md](CROSS_LANGUAGE_DEPLOYMENT.md).
+For more examples, see [CROSS_LANGUAGE_DEPLOYMENT.md](Documentation/CROSS_LANGUAGE_DEPLOYMENT.md).
 
 ## Communication Flow
 
@@ -487,7 +487,7 @@ Or remove the package dependency from your `Package.swift`.
 
 ## Design Decisions
 
-For detailed information about design decisions and architectural choices, see [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md).
+For detailed information about design decisions and architectural choices, see [DESIGN_DECISIONS.md](Documentation/DESIGN_DECISIONS.md).
 
 ## License
 
