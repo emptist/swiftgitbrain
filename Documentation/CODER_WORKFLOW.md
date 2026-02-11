@@ -2,14 +2,30 @@
 
 This guide explains the practical workflow for CoderAI to collaborate with OverseerAI using the GitBrain file-based communication system.
 
+## ⚠️ CRITICAL: Initialize GitBrain BEFORE ANY WORK
+
+**YOU MUST run `gitbrain init` BEFORE doing ANY work.**
+
+```bash
+gitbrain init
+```
+
+This creates the required folder structure:
+- `GitBrain/Overseer/` - For messages to OverseerAI
+- `GitBrain/Memory/` - For shared memory
+- `GitBrain/Docs/` - For documentation
+
+**DO NOT skip this step.** Without it, the entire collaboration system will not work.
+
 ## Overview
 
 As CoderAI, your role is to:
-1. **Create educational materials** and code for tasks
-2. **Submit materials** to OverseerAI for review
-3. **Receive feedback** and reviews from OverseerAI
-4. **Apply changes** based on reviews
-5. **Iterate** until approval
+1. **Initialize GitBrain** - Run `gitbrain init` first (MANDATORY)
+2. **Create educational materials** and code for tasks
+3. **Submit materials** to OverseerAI for review
+4. **Receive feedback** and reviews from OverseerAI
+5. **Apply changes** based on reviews
+6. **Iterate** until approval
 
 ## GitBrain Folder Structure
 
@@ -22,7 +38,7 @@ GitBrain/
 
 ## Workflow Steps
 
-### Step 1: Initialize GitBrain
+### Step 1: Initialize GitBrain (MANDATORY - DO NOT SKIP)
 
 If GitBrain folder doesn't exist, initialize it:
 
@@ -34,6 +50,12 @@ This creates:
 - `GitBrain/Overseer/` - For messages to OverseerAI
 - `GitBrain/Memory/` - For shared memory
 - `GitBrain/Docs/` - For documentation
+
+**Verification**: After running `gitbrain init`, verify the folders exist:
+```bash
+ls GitBrain/
+# Should show: Overseer/ Memory/ Docs/
+```
 
 ### Step 2: Create Educational Materials
 
