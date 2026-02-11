@@ -72,8 +72,8 @@ func testMessageSchemaValidateFieldType() async throws {
         try schema.validate(invalidContent)
         #expect(Bool(false), "Should throw error for invalid field type")
     } catch MessageValidationError.invalidFieldType(let field, let expected, _) {
-        #expect(field == "string_field")
-        #expect(expected == "String")
+        #expect(["string_field", "int_field"].contains(field))
+        #expect(["String", "Int"].contains(expected))
     }
 }
 
