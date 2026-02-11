@@ -1,6 +1,32 @@
 import Foundation
 import GitBrainSwift
 
+enum CLIError: LocalizedError {
+    case unknownCommand(String)
+    case invalidArguments(String)
+    case invalidRecipient(String)
+    case invalidJSON(String)
+    case fileNotFound(String)
+    case initializationError(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .unknownCommand(let command):
+            return "Unknown command: \(command)"
+        case .invalidArguments(let message):
+            return "Invalid arguments: \(message)"
+        case .invalidRecipient(let recipient):
+            return "Unknown recipient: \(recipient)"
+        case .invalidJSON(let message):
+            return "Invalid JSON: \(message)"
+        case .fileNotFound(let path):
+            return "File not found: \(path)"
+        case .initializationError(let message):
+            return "Initialization error: \(message)"
+        }
+    }
+}
+
 @main
 struct GitBrainCLI {
     private static let gitBrainPathEnv = "GITBRAIN_PATH"
@@ -10,7 +36,7 @@ struct GitBrainCLI {
         
         guard arguments.count > 1 else {
             printUsage()
-            exit(1)
+            Foundation.exit(0)
         }
         
         let command = arguments[1]
@@ -31,11 +57,11 @@ struct GitBrainCLI {
             default:
                 print("Unknown command: \(command)")
                 printUsage()
-                exit(1)
+                throw CLIError.unknownCommand(command)
             }
         } catch {
             print("Error: \(error.localizedDescription)")
-            exit(1)
+            Foundation.exit(1)
         }
     }
     
@@ -120,7 +146,7 @@ struct GitBrainCLI {
         print("\nInitialization complete!")
         print("\nNext steps:")
         print("1. Open Trae at project root for CoderAI: trae .")
-        print("2. Open Trae at GitBrain/Overseer for OverseerAI: trae ./GitBrain/Overseer")
+        print("2. Open Trae at GitBrain for OverseerAI: trae ./GitBrain")
         print("3. Ask each AI to read GitBrain/Docs/ to understand their role")
     }
     
@@ -129,7 +155,7 @@ struct GitBrainCLI {
             print("Usage: gitbrain send <to> <message>")
             print("  to: 'coder' or 'overseer'")
             print("  message: JSON string or file path")
-            exit(1)
+            throw CLIError.invalidArguments("send command requires <to> and <message> arguments")
         }
         
         let to = args[0]
@@ -145,12 +171,22 @@ struct GitBrainCLI {
         var content: SendableContent
         
         if messageContent.hasPrefix("{") || messageContent.hasPrefix("[") {
-            let jsonData = try JSONSerialization.jsonObject(with: messageContent.data(using: .utf8)!) as! [String: Any]
+            guard let data = messageContent.data(using: .utf8) else {
+                throw CLIError.invalidJSON("Failed to convert message to UTF-8")
+            }
+            guard let jsonData = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                throw CLIError.invalidJSON("Invalid JSON format")
+            }
             content = SendableContent(jsonData)
         } else {
             let messageURL = URL(fileURLWithPath: messageContent)
+            guard FileManager.default.fileExists(atPath: messageURL.path) else {
+                throw CLIError.fileNotFound(messageContent)
+            }
             let data = try Data(contentsOf: messageURL)
-            let jsonData = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+            guard let jsonData = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                throw CLIError.invalidJSON("Invalid JSON format in file")
+            }
             content = SendableContent(jsonData)
         }
         
@@ -162,7 +198,7 @@ struct GitBrainCLI {
         } else {
             print("Unknown recipient: \(to)")
             print("Valid recipients: coder, overseer")
-            exit(1)
+            throw CLIError.invalidRecipient(to)
         }
         
         print("✓ Message sent to: \(to)")
@@ -187,7 +223,7 @@ struct GitBrainCLI {
         } else {
             print("Unknown role: \(role)")
             print("Valid roles: coder, overseer")
-            exit(1)
+            throw CLIError.invalidArguments("Invalid role: \(role). Valid roles: coder, overseer")
         }
         
         print("Messages for '\(role)': \(messages.count)")
@@ -225,7 +261,7 @@ struct GitBrainCLI {
         } else {
             print("Unknown role: \(role)")
             print("Valid roles: coder, overseer")
-            exit(1)
+            throw CLIError.invalidArguments("Invalid role: \(role). Valid roles: coder, overseer")
         }
     }
     

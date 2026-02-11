@@ -113,7 +113,7 @@ func testBrainStateManagerBackupAndRestore() async throws {
     
     let manager = BrainStateManager(brainstateBase: brainstateBase)
     
-    let original = try await manager.createBrainState(
+    _ = try await manager.createBrainState(
         aiName: "test_ai",
         role: .coder,
         initialState: SendableContent(["original_key": "original_value"])

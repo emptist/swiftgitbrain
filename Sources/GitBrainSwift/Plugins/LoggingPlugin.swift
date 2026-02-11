@@ -20,9 +20,13 @@ public struct LoggingPlugin: GitBrainPlugin, Sendable {
             Version: \(pluginVersion)
             
             """
-            try? logEntry.appendLine(to: logFileURL)
+            do {
+                try logEntry.appendLine(to: logFileURL)
+            } catch {
+                GitBrainLogger.warning("Failed to write log entry to file: \(error.localizedDescription)")
+            }
         }
-        print("✓ LoggingPlugin initialized")
+        GitBrainLogger.info("✓ LoggingPlugin initialized")
     }
     
     public func onMessageReceived(_ message: SendableContent, from: String) async throws -> SendableContent? {
@@ -35,9 +39,13 @@ public struct LoggingPlugin: GitBrainPlugin, Sendable {
         """
         
         if let logFileURL = logFileURL {
-            try? logEntry.appendLine(to: logFileURL)
+            do {
+                try logEntry.appendLine(to: logFileURL)
+            } catch {
+                GitBrainLogger.warning("Failed to write log entry to file: \(error.localizedDescription)")
+            }
         } else {
-            print(logEntry)
+            GitBrainLogger.debug(logEntry)
         }
         
         return nil
@@ -53,9 +61,13 @@ public struct LoggingPlugin: GitBrainPlugin, Sendable {
         """
         
         if let logFileURL = logFileURL {
-            try? logEntry.appendLine(to: logFileURL)
+            do {
+                try logEntry.appendLine(to: logFileURL)
+            } catch {
+                GitBrainLogger.warning("Failed to write log entry to file: \(error.localizedDescription)")
+            }
         } else {
-            print(logEntry)
+            GitBrainLogger.debug(logEntry)
         }
         
         return nil
@@ -69,9 +81,13 @@ public struct LoggingPlugin: GitBrainPlugin, Sendable {
             Timestamp: \(ISO8601DateFormatter().string(from: Date()))
             
             """
-            try? logEntry.appendLine(to: logFileURL)
+            do {
+                try logEntry.appendLine(to: logFileURL)
+            } catch {
+                GitBrainLogger.warning("Failed to write log entry to file: \(error.localizedDescription)")
+            }
         }
-        print("✓ LoggingPlugin shutdown")
+        GitBrainLogger.info("✓ LoggingPlugin shutdown")
     }
 }
 
@@ -79,13 +95,28 @@ extension String {
     func appendLine(to url: URL) throws {
         let data = self.data(using: .utf8)!
         if FileManager.default.fileExists(atPath: url.path) {
-            if let fileHandle = try? FileHandle(forWritingTo: url) {
+            do {
+                let fileHandle = try FileHandle(forWritingTo: url)
+                defer {
+                    do {
+                        try fileHandle.close()
+                    } catch {
+                        GitBrainLogger.warning("Failed to close file handle: \(error.localizedDescription)")
+                    }
+                }
                 fileHandle.seekToEndOfFile()
                 fileHandle.write(data)
-                fileHandle.closeFile()
+            } catch {
+                GitBrainLogger.warning("Failed to open file handle: \(error.localizedDescription)")
+                throw error
             }
         } else {
-            try data.write(to: url)
+            do {
+                try data.write(to: url)
+            } catch {
+                GitBrainLogger.warning("Failed to write file: \(error.localizedDescription)")
+                throw error
+            }
         }
     }
 }

@@ -52,6 +52,7 @@ public enum GitBrainLogger {
     }
     
     public static func setLogLevel(_ level: LogLevel) {
+        logLevel = level
     }
     
     public static func getLogLevel() -> LogLevel {

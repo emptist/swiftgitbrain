@@ -138,16 +138,7 @@ public struct BrainStateManager: @unchecked Sendable, BrainStateManagerProtocol 
     }
     
     public func createBrainState(aiName: String, role: RoleType, initialState: SendableContent? = nil) async throws -> BrainState {
-        let brainState = BrainState(
-            aiName: aiName,
-            role: role,
-            version: "1.0.0",
-            lastUpdated: ISO8601DateFormatter().string(from: Date()),
-            state: initialState?.toAnyDict() ?? [:]
-        )
-        
-        try await saveBrainState(brainState)
-        return brainState
+        return try await storage.createBrainState(aiName: aiName, role: role, initialState: initialState)
     }
     
     public func loadBrainState(aiName: String) async throws -> BrainState? {
@@ -159,28 +150,11 @@ public struct BrainStateManager: @unchecked Sendable, BrainStateManagerProtocol 
     }
     
     public func updateBrainState(aiName: String, key: String, value: SendableContent) async throws -> Bool {
-        guard var brainState = try await loadBrainState(aiName: aiName) else {
-            return false
-        }
-        
-        brainState.updateState(key: key, value: value.toAnyDict())
-        try await saveBrainState(brainState)
-        return true
+        return try await storage.updateBrainState(aiName: aiName, key: key, value: value)
     }
     
     public func getBrainStateValue(aiName: String, key: String, defaultValue: SendableContent? = nil) async throws -> SendableContent? {
-        guard let brainState = try await loadBrainState(aiName: aiName) else {
-            return defaultValue
-        }
-        
-        if let value = brainState.getState(key: key, defaultValue: defaultValue?.toAnyDict()) {
-            if let dictValue = value as? [String: Any] {
-                return SendableContent(dictValue)
-            } else if let sendableValue = value as? SendableContent {
-                return sendableValue
-            }
-        }
-        return defaultValue
+        return try await storage.getBrainStateValue(aiName: aiName, key: key, defaultValue: defaultValue)
     }
     
     public func deleteBrainState(aiName: String) async throws -> Bool {

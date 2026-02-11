@@ -10,7 +10,11 @@ public actor FileBasedCommunication {
         self.overseerFolder = overseerFolder
         self.fileManager = FileManager.default
         
-        try? fileManager.createDirectory(at: overseerFolder, withIntermediateDirectories: true)
+        do {
+            try fileManager.createDirectory(at: overseerFolder, withIntermediateDirectories: true)
+        } catch {
+            GitBrainLogger.warning("Failed to create overseer folder: \(error.localizedDescription)")
+        }
     }
     
     public func sendMessageToOverseer(_ content: SendableContent) async throws -> URL {
@@ -66,26 +70,33 @@ public actor FileBasedCommunication {
     }
     
     private func getMessages(in folder: URL) throws -> [[String: Any]] {
-        guard let files = try? fileManager.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else {
+        do {
+            let files = try fileManager.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)
+            
+            var messages: [[String: Any]] = []
+            
+            for file in files where file.pathExtension == "json" {
+                do {
+                    let data = try Data(contentsOf: file)
+                    guard let message = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                        continue
+                    }
+                    messages.append(message)
+                } catch {
+                    GitBrainLogger.warning("Failed to read message from \(file.path): \(error.localizedDescription)")
+                }
+            }
+            
+            return messages.sorted { message1, message2 in
+                guard let time1 = message1["timestamp"] as? String,
+                      let time2 = message2["timestamp"] as? String else {
+                    return false
+                }
+                return time1 < time2
+            }
+        } catch {
+            GitBrainLogger.warning("Failed to read directory \(folder.path): \(error.localizedDescription)")
             return []
-        }
-        
-        var messages: [[String: Any]] = []
-        
-        for file in files where file.pathExtension == "json" {
-            guard let data = try? Data(contentsOf: file),
-                  let message = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                continue
-            }
-            messages.append(message)
-        }
-        
-        return messages.sorted { message1, message2 in
-            guard let time1 = message1["timestamp"] as? String,
-                  let time2 = message2["timestamp"] as? String else {
-                return false
-            }
-            return time1 < time2
         }
     }
     
@@ -98,12 +109,18 @@ public actor FileBasedCommunication {
     }
     
     private func clearMessages(in folder: URL) throws {
-        guard let files = try? fileManager.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else {
-            return
-        }
-        
-        for file in files where file.pathExtension == "json" {
-            try? fileManager.removeItem(at: file)
+        do {
+            let files = try fileManager.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)
+            
+            for file in files where file.pathExtension == "json" {
+                do {
+                    try fileManager.removeItem(at: file)
+                } catch {
+                    GitBrainLogger.warning("Failed to remove message file \(file.path): \(error.localizedDescription)")
+                }
+            }
+        } catch {
+            GitBrainLogger.warning("Failed to read directory \(folder.path): \(error.localizedDescription)")
         }
     }
     

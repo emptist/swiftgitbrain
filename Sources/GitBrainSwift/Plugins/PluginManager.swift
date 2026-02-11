@@ -48,9 +48,9 @@ public actor PluginManager {
         for (name, plugin) in plugins {
             do {
                 try await plugin.onInitialize()
-                print("✓ Plugin '\(name)' initialized")
+                GitBrainLogger.info("✓ Plugin '\(name)' initialized")
             } catch {
-                print("✗ Failed to initialize plugin '\(name)': \(error)")
+                GitBrainLogger.error("✗ Failed to initialize plugin '\(name)': \(error.localizedDescription)")
                 throw error
             }
         }
@@ -61,9 +61,9 @@ public actor PluginManager {
         for (name, plugin) in plugins {
             do {
                 try await plugin.onShutdown()
-                print("✓ Plugin '\(name)' shutdown")
+                GitBrainLogger.info("✓ Plugin '\(name)' shutdown")
             } catch {
-                print("✗ Failed to shutdown plugin '\(name)': \(error)")
+                GitBrainLogger.error("✗ Failed to shutdown plugin '\(name)': \(error.localizedDescription)")
             }
         }
         plugins.removeAll()
@@ -77,10 +77,10 @@ public actor PluginManager {
             do {
                 if let modifiedMessage = try await plugin.onMessageReceived(currentMessage, from: from) {
                     currentMessage = modifiedMessage
-                    print("Plugin '\(name)' modified incoming message")
+                    GitBrainLogger.debug("Plugin '\(name)' modified incoming message")
                 }
             } catch {
-                print("Plugin '\(name)' error processing incoming message: \(error)")
+                GitBrainLogger.warning("Plugin '\(name)' error processing incoming message: \(error.localizedDescription)")
             }
         }
         
@@ -94,10 +94,10 @@ public actor PluginManager {
             do {
                 if let modifiedMessage = try await plugin.onMessageSending(currentMessage, to: to) {
                     currentMessage = modifiedMessage
-                    print("Plugin '\(name)' modified outgoing message")
+                    GitBrainLogger.debug("Plugin '\(name)' modified outgoing message")
                 }
             } catch {
-                print("Plugin '\(name)' error processing outgoing message: \(error)")
+                GitBrainLogger.warning("Plugin '\(name)' error processing outgoing message: \(error.localizedDescription)")
             }
         }
         

@@ -69,18 +69,31 @@ public actor GitManager {
         process.arguments = arguments
         process.currentDirectoryURL = worktree
         
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
+        let stdoutPipe = Pipe()
+        let stderrPipe = Pipe()
+        process.standardOutput = stdoutPipe
+        process.standardError = stderrPipe
         
         try process.run()
-        process.waitUntilExit()
         
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let output = String(data: data, encoding: .utf8) ?? ""
+        let timeoutDuration: TimeInterval = 30
+        let timeoutTask = Task {
+            try await Task.sleep(nanoseconds: UInt64(timeoutDuration * 1_000_000_000))
+            process.terminate()
+            throw GitError.commandFailed(arguments: arguments, output: "Command timed out after \(timeoutDuration)s", exitCode: -1)
+        }
+        
+        process.waitUntilExit()
+        timeoutTask.cancel()
+        
+        let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+        let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: stdoutData, encoding: .utf8) ?? ""
+        let errorOutput = String(data: stderrData, encoding: .utf8) ?? ""
         
         if process.terminationStatus != 0 {
-            throw GitError.commandFailed(arguments: arguments, output: output, exitCode: process.terminationStatus)
+            let fullOutput = errorOutput.isEmpty ? output : "\(output)\n\(errorOutput)"
+            throw GitError.commandFailed(arguments: arguments, output: fullOutput, exitCode: process.terminationStatus)
         }
         
         return output
