@@ -20,19 +20,19 @@ public enum MessageValidationError: Error, LocalizedError {
     }
 }
 
-public struct MessageSchema {
+public struct MessageSchema: Sendable {
     public let messageType: String
     public let requiredFields: [String]
     public let optionalFields: [String]
     public let fieldTypes: [String: String]
-    public let validators: [String: (Any) throws -> Void]
+    public let validators: [String: @Sendable (Any) throws -> Void]
     
     public init(
         messageType: String,
         requiredFields: [String],
         optionalFields: [String] = [],
         fieldTypes: [String: String] = [:],
-        validators: [String: (Any) throws -> Void] = [:]
+        validators: [String: @Sendable (Any) throws -> Void] = [:]
     ) {
         self.messageType = messageType
         self.requiredFields = requiredFields

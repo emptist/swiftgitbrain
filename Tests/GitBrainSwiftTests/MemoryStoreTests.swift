@@ -77,5 +77,11 @@ func testMemoryStoreTimestamp() async {
     let timestamp = await memoryStore.getTimestamp("test_key")
     
     #expect(timestamp != nil)
-    #expect(timestamp! <= Date())
+    
+    guard let timestamp = timestamp else {
+        #expect(Bool(false), "Timestamp should not be nil")
+        return
+    }
+    
+    #expect(timestamp <= Date())
 }

@@ -1,5 +1,16 @@
 import Foundation
 
+public enum LoggingPluginError: LocalizedError {
+    case encodingFailed
+    
+    public var errorDescription: String? {
+        switch self {
+        case .encodingFailed:
+            return "Failed to encode string to UTF-8 data"
+        }
+    }
+}
+
 public struct LoggingPlugin: GitBrainPlugin, Sendable {
     public let pluginName = "LoggingPlugin"
     public let pluginVersion = "1.0.0"
@@ -93,7 +104,9 @@ public struct LoggingPlugin: GitBrainPlugin, Sendable {
 
 extension String {
     func appendLine(to url: URL) throws {
-        let data = self.data(using: .utf8)!
+        guard let data = self.data(using: .utf8) else {
+            throw LoggingPluginError.encodingFailed
+        }
         if FileManager.default.fileExists(atPath: url.path) {
             do {
                 let fileHandle = try FileHandle(forWritingTo: url)

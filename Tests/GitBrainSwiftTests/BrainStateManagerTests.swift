@@ -123,9 +123,14 @@ func testBrainStateManagerBackupAndRestore() async throws {
     
     #expect(backupPath != nil)
     
+    guard let backupPath = backupPath else {
+        #expect(Bool(false), "Backup path should not be nil")
+        return
+    }
+    
     _ = try await manager.updateBrainState(aiName: "test_ai", key: "modified_key", value: SendableContent(["modified_key": "modified_value"]))
     
-    let restored = try await manager.restoreBrainState(aiName: "test_ai", backupFile: URL(fileURLWithPath: backupPath!).lastPathComponent)
+    let restored = try await manager.restoreBrainState(aiName: "test_ai", backupFile: URL(fileURLWithPath: backupPath).lastPathComponent)
     
     #expect(restored == true)
     
