@@ -212,10 +212,11 @@ struct GitHubCollaborationDemo {
         print("OverseerAI reviewing code...")
         let reviewResult = await overseer.reviewCode(taskID: taskID)
         if let review = reviewResult {
+            let reviewDict = review.toAnyDict()
             print("✓ Review completed:")
-            print("  Approved: \(review["approved"] as? Bool ?? false)")
-            print("  Reviewer: \(review["reviewer"] as? String ?? "")")
-            if let comments = review["comments"] as? [[String: Any]] {
+            print("  Approved: \(reviewDict["approved"] as? Bool ?? false)")
+            print("  Reviewer: \(reviewDict["reviewer"] as? String ?? "")")
+            if let comments = reviewDict["comments"] as? [[String: Any]] {
                 print("  Comments:")
                 for comment in comments {
                     let line = comment["line"] as? Int ?? 0
@@ -228,7 +229,7 @@ struct GitHubCollaborationDemo {
         print()
 
         print("=== Scenario 7: OverseerAI approves the code ===")
-        if let review = reviewResult, let approved = review["approved"] as? Bool, approved {
+        if let review = reviewResult, let approved = review.toAnyDict()["approved"] as? Bool, approved {
             print("OverseerAI approving code via GitHub Issue...")
             do {
                 let issueURL = try await overseer.approveCode(taskID: taskID, coder: "coder")

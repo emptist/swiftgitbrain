@@ -15,7 +15,7 @@ func testBrainStateCreation() {
     #expect(brainState.aiName == "test_ai")
     #expect(brainState.role == .coder)
     #expect(brainState.version == "1.0.0")
-    #expect(brainState.state["test_key"] as? String == "test_value")
+    #expect(brainState.state.toAnyDict()["test_key"] as? String == "test_value")
 }
 
 @Test

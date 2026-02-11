@@ -34,8 +34,8 @@ func testMessageBuilderCreateTaskMessage() {
     #expect(message.messageType == .task)
     #expect(message.fromAI == "overseer")
     #expect(message.toAI == "coder")
-    #expect(message.content["task_id"] as? String == "task_001")
-    #expect(message.content["description"] as? String == "Implement feature")
+    #expect(message.content.toAnyDict()["task_id"] as? String == "task_001")
+    #expect(message.content.toAnyDict()["description"] as? String == "Implement feature")
 }
 
 @Test
@@ -50,8 +50,8 @@ func testMessageBuilderCreateCodeMessage() {
     )
     
     #expect(message.messageType == .code)
-    #expect(message.content["code"] as? String == "func main() {}")
-    #expect(message.content["language"] as? String == "swift")
+    #expect(message.content.toAnyDict()["code"] as? String == "func main() {}")
+    #expect(message.content.toAnyDict()["language"] as? String == "swift")
 }
 
 @Test
@@ -65,8 +65,8 @@ func testMessageBuilderCreateApprovalMessage() {
     )
     
     #expect(message.messageType == .approval)
-    #expect(message.content["approved"] as? Bool == true)
-    #expect(message.content["reason"] as? String == "Code meets standards")
+    #expect(message.content.toAnyDict()["approved"] as? Bool == true)
+    #expect(message.content.toAnyDict()["reason"] as? String == "Code meets standards")
 }
 
 @Test
@@ -80,7 +80,7 @@ func testMessageBuilderCreateRejectionMessage() {
     )
     
     #expect(message.messageType == .rejection)
-    #expect(message.content["approved"] as? Bool == false)
+    #expect(message.content.toAnyDict()["approved"] as? Bool == false)
 }
 
 @Test
@@ -93,5 +93,5 @@ func testMessageBuilderCreateStatusMessage() {
     )
     
     #expect(message.messageType == .status)
-    #expect(message.content["status"] as? String == "Task completed")
+    #expect(message.content.toAnyDict()["status"] as? String == "Task completed")
 }

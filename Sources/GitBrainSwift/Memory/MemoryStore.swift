@@ -57,11 +57,11 @@ public actor MemoryStore: MemoryStoreProtocol {
     public init() {}
     
     public func set(_ key: String, value: SendableContent) async {
-        storage[key] = StoredValue(value: value, timestamp: Date())
+        await storage.set(key, value: StoredValue(value: value, timestamp: Date()))
     }
     
     public func get(_ key: String, defaultValue: SendableContent? = nil) async -> SendableContent? {
-        return storage[key]?.value ?? defaultValue
+        return (await storage.get(key))?.value ?? defaultValue
     }
     
     public func delete(_ key: String) async -> Bool {

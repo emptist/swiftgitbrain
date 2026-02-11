@@ -91,15 +91,15 @@ public actor CoderAI: BaseRole {
     public func processMessage(_ message: Message) async {
         switch message.messageType {
         case .task:
-            await handleTask(TaskData(message.content))
+            await handleTask(message.content)
         case .feedback:
-            await handleFeedback(TaskData(message.content))
+            await handleFeedback(message.content)
         case .approval:
-            await handleApproval(TaskData(message.content))
+            await handleApproval(message.content)
         case .rejection:
-            await handleRejection(TaskData(message.content))
+            await handleRejection(message.content)
         case .heartbeat:
-            await handleHeartbeat(TaskData(message.content))
+            await handleHeartbeat(message.content)
         default:
             await handleUnknownMessage(message)
         }
@@ -112,29 +112,28 @@ public actor CoderAI: BaseRole {
             return
         }
         
-        let taskType = taskDict["type"] as? String ?? "coding"
-        
-        currentTask = [
+        let newTaskContent = SendableContent([
             "task_id": taskID,
             "description": description,
             "status": "assigned",
             "assigned_at": ISO8601DateFormatter().string(from: Date())
-        ]
+        ])
         
-        try? await updateBrainState(key: "current_task", value: SendableContent(["value": currentTask ?? [:]]))
+        await storage.setCurrentTask(newTaskContent.toAnyDict())
+        try? await updateBrainState(key: "current_task", value: SendableContent(["value": newTaskContent.toAnyDict()]))
         
-        taskHistory.append(currentTask ?? [:])
-        try? await updateBrainState(key: "task_history", value: SendableContent(["value": taskHistory]))
+        await storage.addToTaskHistory(TaskData(newTaskContent.toAnyDict()))
+        let taskHistoryData = await storage.getTaskHistory()
+        try? await updateBrainState(key: "task_history", value: SendableContent(taskHistoryData.data))
         
         try? await sendStatusUpdate(status: "Started task: \(taskID)")
     }
     
     public func implementTask() async -> SendableContent? {
-        guard let currentTask = currentTask else {
+        let currentTaskData = await storage.getCurrentTask()
+        guard let currentTask = currentTaskData?.data else {
             return nil
         }
-        
-        let currentTask = currentTaskTaskData.data
         
         guard let taskID = currentTask["task_id"] as? String,
               let description = currentTask["description"] as? String else {
@@ -151,18 +150,21 @@ public actor CoderAI: BaseRole {
             "description": "Implementation for task: \(description)"
         ]
         
-        codeHistory.append(codeSubmission)
-        try? await updateBrainState(key: "code_history", value: SendableContent(["value": codeHistory]))
+        await storage.addToCodeHistory(TaskData(codeSubmission))
+        let codeHistoryData = await storage.getCodeHistory()
+        try? await updateBrainState(key: "code_history", value: SendableContent(codeHistoryData.data))
         
-        self.currentTask?["status"] = "completed"
-        self.currentTask?["completed_at"] = ISO8601DateFormatter().string(from: Date())
-        try? await updateBrainState(key: "current_task", value: SendableContent(["value": self.currentTask ?? [:]]))
+        await storage.updateCurrentTask(key: "status", value: "completed")
+        await storage.updateCurrentTask(key: "completed_at", value: ISO8601DateFormatter().string(from: Date()))
+        let updatedTaskData = await storage.getCurrentTask()
+        try? await updateBrainState(key: "current_task", value: SendableContent(["value": updatedTaskData?.data ?? [:]]))
         
         return SendableContent(codeSubmission)
     }
     
     public func submitCode(reviewer: String = "overseer") async throws -> URL {
-        guard let currentTask = currentTask else {
+        let currentTaskData = await storage.getCurrentTask()
+        guard currentTaskData != nil else {
             throw CoderError.noCurrentTask
         }
         
@@ -182,7 +184,7 @@ public actor CoderAI: BaseRole {
         )
         
         let issueURL = try await sendMessage(message)
-        return issueURL.absoluteString
+        return issueURL
     }
     
     public func handleFeedback(_ feedback: SendableContent) async {
@@ -218,7 +220,7 @@ public actor CoderAI: BaseRole {
         let tasksCompleted = (try? await getBrainStateValue(key: "tasks_completed", defaultValue: SendableContent(["value": 0]))?.toAnyDict()["value"] as? Int) ?? 0
         try? await updateBrainState(key: "tasks_completed", value: SendableContent(["value": tasksCompleted + 1]))
         
-        currentTask = nil
+        await storage.setCurrentTask([:])
         try? await updateBrainState(key: "current_task", value: SendableContent(["value": NSNull()]))
         
         try? await sendStatusUpdate(status: "Task \(taskID) approved and completed")
@@ -232,8 +234,9 @@ public actor CoderAI: BaseRole {
         
         let reason = rejectionDict["reason"] as? String ?? ""
         
-        currentTask?["status"] = "rejected"
-        try? await updateBrainState(key: "current_task", value: SendableContent(["value": currentTask ?? [:]]))
+        await storage.updateCurrentTask(key: "status", value: "rejected")
+        let currentTaskData = await storage.getCurrentTask()
+        try? await updateBrainState(key: "current_task", value: SendableContent(["value": currentTaskData?.data ?? [:]]))
         
         try? await addKnowledge(
             category: "rejections",
@@ -285,8 +288,6 @@ public actor CoderAI: BaseRole {
         switch language.lowercased() {
         case "python":
             return await generatePythonCode(description: description)
-        case "javascript", "js":
-            return await generateJavaScriptCode(description: description)
         case "swift":
             return await generateSwiftCode(description: description)
         default:
@@ -295,7 +296,7 @@ public actor CoderAI: BaseRole {
     }
     
     private func generateSwiftCode(description: String) async -> String {
-        var code = """
+        let code = """
 "/"\(description)"/
 
 import Foundation
@@ -310,7 +311,7 @@ main()
     }
     
     private func generatePythonCode(description: String) async -> String {
-        var code = """
+        let code = """
 "/"\(description)"/
 
 def main():
@@ -372,11 +373,15 @@ if __name__ == "__main__":
     }
     
     public func getStatus() async -> SendableContent {
+        let currentTaskData = await storage.getCurrentTask()
+        let taskHistoryData = await storage.getTaskHistory()
+        let codeHistoryData = await storage.getCodeHistory()
+        
         return SendableContent([
             "role": "CoderAI",
-            "current_task": currentTask ?? [:],
-            "task_history_count": taskHistory.count,
-            "code_history_count": codeHistory.count,
+            "current_task": currentTaskData?.data ?? [:],
+            "task_history_count": taskHistoryData.data["task_history"] as? Int ?? 0,
+            "code_history_count": codeHistoryData.data["code_history"] as? Int ?? 0,
             "capabilities": await getCapabilities()
         ])
     }

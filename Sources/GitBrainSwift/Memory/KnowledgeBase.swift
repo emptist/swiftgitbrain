@@ -48,9 +48,6 @@ public actor KnowledgeBase: KnowledgeBaseProtocol {
         }
         inMemoryStorage[category]?[key] = item
         
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
-        
         let itemData: [String: Any] = [
             "value": value.data,
             "metadata": metadata?.data ?? [:],
@@ -66,24 +63,21 @@ public actor KnowledgeBase: KnowledgeBaseProtocol {
             return item.value
         }
         
-        private func getCategoryPath(category: String) -> URL {
-            return base.appendingPathComponent(category)
+        let itemPath = getItemPath(category: category, key: key)
+        guard fileManager.fileExists(atPath: itemPath.path) else {
+            return nil
         }
         
         let data = try Data(contentsOf: itemPath)
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let valueData = json["value"] as? [String: String] else {
+              let valueData = json["value"] as? [String: Any] else {
             return nil
         }
         
-        let value = SendableContent(valueData.reduce(into: [String: Any]()) { dict, pair in
-            dict[pair.key] = pair.value
-        })
+        let value = SendableContent(valueData)
         
-        let metadataData = json["metadata"] as? [String: String] ?? [:]
-        let metadata = SendableContent(metadataData.reduce(into: [String: Any]()) { dict, pair in
-            dict[pair.key] = pair.value
-        })
+        let metadataData = json["metadata"] as? [String: Any] ?? [:]
+        let metadata = SendableContent(metadataData)
         
         if inMemoryStorage[category] == nil {
             inMemoryStorage[category] = [:]
@@ -102,53 +96,38 @@ public actor KnowledgeBase: KnowledgeBaseProtocol {
             return false
         }
         
-        func getKnowledge(category: String, key: String) async throws -> TaskData? {
-            if let item = inMemoryStorage[category]?[key] {
-                return TaskData(item.value)
-            }
-            
-            let itemPath = getItemPath(category: category, key: key)
-            guard fileManager.fileExists(atPath: itemPath.path) else {
-                return nil
-            }
-            
-            let data = try Data(contentsOf: itemPath)
-            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let value = json["value"] as? [String: Any] else {
-                return nil
-            }
-            
-            if inMemoryStorage[category] == nil {
-                inMemoryStorage[category] = [:]
-            }
-            inMemoryStorage[category]?[key] = KnowledgeItem(
-                value: value,
-                metadata: json["metadata"] as? [String: Any] ?? [:],
-                timestamp: ISO8601DateFormatter().date(from: json["timestamp"] as? String ?? "") ?? Date()
-            )
-            
-            return TaskData(value)
+        try await addKnowledge(category: category, key: key, value: value, metadata: metadata)
+        return true
+    }
+    
+    public func deleteKnowledge(category: String, key: String) async throws -> Bool {
+        let itemPath = getItemPath(category: category, key: key)
+        
+        guard fileManager.fileExists(atPath: itemPath.path) else {
+            return false
         }
         
-        func updateKnowledge(category: String, key: String, value: TaskData, metadataTaskData: TaskData?) async throws -> Bool {
-            guard try await getKnowledge(category: category, key: key) != nil else {
-                return false
-            }
-            
-            try await addKnowledge(category: category, key: key, taskData: value, metadataTaskData: metadataTaskData)
-            return true
+        try fileManager.removeItem(at: itemPath)
+        inMemoryStorage[category]?.removeValue(forKey: key)
+        return true
+    }
+    
+    public func listCategories() async throws -> [String] {
+        guard fileManager.fileExists(atPath: base.path) else {
+            return []
         }
         
-        func deleteKnowledge(category: String, key: String) async throws -> Bool {
-            let itemPath = getItemPath(category: category, key: key)
-            
-            guard fileManager.fileExists(atPath: itemPath.path) else {
-                return false
-            }
-            
-            try fileManager.removeItem(at: itemPath)
-            inMemoryStorage[category]?.removeValue(forKey: key)
-            return true
+        let categories = try fileManager.contentsOfDirectory(at: base, includingPropertiesForKeys: nil)
+        return categories
+            .filter { $0.hasDirectoryPath }
+            .map { $0.lastPathComponent }
+            .sorted()
+    }
+    
+    public func listKeys(category: String) async throws -> [String] {
+        let categoryPath = getCategoryPath(category: category)
+        guard fileManager.fileExists(atPath: categoryPath.path) else {
+            return []
         }
         
         let files = try fileManager.contentsOfDirectory(at: categoryPath, includingPropertiesForKeys: nil)
@@ -171,42 +150,8 @@ public actor KnowledgeBase: KnowledgeBaseProtocol {
                     }
                 }
             }
-            
-            return results
         }
-    }
-    
-    private let storage: Storage
-    
-    public init(base: URL) {
-        self.storage = Storage(base: base, fileManager: FileManager.default)
-    }
-    
-    public func addKnowledge(category: String, key: String, value: TaskData, metadata: TaskData? = nil) async throws {
-        try await storage.addKnowledge(category: category, key: key, taskData: value, metadataTaskData: metadata)
-    }
-    
-    public func getKnowledge(category: String, key: String) async throws -> TaskData? {
-        return try await storage.getKnowledge(category: category, key: key)
-    }
-    
-    public func updateKnowledge(category: String, key: String, value: TaskData, metadata: TaskData? = nil) async throws -> Bool {
-        return try await storage.updateKnowledge(category: category, key: key, value: value, metadataTaskData: metadata)
-    }
-    
-    public func deleteKnowledge(category: String, key: String) async throws -> Bool {
-        return try await storage.deleteKnowledge(category: category, key: key)
-    }
-    
-    public func listCategories() async throws -> [String] {
-        return try await storage.listCategories()
-    }
-    
-    public func listKeys(category: String) async throws -> [String] {
-        return try await storage.listKeys(category: category)
-    }
-    
-    public func searchKnowledge(category: String, query: String) async throws -> [TaskData] {
-        return try await storage.searchKnowledge(category: category, query: query)
+        
+        return results
     }
 }

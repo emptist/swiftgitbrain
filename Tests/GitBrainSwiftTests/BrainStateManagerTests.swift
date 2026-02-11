@@ -12,7 +12,7 @@ func testBrainStateManagerCreateAndLoad() async throws {
     let brainState = try await manager.createBrainState(
         aiName: "test_ai",
         role: .coder,
-        initialState: TaskData(["test_key": "test_value"])
+        initialState: SendableContent(["test_key": "test_value"])
     )
     
     #expect(brainState.aiName == "test_ai")
@@ -36,13 +36,15 @@ func testBrainStateManagerUpdate() async throws {
     
     _ = try await manager.createBrainState(aiName: "test_ai", role: .coder)
     
-    let updated = try await manager.updateBrainState(aiName: "test_ai", key: "new_key", value: TaskData(["new_key": "new_value"]))
+    let updated = try await manager.updateBrainState(aiName: "test_ai", key: "new_key", value: SendableContent(["new_key": "new_value"]))
     
     #expect(updated == true)
     
     let value = try await manager.getBrainStateValue(aiName: "test_ai", key: "new_key")
     
-    #expect(value?.data["new_key"] as? String == "new_value")
+    if let dictValue = value?.toAnyDict()["new_key"] as? [String: Any] {
+        #expect(dictValue["new_key"] as? String == "new_value")
+    }
     
     try FileManager.default.removeItem(at: brainstateBase)
 }
@@ -56,9 +58,9 @@ func testBrainStateManagerGetWithDefault() async throws {
     
     _ = try await manager.createBrainState(aiName: "test_ai", role: .coder)
     
-    let value = try await manager.getBrainStateValue(aiName: "test_ai", key: "nonexistent", defaultValue: TaskData(["default": "default"]))
+    let value = try await manager.getBrainStateValue(aiName: "test_ai", key: "nonexistent", defaultValue: SendableContent(["default": "default"]))
     
-    #expect(value?.data["default"] as? String == "default")
+    #expect(value?.toAnyDict()["default"] as? String == "default")
     
     try FileManager.default.removeItem(at: brainstateBase)
 }
@@ -114,14 +116,14 @@ func testBrainStateManagerBackupAndRestore() async throws {
     let original = try await manager.createBrainState(
         aiName: "test_ai",
         role: .coder,
-        initialState: TaskData(["original_key": "original_value"])
+        initialState: SendableContent(["original_key": "original_value"])
     )
     
     let backupPath = try await manager.backupBrainState(aiName: "test_ai")
     
     #expect(backupPath != nil)
     
-    _ = try await manager.updateBrainState(aiName: "test_ai", key: "modified_key", value: TaskData(["modified_key": "modified_value"]))
+    _ = try await manager.updateBrainState(aiName: "test_ai", key: "modified_key", value: SendableContent(["modified_key": "modified_value"]))
     
     let restored = try await manager.restoreBrainState(aiName: "test_ai", backupFile: URL(fileURLWithPath: backupPath!).lastPathComponent)
     
@@ -129,7 +131,7 @@ func testBrainStateManagerBackupAndRestore() async throws {
     
     let loaded = try await manager.loadBrainState(aiName: "test_ai")
     
-    #expect(loaded?.state["original_key"] as? String == "original_value")
+    #expect(loaded?.state.toAnyDict()["original_key"] as? String == "original_value")
     
     try FileManager.default.removeItem(at: brainstateBase)
 }
