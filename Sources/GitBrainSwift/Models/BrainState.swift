@@ -36,10 +36,7 @@ public struct BrainState: Codable, @unchecked Sendable {
         version = try container.decode(String.self, forKey: .version)
         lastUpdated = try container.decode(String.self, forKey: .lastUpdated)
         
-        let stateData = try container.decode([String: String].self, forKey: .state)
-        state = SendableContent(stateData.reduce(into: [String: Any]()) { dict, pair in
-            dict[pair.key] = pair.value
-        })
+        state = try container.decode(SendableContent.self, forKey: .state)
     }
     
     public func encode(to encoder: Encoder) throws {
