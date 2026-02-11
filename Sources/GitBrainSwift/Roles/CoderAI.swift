@@ -5,7 +5,7 @@ public enum CoderError: Error {
     case codeGenerationFailed
 }
 
-public actor CoderAI: BaseRole {
+public actor CoderAI: CoderAIProtocol {
     public let system: SystemConfig
     public let roleConfig: RoleConfig
     public let communication: any CommunicationProtocol
@@ -22,8 +22,8 @@ public actor CoderAI: BaseRole {
             currentTask = task
         }
         
-        func getCurrentTask() -> TaskData? {
-            return currentTask.map { TaskData($0) }
+        func getCurrentTask() -> SendableContent? {
+            return currentTask.map { SendableContent($0) }
         }
         
         func updateCurrentTask(key: String, value: Any) {
@@ -32,24 +32,24 @@ public actor CoderAI: BaseRole {
             }
         }
         
-        func addToTaskHistory(_ item: TaskData) {
-            taskHistory.append(item.data)
+        func addToTaskHistory(_ item: SendableContent) {
+            taskHistory.append(item.toAnyDict())
         }
         
-        func getTaskHistory() -> TaskData {
-            return TaskData(["task_history": taskHistory])
+        func getTaskHistory() -> SendableContent {
+            return SendableContent(["task_history": taskHistory])
         }
         
         func getTaskHistoryCount() -> Int {
             return taskHistory.count
         }
         
-        func addToCodeHistory(_ item: TaskData) {
-            codeHistory.append(item.data)
+        func addToCodeHistory(_ item: SendableContent) {
+            codeHistory.append(item.toAnyDict())
         }
         
-        func getCodeHistory() -> TaskData {
-            return TaskData(["code_history": codeHistory])
+        func getCodeHistory() -> SendableContent {
+            return SendableContent(["code_history": codeHistory])
         }
         
         func getCodeHistoryCount() -> Int {
@@ -122,16 +122,16 @@ public actor CoderAI: BaseRole {
         await storage.setCurrentTask(newTaskContent.toAnyDict())
         try? await updateBrainState(key: "current_task", value: SendableContent(["value": newTaskContent.toAnyDict()]))
         
-        await storage.addToTaskHistory(TaskData(newTaskContent.toAnyDict()))
+        await storage.addToTaskHistory(newTaskContent)
         let taskHistoryData = await storage.getTaskHistory()
-        try? await updateBrainState(key: "task_history", value: SendableContent(taskHistoryData.data))
+        try? await updateBrainState(key: "task_history", value: SendableContent(taskHistoryData.toAnyDict()))
         
         try? await sendStatusUpdate(status: "Started task: \(taskID)")
     }
     
     public func implementTask() async -> SendableContent? {
         let currentTaskData = await storage.getCurrentTask()
-        guard let currentTask = currentTaskData?.data else {
+        guard let currentTask = currentTaskData?.toAnyDict() else {
             return nil
         }
         
@@ -150,14 +150,14 @@ public actor CoderAI: BaseRole {
             "description": "Implementation for task: \(description)"
         ]
         
-        await storage.addToCodeHistory(TaskData(codeSubmission))
+        await storage.addToCodeHistory(SendableContent(codeSubmission))
         let codeHistoryData = await storage.getCodeHistory()
-        try? await updateBrainState(key: "code_history", value: SendableContent(codeHistoryData.data))
+        try? await updateBrainState(key: "code_history", value: SendableContent(codeHistoryData.toAnyDict()))
         
         await storage.updateCurrentTask(key: "status", value: "completed")
         await storage.updateCurrentTask(key: "completed_at", value: ISO8601DateFormatter().string(from: Date()))
         let updatedTaskData = await storage.getCurrentTask()
-        try? await updateBrainState(key: "current_task", value: SendableContent(["value": updatedTaskData?.data ?? [:]]))
+        try? await updateBrainState(key: "current_task", value: SendableContent(["value": updatedTaskData?.toAnyDict() ?? [:]]))
         
         return SendableContent(codeSubmission)
     }
@@ -280,7 +280,7 @@ public actor CoderAI: BaseRole {
         )
     }
     
-    private func generateCode(description: String) async -> String {
+    public func generateCode(description: String) async -> String {
         let defaultValue = SendableContent(["value": "swift"])
         let languageContent = (try? await getBrainStateValue(key: "preferred_language", defaultValue: defaultValue)) ?? defaultValue
         let language = languageContent.data["value"] as? String ?? "swift"
@@ -379,10 +379,14 @@ if __name__ == "__main__":
         
         return SendableContent([
             "role": "CoderAI",
-            "current_task": currentTaskData?.data ?? [:],
-            "task_history_count": taskHistoryData.data["task_history"] as? Int ?? 0,
-            "code_history_count": codeHistoryData.data["code_history"] as? Int ?? 0,
+            "current_task": currentTaskData?.toAnyDict() ?? [:],
+            "task_history_count": taskHistoryData.toAnyDict()["task_history"] as? Int ?? 0,
+            "code_history_count": codeHistoryData.toAnyDict()["code_history"] as? Int ?? 0,
             "capabilities": await getCapabilities()
         ])
+    }
+    
+    public func cleanup() async {
+        await memoryStore.clear()
     }
 }

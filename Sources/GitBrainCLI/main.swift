@@ -16,18 +16,14 @@ struct GitBrainCLI {
         
         do {
             switch command {
-            case "setup":
-                try await handleSetup(args: args)
-            case "check":
-                try await handleCheck(args: args)
+            case "init":
+                try await handleInit(args: args)
             case "send":
                 try await handleSend(args: args)
-            case "daemon":
-                try await handleDaemon(args: args)
-            case "status":
-                try await handleStatus(args: args)
-            case "sync":
-                try await handleSync(args: args)
+            case "check":
+                try await handleCheck(args: args)
+            case "clear":
+                try await handleClear(args: args)
             case "help", "--help", "-h":
                 printUsage()
             default:
@@ -41,197 +37,210 @@ struct GitBrainCLI {
         }
     }
     
-    private static func handleSetup(args: [String]) async throws {
-        guard args.count >= 2 else {
-            print("Usage: gitbrain setup <repo> <shared-path>")
-            exit(1)
-        }
+    private static func handleInit(args: [String]) async throws {
+        let gitBrainPath = args.first ?? "./GitBrain"
+        let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
+        let overseerURL = gitBrainURL.appendingPathComponent("Overseer")
+        let memoryURL = gitBrainURL.appendingPathComponent("Memory")
+        let docsURL = gitBrainURL.appendingPathComponent("Docs")
         
-        let repo = args[0]
-        let sharedPath = args[1]
+        print("Initializing GitBrain...")
+        print("Path: \(gitBrainPath)")
         
-        print("Setting up shared worktree...")
-        let worktree = try await WorktreeManager.setupSharedWorktree(
-            repository: repo,
-            sharedPath: sharedPath
-        )
+        let fileManager = FileManager.default
         
-        print("✓ Shared worktree created at: \(worktree.path)")
-        print("✓ Branch: \(worktree.branch)")
+        try fileManager.createDirectory(at: overseerURL, withIntermediateDirectories: true)
+        try fileManager.createDirectory(at: memoryURL, withIntermediateDirectories: true)
+        try fileManager.createDirectory(at: docsURL, withIntermediateDirectories: true)
         
-        let communication = SharedWorktreeCommunication(
-            sharedWorktree: URL(fileURLWithPath: sharedPath)
-        )
+        print("✓ Created GitBrain/Overseer/")
+        print("✓ Created GitBrain/Memory/")
+        print("✓ Created GitBrain/Docs/")
         
-        print("Setting up role directories...")
-        _ = try await communication.setupRoleDirectory(for: "coder")
-        _ = try await communication.setupRoleDirectory(for: "overseer")
+        let readmeContent = """
+        # GitBrain Development Folder
         
-        print("✓ Role directories created")
-        print("\nSetup complete!")
-    }
-    
-    private static func handleCheck(args: [String]) async throws {
-        let role = args.first ?? "coder"
-        let sharedPath = args.count > 1 ? args[1] : "./shared"
+        This folder is used for AI-assisted collaborative development.
         
-        let communication = SharedWorktreeCommunication(
-            sharedWorktree: URL(fileURLWithPath: sharedPath)
-        )
+        ## Structure
         
-        let count = try await communication.getMessageCount(for: role)
-        print("Messages for '\(role)': \(count)")
+        - **Overseer/**: Working folder for OverseerAI (write access)
+        - **Memory/**: Shared persistent memory
+        - **Docs/**: Documentation for AIs
         
-        if count > 0 {
-            let messages = try await communication.receiveMessages(for: role)
-            print("\nMessages:")
-            for message in messages {
-                print("  [\(message.messageType.rawValue)] \(message.timestamp): \(message.content)")
-            }
-        }
+        ## Usage
+        
+        ### For CoderAI
+        Open Trae at project root:
+        ```
+        trae .
+        ```
+        
+        CoderAI has access to all folders in the project.
+        
+        ### For OverseerAI
+        Open Trae at Overseer folder:
+        ```
+        trae ./GitBrain/Overseer
+        ```
+        
+        OverseerAI has read access to the whole project and write access to GitBrain/Overseer/.
+        
+        ## Communication
+        
+        CoderAI writes to GitBrain/Overseer/
+        OverseerAI writes to GitBrain/Memory/ (for CoderAI to read)
+        
+        Messages are stored as JSON files with timestamps.
+        
+        ## Cleanup
+        
+        After development is complete, you can safely remove this folder:
+        ```
+        rm -rf GitBrain
+        ```
+        """
+        
+        let readmeURL = gitBrainURL.appendingPathComponent("README.md")
+        try readmeContent.write(to: readmeURL, atomically: true, encoding: .utf8)
+        
+        print("✓ Created GitBrain/README.md")
+        print("\nInitialization complete!")
+        print("\nNext steps:")
+        print("1. Open Trae at project root for CoderAI: trae .")
+        print("2. Open Trae at GitBrain/Overseer for OverseerAI: trae ./GitBrain/Overseer")
+        print("3. Ask each AI to read GitBrain/Docs/ to understand their role")
     }
     
     private static func handleSend(args: [String]) async throws {
-        guard args.count >= 4 else {
-            print("Usage: gitbrain send <from> <to> <type> <message>")
+        guard args.count >= 2 else {
+            print("Usage: gitbrain send <to> <message>")
+            print("  to: 'coder' or 'overseer'")
+            print("  message: JSON string or file path")
             exit(1)
         }
         
-        let from = args[0]
-        let to = args[1]
-        let type = args[2]
-        let messageContent = args[3]
+        let to = args[0]
+        let messageContent = args[1]
         
-        let sharedPath = args.count > 4 ? args[4] : "./shared"
+        let gitBrainPath = args.count > 2 ? args[2] : "./GitBrain"
+        let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
+        let overseerURL = gitBrainURL.appendingPathComponent("Overseer")
+        let memoryURL = gitBrainURL.appendingPathComponent("Memory")
         
-        let communication = SharedWorktreeCommunication(
-            sharedWorktree: URL(fileURLWithPath: sharedPath)
-        )
+        let communication = FileBasedCommunication(overseerFolder: overseerURL)
         
-        guard let messageType = MessageType(rawValue: type) else {
-            print("Unknown message type: \(type)")
-            print("Valid types: status, task, code, review, feedback, approval, rejection, heartbeat")
+        var content: SendableContent
+        
+        if messageContent.hasPrefix("{") || messageContent.hasPrefix("[") {
+            content = SendableContent(try JSONSerialization.jsonObject(with: messageContent.data(using: .utf8)!) as! [String: Any])
+        } else {
+            let messageURL = URL(fileURLWithPath: messageContent)
+            let data = try Data(contentsOf: messageURL)
+            content = SendableContent(try JSONSerialization.jsonObject(with: data) as! [String: Any])
+        }
+        
+        let path: URL
+        if to == "coder" {
+            path = try await communication.sendMessageToCoder(content, coderFolder: memoryURL)
+        } else if to == "overseer" {
+            path = try await communication.sendMessageToOverseer(content)
+        } else {
+            print("Unknown recipient: \(to)")
+            print("Valid recipients: coder, overseer")
             exit(1)
         }
         
-        let message = Message(
-            id: UUID().uuidString,
-            fromAI: from,
-            toAI: to,
-            messageType: messageType,
-            content: ["message": messageContent],
-            timestamp: Date().iso8601String,
-            priority: 1
-        )
-        
-        let path = try await communication.sendMessage(message, from: from, to: to)
         print("✓ Message sent to: \(to)")
         print("  Path: \(path.path)")
     }
     
-    private static func handleDaemon(args: [String]) async throws {
-        let sharedPath = args.first ?? "./shared"
-        let roles = args.count > 1 ? Array(args.dropFirst()) : ["coder", "overseer"]
+    private static func handleCheck(args: [String]) async throws {
+        let role = args.first ?? "coder"
+        let gitBrainPath = args.count > 1 ? args[1] : "./GitBrain"
+        let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
+        let overseerURL = gitBrainURL.appendingPathComponent("Overseer")
+        let memoryURL = gitBrainURL.appendingPathComponent("Memory")
         
-        print("Starting GitBrain daemon...")
-        print("Shared worktree: \(sharedPath)")
-        print("Monitoring roles: \(roles.joined(separator: ", "))")
+        let communication = FileBasedCommunication(overseerFolder: overseerURL)
         
-        let monitor = try await SharedWorktreeMonitor(
-            sharedWorktree: URL(fileURLWithPath: sharedPath)
-        )
+        let messages: [SendableContent]
         
-        for role in roles {
-            await monitor.registerHandler(for: role) { message in
-                print("[\(message.fromAI) -> \(message.toAI)] [\(message.messageType.rawValue)] \(message.timestamp)")
-                print("  Content: \(message.content)")
-            }
+        if role == "coder" {
+            messages = try await communication.getMessagesForCoder(coderFolder: memoryURL)
+        } else if role == "overseer" {
+            messages = try await communication.getMessagesForOverseer()
+        } else {
+            print("Unknown role: \(role)")
+            print("Valid roles: coder, overseer")
+            exit(1)
         }
         
-        try await monitor.start()
+        print("Messages for '\(role)': \(messages.count)")
         
-        print("✓ Daemon started")
-        print("Press Ctrl+C to stop")
-        
-        let task = Task {
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
+        if !messages.isEmpty {
+            print("\nMessages:")
+            for message in messages {
+                let data = message.toAnyDict()
+                if let from = data["from"] as? String,
+                   let to = data["to"] as? String,
+                   let timestamp = data["timestamp"] as? String,
+                   let content = data["content"] as? [String: Any] {
+                    print("  [\(from) -> \(to)] \(timestamp)")
+                    print("    Content: \(content)")
+                }
             }
-            await monitor.stop()
-        }
-        
-        await withTaskCancellationHandler {
-            await task.value
-        } onCancel: {
-            print("\nStopping daemon...")
-            task.cancel()
         }
     }
     
-    private static func handleStatus(args: [String]) async throws {
-        let sharedPath = args.first ?? "./shared"
+    private static func handleClear(args: [String]) async throws {
+        let role = args.first ?? "coder"
+        let gitBrainPath = args.count > 1 ? args[1] : "./GitBrain"
+        let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
+        let overseerURL = gitBrainURL.appendingPathComponent("Overseer")
+        let memoryURL = gitBrainURL.appendingPathComponent("Memory")
         
-        let communication = SharedWorktreeCommunication(
-            sharedWorktree: URL(fileURLWithPath: sharedPath)
-        )
+        let communication = FileBasedCommunication(overseerFolder: overseerURL)
         
-        print("GitBrain Status")
-        print("===============")
-        print("Shared worktree: \(sharedPath)")
-        
-        let coderCount = try await communication.getMessageCount(for: "coder")
-        let overseerCount = try await communication.getMessageCount(for: "overseer")
-        
-        print("\nCoder: \(coderCount) messages")
-        print("Overseer: \(overseerCount) messages")
-        print("Total: \(coderCount + overseerCount) messages")
-    }
-    
-    private static func handleSync(args: [String]) async throws {
-        let repo = args.first ?? "."
-        
-        let worktreeManager = WorktreeManager(repository: URL(fileURLWithPath: repo))
-        
-        print("Syncing worktree...")
-        let worktrees = try await worktreeManager.listWorktrees()
-        
-        for worktree in worktrees {
-            print("Syncing: \(worktree.path)")
-            try? await worktreeManager.syncWorktree(worktree.path)
-            print("  ✓ Pulled and pushed")
+        if role == "coder" {
+            try await communication.clearCoderMessages(coderFolder: memoryURL)
+            print("✓ Cleared messages for coder")
+        } else if role == "overseer" {
+            try await communication.clearOverseerMessages()
+            print("✓ Cleared messages for overseer")
+        } else {
+            print("Unknown role: \(role)")
+            print("Valid roles: coder, overseer")
+            exit(1)
         }
-        
-        print("\nSync complete!")
     }
     
     private static func printUsage() {
         print("""
-        GitBrain CLI - AI Collaboration Tool
+        GitBrain CLI - AI-Assisted Collaborative Development Tool
         
-        Usage:
-          gitbrain <command> [arguments]
+        Usage: gitbrain <command> [arguments]
         
         Commands:
-          setup <repo> <shared-path>     Setup shared worktree and role directories
-          check [role] [shared-path]       Check messages for a role
-          send <from> <to> <type> <msg>   Send a message
-          daemon [shared-path] [roles...]     Start monitoring daemon
-          status [shared-path]                Show system status
-          sync [repo]                        Sync all worktrees
-          help                               Show this help message
+          init [path]          Initialize GitBrain folder structure
+          send <to> <message>  Send a message to another AI
+          check [role]         Check messages for a role
+          clear [role]         Clear messages for a role
+          help                 Show this help message
         
-        Message Types:
-          status, task, code, review, feedback, approval, rejection, heartbeat
+        Arguments:
+          path                 Path to GitBrain folder (default: ./GitBrain)
+          to                   Recipient: 'coder' or 'overseer'
+          message              JSON string or file path
+          role                 Role to check/clear: 'coder' or 'overseer'
         
         Examples:
-          gitbrain setup . ./shared
+          gitbrain init
+          gitbrain send overseer '{"type":"code_review","files":["file.swift"]}'
           gitbrain check coder
-          gitbrain send coder overseer status "Working on feature X"
-          gitbrain daemon ./shared coder overseer
-          gitbrain status
-          gitbrain sync .
+          gitbrain clear overseer
         
-        For more information, visit: https://github.com/emptist/swiftgitbrain
+        For more information, see GitBrain/README.md
         """)
     }
 }

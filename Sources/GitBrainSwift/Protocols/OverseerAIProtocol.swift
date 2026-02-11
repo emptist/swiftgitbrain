@@ -1,6 +1,6 @@
 import Foundation
 
-public protocol OverseerAIProtocol: BaseRole {
+public protocol OverseerAIProtocol: BaseRoleProtocol {
     func reviewCode(taskID: String) async -> SendableContent?
     func approveCode(taskID: String, coder: String) async throws -> URL
     func rejectCode(taskID: String, reason: String, coder: String) async throws -> URL

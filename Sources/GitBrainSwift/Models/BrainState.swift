@@ -58,15 +58,6 @@ public struct BrainState: Codable, @unchecked Sendable {
         lastUpdated = ISO8601DateFormatter().string(from: Date())
     }
     
-    public mutating func updateState(taskData: TaskData) {
-        var stateDict = state.toAnyDict()
-        for (key, value) in taskData.data {
-            stateDict[key] = value
-        }
-        state = SendableContent(stateDict)
-        lastUpdated = ISO8601DateFormatter().string(from: Date())
-    }
-    
     public func getState(key: String, defaultValue: Any? = nil) -> Any? {
         return state.toAnyDict()[key] ?? defaultValue
     }

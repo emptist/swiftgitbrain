@@ -89,6 +89,10 @@ public struct OverseerAI: @unchecked Sendable, OverseerAIProtocol {
             "capabilities": await getCapabilities()
         ])
     }
+    
+    public func cleanup() async {
+        await memoryStore.clear()
+    }
 }
 
 public enum ReviewError: Error, LocalizedError {
