@@ -1,8 +1,8 @@
-# Design Decisions for Cross-Language Deployment
+# Design Decisions for GitBrainSwift
 
 ## Overview
 
-This document explains the key design decisions that enable GitBrainSwift to be used across different programming languages and environments.
+This document explains key design decisions that enable GitBrainSwift to be a lightweight, cross-language AI collaboration platform with message validation and plugin support.
 
 ## Core Design Principles
 
@@ -19,7 +19,7 @@ This document explains the key design decisions that enable GitBrainSwift to be 
 **Trade-offs**:
 - Slower than binary protocols (acceptable for AI communication)
 - Larger file sizes (acceptable for modern storage)
-- No type safety at protocol level (mitigated by SendableContent wrapper)
+- No type safety at protocol level (mitigated by message validation)
 
 ### 2. Standalone CLI Executable
 
@@ -51,6 +51,50 @@ This document explains the key design decisions that enable GitBrainSwift to be 
 - Slower than in-memory communication (acceptable for AI collaboration)
 - Potential for file system contention (mitigated by timestamp-based naming)
 - No real-time guarantees (acceptable for AI workflows)
+
+### 4. Message Validation
+
+**Decision**: Implement schema-based validation for all outgoing messages.
+
+**Rationale**:
+- Ensures message consistency across AIs
+- Catches errors early in the communication process
+- Provides clear error messages for debugging
+- Prevents malformed messages from being stored
+
+**Trade-offs**:
+- Additional validation overhead (minimal impact on performance)
+- Requires schema maintenance (acceptable for stability)
+- Less flexibility in message format (mitigated by extensible schema system)
+
+### 5. Plugin System
+
+**Decision**: Implement a plugin system for extending functionality.
+
+**Rationale**:
+- Allows users to customize behavior without modifying core code
+- Enables logging, transformation, and custom processing
+- Maintains clean separation of concerns
+- Facilitates third-party extensions
+
+**Trade-offs**:
+- Additional complexity in message processing (acceptable for flexibility)
+- Plugin lifecycle management overhead (minimal impact)
+- Potential for plugin conflicts (mitigated by clear plugin API)
+
+### 6. Environment Variable Configuration
+
+**Decision**: Support `GITBRAIN_PATH` environment variable for flexible deployment.
+
+**Rationale**:
+- Enables CI/CD integration without path modifications
+- Supports multiple GitBrain instances
+- Facilitates Docker containerization
+- Allows testing with different configurations
+
+**Trade-offs**:
+- Additional configuration option (minimal complexity)
+- Potential for path confusion (mitigated by clear documentation)
 
 ## Architecture Decisions
 
@@ -114,15 +158,31 @@ CoderAI ──reads──> GitBrain/Memory/
 - Requires Swift 6.2+ runtime (acceptable for development tool)
 - Learning curve for developers unfamiliar with Swift concurrency (mitigated by documentation)
 
+### CodableAny Type
+
+**Decision**: Create custom CodableAny enum for handling mixed JSON types while maintaining Sendable compliance.
+
+**Rationale**:
+- Enables proper JSON decoding of mixed types
+- Maintains Sendable protocol compliance
+- Handles nested arrays and objects correctly
+- Provides type-safe wrapper for Any values
+
+**Trade-offs**:
+- Additional wrapper layer (minimal overhead)
+- Requires conversion to/from dictionaries (acceptable for safety)
+- More complex than using Any directly (necessary for Sendable compliance)
+
 ### SendableContent Wrapper
 
-**Decision**: Use SendableContent struct instead of raw `[String: Any]` dictionaries.
+**Decision**: Use SendableContent struct with CodableAny instead of raw `[String: Any]` dictionaries.
 
 **Rationale**:
 - Thread-safe across actor boundaries
 - Type-safe operations
 - Clear API surface
 - Prevents data races
+- Proper JSON encoding/decoding
 
 **Trade-offs**:
 - Additional wrapper layer (minimal overhead)
@@ -141,6 +201,35 @@ CoderAI ──reads──> GitBrain/Memory/
 **Trade-offs**:
 - Performance overhead (acceptable for AI workflows)
 - Learning curve (mitigated by Swift 6.2 documentation)
+
+### Message Schema System
+
+**Decision**: Define schemas for all message types with field-level validation.
+
+**Rationale**:
+- Ensures message consistency
+- Provides clear error messages
+- Enables early error detection
+- Supports custom validators for complex fields
+
+**Trade-offs**:
+- Schema maintenance overhead (acceptable for stability)
+- Less flexibility in message format (mitigated by extensible design)
+- Additional validation code (minimal impact)
+
+### Plugin Protocol
+
+**Decision**: Define GitBrainPlugin protocol with lifecycle hooks.
+
+**Rationale**:
+- Clear extension points
+- Standardized plugin interface
+- Enables message interception and transformation
+- Supports initialization and cleanup
+
+**Trade-offs**:
+- Plugin lifecycle complexity (acceptable for flexibility)
+- Potential for plugin ordering issues (mitigated by sequential processing)
 
 ## Deployment Decisions
 
@@ -163,7 +252,7 @@ CoderAI ──reads──> GitBrain/Memory/
 **Decision**: CLI has no external runtime dependencies.
 
 **Rationale**:
-- Works out of the box
+- Works out of box
 - No installation conflicts
 - Easy to uninstall
 - Predictable behavior
@@ -185,6 +274,67 @@ CoderAI ──reads──> GitBrain/Memory/
 **Trade-offs**:
 - No automatic GitHub issue creation (can be added later)
 - Manual GitHub integration required (acceptable for flexibility)
+
+## Message Validation Design
+
+### Schema Definition
+
+**Decision**: Define schemas for each message type with required fields, field types, and custom validators.
+
+**Rationale**:
+- Clear contract for message formats
+- Type safety at message level
+- Extensible validation logic
+- Easy to add new message types
+
+**Trade-offs**:
+- Schema maintenance overhead (acceptable for stability)
+- Less flexibility in message format (mitigated by extensible design)
+
+### Field Type Detection
+
+**Decision**: Implement robust type detection including NSNumber bridging for JSON/Swift type conversion.
+
+**Rationale**:
+- Handles JSON boolean encoding as integers
+- Supports all Swift types
+- Provides clear error messages
+- Works across different JSON encoders
+
+**Trade-offs**:
+- Complex type detection logic (necessary for correctness)
+- Performance overhead (minimal impact)
+
+## Plugin System Design
+
+### Plugin Lifecycle
+
+**Decision**: Define clear lifecycle: registration, initialization, message processing, shutdown.
+
+**Rationale**:
+- Predictable plugin behavior
+- Clean resource management
+- Enables proper initialization
+- Supports graceful shutdown
+
+**Trade-offs**:
+- Plugin state management complexity (acceptable for flexibility)
+- Potential for initialization errors (mitigated by error handling)
+
+### Message Processing Pipeline
+
+**Decision**: Process messages through all plugins sequentially before sending/receiving.
+
+**Rationale**:
+- Enables message transformation
+- Supports logging and auditing
+- Allows multiple plugins to modify messages
+- Simple implementation
+
+**Trade-offs**:
+- Sequential processing (acceptable for AI workflows)
+- Plugin ordering dependency (mitigated by registration order)
+- Potential for conflicts (mitigated by clear plugin API)
 
 ## Future Considerations
 
@@ -220,21 +370,37 @@ CoderAI ──reads──> GitBrain/Memory/
 - Provide platform-specific binaries
 - Document platform differences
 
-### Plugin System
+### Advanced Plugin Features
 
-**Potential**: Add plugin system for extensibility.
+**Potential**: Add plugin discovery, dependency management, and hot-reloading.
 
 **Use Cases**:
-- Custom message formats
-- Integration with other tools
-- Custom AI roles
-- Custom communication protocols
+- Dynamic plugin loading
+- Plugin marketplace
+- Plugin dependencies
+- Runtime plugin updates
 
 **Design Implications**:
-- Define plugin API
+- Define plugin manifest format
 - Add plugin discovery mechanism
 - Add plugin sandboxing
 - Document plugin development
+
+### Message Encryption
+
+**Potential**: Add optional message encryption for sensitive projects.
+
+**Use Cases**:
+- Proprietary codebases
+- Multi-tenant environments
+- Security compliance
+- Privacy requirements
+
+**Design Implications**:
+- Add encryption/decryption hooks
+- Support multiple encryption algorithms
+- Add key management
+- Document security model
 
 ## Security Considerations
 
@@ -252,21 +418,21 @@ CoderAI ──reads──> GitBrain/Memory/
 
 ### Message Validation
 
-**Current**: Basic JSON validation.
+**Current**: Schema-based validation with type checking.
 
-**Future**: Add schema validation.
+**Future**: Add content sanitization and security scanning.
 
 **Design**:
-- Define JSON schema for messages
-- Validate messages before processing
-- Reject malformed messages
-- Log validation failures
+- Sanitize message content
+- Scan for malicious patterns
+- Validate file paths
+- Reject suspicious messages
 
 ### AI Isolation
 
 **Current**: Separate working folders.
 
-**Future**: Add sandboxing.
+**Future**: Add sandboxing and resource limits.
 
 **Design**:
 - Run AIs in separate processes
@@ -280,7 +446,7 @@ CoderAI ──reads──> GitBrain/Memory/
 
 **Current**: Read/write individual files.
 
-**Future**: Batch operations.
+**Future**: Batch operations and caching.
 
 **Design**:
 - Cache file listings
@@ -328,9 +494,9 @@ CoderAI ──reads──> GitBrain/Memory/
 
 ### Cross-Language Tests
 
-**Current**: Manual testing.
+**Current**: Automated test script for Python, JavaScript, Rust, Go.
 
-**Future**: Automated cross-language tests.
+**Future**: Expand to more languages and CI/CD integration.
 
 **Design**:
 - Test with Python, JavaScript, Rust, Go
@@ -354,18 +520,21 @@ CoderAI ──reads──> GitBrain/Memory/
 
 ### Developer Documentation
 
-**Current**: Code comments.
+**Current**: Code comments and design decisions.
 
-**Future**: Architecture documentation.
+**Future**: Architecture documentation and plugin development guide.
 
 **Design**:
-- Design decisions
+- Design decisions (this document)
 - Architecture diagrams
 - Contribution guide
 - Code style guide
+- Plugin development guide
 
 ## Conclusion
 
 These design decisions prioritize simplicity, flexibility, and cross-language compatibility over performance and feature richness. The architecture is intentionally minimal to serve as a foundation for future enhancements while remaining useful in its current form.
 
-The key insight is that AI collaboration doesn't require complex infrastructure - simple file-based communication is sufficient and provides maximum flexibility for integration with any programming language or development environment.
+The key insight is that AI collaboration doesn't require complex infrastructure - simple file-based communication with message validation and plugin support is sufficient and provides maximum flexibility for integration with any programming language or development environment.
+
+Recent additions (message validation, plugin system, environment variable support) enhance the system's robustness and extensibility while maintaining the core simplicity that makes GitBrainSwift easy to use and understand.

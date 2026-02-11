@@ -6,8 +6,11 @@ A Swift Package Manager (SwiftPM) implementation of GitBrain - a lightweight AI 
 
 GitBrainSwift enables two AIs to collaborate on software development through:
 - **File-based communication**: Simple read/write operations between AIs
+- **Message validation**: Schema-based validation for all message types
+- **Plugin system**: Extensible architecture for custom behavior
 - **Persistent memory**: Cross-session brainstate management
 - **Role separation**: CoderAI (full-featured) and OverseerAI (review-only)
+- **Cross-language support**: CLI executable usable in any programming language
 - **Development-only**: Can be safely removed after development is complete
 
 ## Use Case
@@ -19,7 +22,7 @@ GitBrainSwift is a **developer tool package** that enables AI-assisted collabora
 1. **Setup**: Initialize GitBrain folder structure in your project
 2. **CoderAI**: Open Trae at project root - has full access to all folders
 3. **OverseerAI**: Open Trae at `GitBrain/Overseer/` - has read access to whole project, write access to Overseer folder
-4. **Collaboration**: AIs communicate through file-based messages
+4. **Collaboration**: AIs communicate through validated file-based messages
 5. **Cleanup**: Remove GitBrain folder when development is complete
 
 ## Installation
@@ -83,15 +86,6 @@ OverseerAI has read access to the whole project and write access to `GitBrain/Ov
 
 Ask each AI to read `GitBrain/Docs/` to understand their role and responsibilities.
 
-## Communication Flow
-
-```
-CoderAI (root/) ──writes──> GitBrain/Overseer/
-OverseerAI (GitBrain/Overseer/) ──reads──> GitBrain/Overseer/
-OverseerAI ──writes──> GitBrain/Memory/
-CoderAI ──reads──> GitBrain/Memory/
-```
-
 ## CLI Commands
 
 ```bash
@@ -102,35 +96,260 @@ gitbrain init [path]
 gitbrain send <to> <message> [path]
 # to: 'coder' or 'overseer'
 # message: JSON string or file path
-# path: GitBrain folder path (default: ./GitBrain)
+# path: GitBrain folder path (default: ./GitBrain or $GITBRAIN_PATH)
 
 # Check messages for a role
 gitbrain check [role] [path]
 # role: 'coder' or 'overseer' (default: coder)
+# path: GitBrain folder path (default: ./GitBrain or $GITBRAIN_PATH)
 
 # Clear messages for a role
 gitbrain clear [role] [path]
 # role: 'coder' or 'overseer' (default: coder)
+# path: GitBrain folder path (default: ./GitBrain or $GITBRAIN_PATH)
 ```
 
-## Examples
-
-### Send a code review request
+### Environment Variables
 
 ```bash
-gitbrain send overseer '{"type":"code_review","files":["Sources/MyFile.swift"],"description":"Please review this implementation"}'
-```
+# Set default GitBrain path
+export GITBRAIN_PATH=/custom/path/to/GitBrain
 
-### Check messages for CoderAI
-
-```bash
+# Now all commands use this path
 gitbrain check coder
+gitbrain send overseer '{"type":"review"}'
 ```
 
-### Clear Overseer messages
+## Message Types and Validation
 
-```bash
-gitbrain clear overseer
+GitBrainSwift validates all outgoing messages against defined schemas. Supported message types:
+
+### Task Message
+```json
+{
+  "type": "task",
+  "task_id": "task-001",
+  "description": "Implement new feature",
+  "task_type": "coding|review|testing|documentation",
+  "priority": 5
+}
+```
+
+### Code Message
+```json
+{
+  "type": "code",
+  "code": "func example() {}",
+  "language": "swift",
+  "file_path": "Sources/Example.swift",
+  "line_number": 10
+}
+```
+
+### Review Message
+```json
+{
+  "type": "review",
+  "task_id": "task-001",
+  "approved": true,
+  "reviewer": "OverseerAI",
+  "comments": [
+    {
+      "line": 10,
+      "type": "error|warning|suggestion|info",
+      "message": "Fix this issue"
+    }
+  ]
+}
+```
+
+### Feedback Message
+```json
+{
+  "type": "feedback",
+  "task_id": "task-001",
+  "message": "Code review completed",
+  "severity": "info|warning|error",
+  "suggestions": ["Add error handling"]
+}
+```
+
+### Approval Message
+```json
+{
+  "type": "approval",
+  "task_id": "task-001",
+  "approver": "OverseerAI",
+  "approved_at": "2024-01-01T12:00:00Z"
+}
+```
+
+### Rejection Message
+```json
+{
+  "type": "rejection",
+  "task_id": "task-001",
+  "rejecter": "OverseerAI",
+  "reason": "Code does not meet standards",
+  "rejected_at": "2024-01-01T12:00:00Z"
+}
+```
+
+### Status Message
+```json
+{
+  "type": "status",
+  "status": "working|idle|blocked|completed",
+  "message": "Currently working on feature X",
+  "progress": 45
+}
+```
+
+### Heartbeat Message
+```json
+{
+  "type": "heartbeat",
+  "timestamp": "2024-01-01T12:00:00Z",
+  "status": "active"
+}
+```
+
+## Plugin System
+
+GitBrainSwift includes a plugin system for extending functionality.
+
+### Available Plugins
+
+#### LoggingPlugin
+Logs all messages sent and received.
+
+```swift
+import GitBrainSwift
+
+let communication = FileBasedCommunication(overseerFolder: overseerURL)
+let loggingPlugin = LoggingPlugin(logFileURL: logFileURL)
+try await communication.registerPlugin(loggingPlugin)
+```
+
+#### MessageTransformPlugin
+Adds metadata (timestamps, recipients) to messages.
+
+```swift
+let transformPlugin = MessageTransformPlugin()
+try await communication.registerPlugin(transformPlugin)
+```
+
+### Creating Custom Plugins
+
+```swift
+import GitBrainSwift
+
+public struct MyCustomPlugin: GitBrainPlugin, Sendable {
+    public let pluginName = "MyCustomPlugin"
+    public let pluginVersion = "1.0.0"
+    public let pluginDescription = "My custom plugin"
+    
+    public func onMessageReceived(_ message: SendableContent, from: String) async throws -> SendableContent? {
+        // Process incoming message
+        return nil // Return modified message or nil
+    }
+    
+    public func onMessageSending(_ message: SendableContent, to: String) async throws -> SendableContent? {
+        // Process outgoing message
+        return nil // Return modified message or nil
+    }
+}
+```
+
+### Plugin Lifecycle
+
+1. **Registration**: `registerPlugin(_:)` - Add plugin to manager
+2. **Initialization**: `onInitialize()` - Called when plugin is initialized
+3. **Message Processing**: `onMessageReceived(_:from:)` and `onMessageSending(_:to:)` - Called for each message
+4. **Shutdown**: `onShutdown()` - Called when plugin is removed
+
+## Cross-Language Usage
+
+GitBrainSwift CLI can be used in projects written in any programming language.
+
+### Python Example
+
+```python
+import json
+import subprocess
+
+message = {
+    "type": "task",
+    "task_id": "py-task-001",
+    "description": "Implement Python function",
+    "task_type": "coding",
+    "priority": 7
+}
+
+subprocess.run(["gitbrain", "send", "overseer", json.dumps(message)])
+```
+
+### JavaScript Example
+
+```javascript
+const { execSync } = require('child_process');
+
+const message = {
+    type: "task",
+    task_id: "js-task-001",
+    description: "Implement JavaScript function",
+    task_type: "coding",
+    priority: 7
+};
+
+execSync(`gitbrain send overseer '${JSON.stringify(message)}'`);
+```
+
+### Rust Example
+
+```rust
+use std::process::Command;
+
+let message = r#"{
+    "type": "task",
+    "task_id": "rust-task-001",
+    "description": "Implement Rust function",
+    "task_type": "coding",
+    "priority": 7
+}"#;
+
+Command::new("gitbrain")
+    .args(&["send", "overseer", message])
+    .status()
+    .expect("Failed to execute gitbrain");
+```
+
+### Go Example
+
+```go
+import "os/exec"
+
+message := `{
+    "type": "task",
+    "task_id": "go-task-001",
+    "description": "Implement Go function",
+    "task_type": "coding",
+    "priority": 7
+}`
+
+cmd := exec.Command("gitbrain", "send", "overseer", message)
+cmd.Run()
+```
+
+For more examples, see [CROSS_LANGUAGE_DEPLOYMENT.md](CROSS_LANGUAGE_DEPLOYMENT.md).
+
+## Communication Flow
+
+```
+CoderAI (root/) ──writes──> GitBrain/Overseer/
+OverseerAI (GitBrain/Overseer/) ──reads──> GitBrain/Overseer/
+OverseerAI ──writes──> GitBrain/Memory/
+CoderAI ──reads──> GitBrain/Memory/
 ```
 
 ## Architecture
@@ -152,11 +371,29 @@ gitbrain clear overseer
 ### Components
 
 #### FileBasedCommunication
-Simple file-based messaging system:
+Simple file-based messaging system with plugin support:
 - `sendMessageToOverseer()`: Send message from CoderAI to OverseerAI
 - `sendMessageToCoder()`: Send message from OverseerAI to CoderAI
 - `getMessagesForCoder()`: Get messages for CoderAI from Memory folder
 - `getMessagesForOverseer()`: Get messages for OverseerAI from Overseer folder
+- `registerPlugin()`: Register a plugin for message processing
+- `initializePlugins()`: Initialize all registered plugins
+- `shutdownPlugins()`: Shutdown all registered plugins
+
+#### MessageValidator
+Schema-based message validation:
+- `validate()`: Validate message content against schema
+- Supports all message types with field type checking
+- Custom validators for specific fields
+
+#### PluginManager
+Plugin lifecycle management:
+- `registerPlugin()`: Register a new plugin
+- `unregisterPlugin()`: Remove a plugin
+- `initializeAll()`: Initialize all plugins
+- `shutdownAll()`: Shutdown all plugins
+- `processIncomingMessage()`: Process message through all plugins
+- `processOutgoingMessage()`: Process message through all plugins
 
 #### BrainStateManager
 Manages persistent AI brainstate:
@@ -178,29 +415,52 @@ Knowledge management system:
 - `getKnowledge()`: Retrieve knowledge item
 - `searchKnowledge()`: Search knowledge base
 
-## Message Format
+## Examples
 
-Messages are stored as JSON files with timestamps:
+### Send a task message
 
-```json
-{
-  "from": "coder",
-  "to": "overseer",
-  "timestamp": "2024-01-01T12:00:00Z",
-  "content": {
-    "type": "code_review",
-    "files": ["Sources/MyFile.swift"],
-    "description": "Please review this implementation"
-  }
-}
+```bash
+gitbrain send overseer '{"type":"task","task_id":"task-001","description":"Implement new feature","task_type":"coding","priority":5}'
 ```
 
-## Cross-Session Memory
+### Send a review message
 
-Brainstate is stored in `GitBrain/Memory/` as JSON files, enabling:
-- Persistent memory across sessions
-- Knowledge retention between AI interactions
-- State restoration after interruptions
+```bash
+gitbrain send coder '{"type":"review","task_id":"task-001","approved":true,"reviewer":"OverseerAI","comments":[{"line":10,"type":"suggestion","message":"Consider using let instead of var"}]}'
+```
+
+### Check messages for CoderAI
+
+```bash
+gitbrain check coder
+```
+
+### Clear Overseer messages
+
+```bash
+gitbrain clear overseer
+```
+
+### Using custom GitBrain path
+
+```bash
+# Method 1: Command-line argument
+gitbrain check coder /custom/path/to/GitBrain
+
+# Method 2: Environment variable
+export GITBRAIN_PATH=/custom/path/to/GitBrain
+gitbrain check coder
+```
+
+## Testing
+
+Run the cross-language integration test:
+
+```bash
+./test_cross_language.sh
+```
+
+This tests GitBrainSwift with messages from Python, JavaScript, Rust, and Go contexts.
 
 ## Cleanup
 
@@ -214,7 +474,7 @@ Or remove the package dependency from your `Package.swift`.
 
 ## Platform Support
 
-- macOS 14+ (Primary platform)
+- macOS 15+ (Primary platform)
 - iOS 17+
 - tvOS 17+
 - watchOS 10+
@@ -224,6 +484,10 @@ Or remove the package dependency from your `Package.swift`.
 - Swift 6.2+
 - Swift Package Manager
 - Trae or similar AI editor
+
+## Design Decisions
+
+For detailed information about design decisions and architectural choices, see [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md).
 
 ## License
 

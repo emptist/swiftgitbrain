@@ -22,6 +22,10 @@ let package = Package(
         .executable(
             name: "test-github-issue",
             targets: ["TestGitHubIssue"]
+        ),
+        .executable(
+            name: "plugin-test",
+            targets: ["PluginTest"]
         )
     ],
     dependencies: [],
@@ -45,6 +49,11 @@ let package = Package(
             name: "TestGitHubIssue",
             dependencies: ["GitBrainSwift"],
             path: "Sources/TestGitHubIssue"
+        ),
+        .executableTarget(
+            name: "PluginTest",
+            dependencies: ["GitBrainSwift"],
+            path: "Sources/PluginTest"
         ),
         .testTarget(
             name: "GitBrainSwiftTests",

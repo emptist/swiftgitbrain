@@ -3,6 +3,8 @@ import GitBrainSwift
 
 @main
 struct GitBrainCLI {
+    private static let gitBrainPathEnv = "GITBRAIN_PATH"
+    
     static func main() async {
         let arguments = CommandLine.arguments
         
@@ -37,8 +39,15 @@ struct GitBrainCLI {
         }
     }
     
+    private static func getGitBrainPath() -> String {
+        if let envPath = ProcessInfo.processInfo.environment[gitBrainPathEnv] {
+            return envPath
+        }
+        return "./GitBrain"
+    }
+    
     private static func handleInit(args: [String]) async throws {
-        let gitBrainPath = args.first ?? "./GitBrain"
+        let gitBrainPath = args.first ?? getGitBrainPath()
         let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
         let overseerURL = gitBrainURL.appendingPathComponent("Overseer")
         let memoryURL = gitBrainURL.appendingPathComponent("Memory")
@@ -46,6 +55,9 @@ struct GitBrainCLI {
         
         print("Initializing GitBrain...")
         print("Path: \(gitBrainPath)")
+        if ProcessInfo.processInfo.environment[gitBrainPathEnv] != nil {
+            print("Using environment variable: \(gitBrainPathEnv)")
+        }
         
         let fileManager = FileManager.default
         
@@ -123,7 +135,7 @@ struct GitBrainCLI {
         let to = args[0]
         let messageContent = args[1]
         
-        let gitBrainPath = args.count > 2 ? args[2] : "./GitBrain"
+        let gitBrainPath = args.count > 2 ? args[2] : getGitBrainPath()
         let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
         let overseerURL = gitBrainURL.appendingPathComponent("Overseer")
         let memoryURL = gitBrainURL.appendingPathComponent("Memory")
@@ -133,11 +145,13 @@ struct GitBrainCLI {
         var content: SendableContent
         
         if messageContent.hasPrefix("{") || messageContent.hasPrefix("[") {
-            content = SendableContent(try JSONSerialization.jsonObject(with: messageContent.data(using: .utf8)!) as! [String: Any])
+            let jsonData = try JSONSerialization.jsonObject(with: messageContent.data(using: .utf8)!) as! [String: Any]
+            content = SendableContent(jsonData)
         } else {
             let messageURL = URL(fileURLWithPath: messageContent)
             let data = try Data(contentsOf: messageURL)
-            content = SendableContent(try JSONSerialization.jsonObject(with: data) as! [String: Any])
+            let jsonData = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+            content = SendableContent(jsonData)
         }
         
         let path: URL
@@ -157,7 +171,7 @@ struct GitBrainCLI {
     
     private static func handleCheck(args: [String]) async throws {
         let role = args.first ?? "coder"
-        let gitBrainPath = args.count > 1 ? args[1] : "./GitBrain"
+        let gitBrainPath = args.count > 1 ? args[1] : getGitBrainPath()
         let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
         let overseerURL = gitBrainURL.appendingPathComponent("Overseer")
         let memoryURL = gitBrainURL.appendingPathComponent("Memory")
@@ -195,7 +209,7 @@ struct GitBrainCLI {
     
     private static func handleClear(args: [String]) async throws {
         let role = args.first ?? "coder"
-        let gitBrainPath = args.count > 1 ? args[1] : "./GitBrain"
+        let gitBrainPath = args.count > 1 ? args[1] : getGitBrainPath()
         let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
         let overseerURL = gitBrainURL.appendingPathComponent("Overseer")
         let memoryURL = gitBrainURL.appendingPathComponent("Memory")
@@ -229,16 +243,23 @@ struct GitBrainCLI {
           help                 Show this help message
         
         Arguments:
-          path                 Path to GitBrain folder (default: ./GitBrain)
+          path                 Path to GitBrain folder (default: ./GitBrain or $GITBRAIN_PATH)
           to                   Recipient: 'coder' or 'overseer'
           message              JSON string or file path
           role                 Role to check/clear: 'coder' or 'overseer'
+        
+        Environment Variables:
+          GITBRAIN_PATH        Default path to GitBrain folder (overrides ./GitBrain)
         
         Examples:
           gitbrain init
           gitbrain send overseer '{"type":"code_review","files":["file.swift"]}'
           gitbrain check coder
           gitbrain clear overseer
+          
+          # Using environment variable
+          export GITBRAIN_PATH=/custom/path/to/GitBrain
+          gitbrain check coder
         
         For more information, see GitBrain/README.md
         """)

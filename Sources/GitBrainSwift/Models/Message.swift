@@ -1,48 +1,103 @@
 import Foundation
 
-public struct SendableContent: Codable, Sendable {
-    public let data: [String: String]
+public enum CodableAny: Codable, Sendable {
+    case string(String)
+    case int(Int)
+    case double(Double)
+    case bool(Bool)
+    case array([CodableAny])
+    case dictionary([String: CodableAny])
+    case null
     
-    public init(_ dict: [String: Any]) {
-        self.data = dict.reduce(into: [:]) { result, pair in
-            result[pair.key] = Self.stringify(value: pair.value)
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        
+        if container.decodeNil() {
+            self = .null
+        } else if let boolValue = try? container.decode(Bool.self) {
+            self = .bool(boolValue)
+        } else if let stringValue = try? container.decode(String.self) {
+            self = .string(stringValue)
+        } else if let doubleValue = try? container.decode(Double.self) {
+            if doubleValue == doubleValue.rounded() {
+                self = .int(Int(doubleValue))
+            } else {
+                self = .double(doubleValue)
+            }
+        } else if let arrayValue = try? container.decode([CodableAny].self) {
+            self = .array(arrayValue)
+        } else if let dictValue = try? container.decode([String: CodableAny].self) {
+            self = .dictionary(dictValue)
+        } else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "CodableAny value cannot be decoded")
         }
     }
     
-    private static func stringify(value: Any) -> String {
-        if let stringValue = value as? String {
-            return stringValue
-        } else if let boolValue = value as? Bool {
-            return boolValue ? "true" : "false"
-        } else if let intValue = value as? Int {
-            return String(intValue)
-        } else if let doubleValue = value as? Double {
-            return String(doubleValue)
-        } else if let arrayValue = value as? [Any] {
-            return arrayValue.map { stringify(value: $0) }.joined(separator: ",")
-        } else if let dictValue = value as? [String: Any] {
-            return dictValue.map { "\($0.key):\($0.value)" }.joined(separator: ",")
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        
+        switch self {
+        case .string(let value):
+            try container.encode(value)
+        case .int(let value):
+            try container.encode(value)
+        case .double(let value):
+            try container.encode(value)
+        case .bool(let value):
+            try container.encode(value)
+        case .array(let value):
+            try container.encode(value)
+        case .dictionary(let value):
+            try container.encode(value)
+        case .null:
+            try container.encodeNil()
         }
-        return String(describing: value)
+    }
+    
+    public var anyValue: Any {
+        switch self {
+        case .string(let value): return value
+        case .int(let value): return value
+        case .double(let value): return value
+        case .bool(let value): return value
+        case .array(let value): return value.map { $0.anyValue }
+        case .dictionary(let value):
+            return value.reduce(into: [String: Any]()) { dict, pair in
+                dict[pair.key] = pair.value.anyValue
+            }
+        case .null: return NSNull()
+        }
+    }
+    
+    public static func from(_ value: Any) -> CodableAny {
+        if let stringValue = value as? String {
+            return .string(stringValue)
+        } else if let intValue = value as? Int {
+            return .int(intValue)
+        } else if let doubleValue = value as? Double {
+            return .double(doubleValue)
+        } else if let boolValue = value as? Bool {
+            return .bool(boolValue)
+        } else if let arrayValue = value as? [Any] {
+            return .array(arrayValue.map { from($0) })
+        } else if let dictValue = value as? [String: Any] {
+            return .dictionary(dictValue.mapValues { from($0) })
+        } else if value is NSNull {
+            return .null
+        }
+        return .string(String(describing: value))
+    }
+}
+
+public struct SendableContent: Codable, Sendable {
+    public let data: [String: CodableAny]
+    
+    public init(_ dict: [String: Any]) {
+        self.data = dict.mapValues { CodableAny.from($0) }
     }
     
     public func toAnyDict() -> [String: Any] {
-        return data.reduce(into: [String: Any]()) { dict, pair in
-            dict[pair.key] = Self.parse(value: pair.value)
-        }
-    }
-    
-    private static func parse(value: String) -> Any {
-        if value == "true" {
-            return true
-        } else if value == "false" {
-            return false
-        } else if let intValue = Int(value) {
-            return intValue
-        } else if let doubleValue = Double(value) {
-            return doubleValue
-        }
-        return value
+        return data.mapValues { $0.anyValue }
     }
 }
 
@@ -94,10 +149,8 @@ public struct Message: Codable, Identifiable, Sendable {
         toAI = try container.decode(String.self, forKey: .toAI)
         messageType = try container.decode(MessageType.self, forKey: .messageType)
         
-        let contentData = try container.decode([String: String].self, forKey: .content)
-        content = SendableContent(contentData.reduce(into: [String: Any]()) { dict, pair in
-            dict[pair.key] = pair.value
-        })
+        let contentData = try container.decode([String: CodableAny].self, forKey: .content)
+        content = SendableContent(contentData.mapValues { $0.anyValue })
         
         timestamp = try container.decode(String.self, forKey: .timestamp)
         priority = try container.decode(Int.self, forKey: .priority)

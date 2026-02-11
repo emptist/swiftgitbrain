@@ -3,6 +3,8 @@ import Foundation
 public actor FileBasedCommunication {
     private let overseerFolder: URL
     private let fileManager: FileManager
+    private let validator = MessageValidator()
+    private let pluginManager = PluginManager()
     
     public init(overseerFolder: URL) {
         self.overseerFolder = overseerFolder
@@ -12,6 +14,9 @@ public actor FileBasedCommunication {
     }
     
     public func sendMessageToOverseer(_ content: SendableContent) async throws -> URL {
+        let processedContent = try await pluginManager.processOutgoingMessage(content, to: "overseer")
+        try await validator.validate(content: processedContent)
+        
         let timestamp = ISO8601DateFormatter().string(from: Date())
         let filename = "\(timestamp)_\(UUID().uuidString).json"
         let fileURL = overseerFolder.appendingPathComponent(filename)
@@ -20,7 +25,7 @@ public actor FileBasedCommunication {
             "from": "coder",
             "to": "overseer",
             "timestamp": timestamp,
-            "content": content.toAnyDict()
+            "content": processedContent.toAnyDict()
         ]
         
         let jsonData = try JSONSerialization.data(withJSONObject: messageData)
@@ -30,6 +35,9 @@ public actor FileBasedCommunication {
     }
     
     public func sendMessageToCoder(_ content: SendableContent, coderFolder: URL) async throws -> URL {
+        let processedContent = try await pluginManager.processOutgoingMessage(content, to: "coder")
+        try await validator.validate(content: processedContent)
+        
         let timestamp = ISO8601DateFormatter().string(from: Date())
         let filename = "\(timestamp)_\(UUID().uuidString).json"
         let fileURL = coderFolder.appendingPathComponent(filename)
@@ -38,7 +46,7 @@ public actor FileBasedCommunication {
             "from": "overseer",
             "to": "coder",
             "timestamp": timestamp,
-            "content": content.toAnyDict()
+            "content": processedContent.toAnyDict()
         ]
         
         let jsonData = try JSONSerialization.data(withJSONObject: messageData)
@@ -97,5 +105,25 @@ public actor FileBasedCommunication {
         for file in files where file.pathExtension == "json" {
             try? fileManager.removeItem(at: file)
         }
+    }
+    
+    public func registerPlugin(_ plugin: GitBrainPlugin) async throws {
+        try await pluginManager.registerPlugin(plugin)
+    }
+    
+    public func unregisterPlugin(named name: String) async throws {
+        try await pluginManager.unregisterPlugin(named: name)
+    }
+    
+    public func initializePlugins() async throws {
+        try await pluginManager.initializeAll()
+    }
+    
+    public func shutdownPlugins() async throws {
+        try await pluginManager.shutdownAll()
+    }
+    
+    public func getRegisteredPlugins() async -> [String] {
+        return await pluginManager.getRegisteredPlugins()
     }
 }
