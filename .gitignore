@@ -133,3 +133,17 @@ docs/build/
 # Git worktrees
 *-worktree/
 worktrees/
+
+# GitBrain communication files (transient AI communication)
+GitBrain/Memory/
+GitBrain/Overseer/
+GitBrain/Coder/
+GitBrain/keepalive_counter.txt
+
+# Temporary message files
+acknowledgment.json
+message_to_overseer.json
+message_to_coder.json
+status_update.json
+heartbeat.json
+
