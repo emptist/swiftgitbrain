@@ -146,4 +146,5 @@ message_to_overseer.json
 message_to_coder.json
 status_update.json
 heartbeat.json
+daily_target.json
 

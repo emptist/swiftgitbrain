@@ -1,6 +1,6 @@
 import Foundation
 
-public struct BrainState: Codable, @unchecked Sendable {
+public struct BrainState: Codable, Sendable {
     public let aiName: String
     public let role: RoleType
     public var version: String

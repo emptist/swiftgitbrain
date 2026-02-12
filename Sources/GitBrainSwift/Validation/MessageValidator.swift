@@ -82,8 +82,7 @@ public struct MessageSchema: Sendable {
         if value is Int { return "Int" }
         if value is Double { return "Double" }
         if value is Bool { return "Bool" }
-        if value is NSNumber {
-            let nsNumber = value as! NSNumber
+        if let nsNumber = value as? NSNumber {
             if nsNumber === kCFBooleanTrue || nsNumber === kCFBooleanFalse {
                 return "Bool"
             }
