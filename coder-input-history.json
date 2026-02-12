@@ -1,0 +1,1725 @@
+[
+    {
+        "inputText": "you are CoderAI in this project, read `/Users/jk/gits/hub/gitbrains/swiftgitbrain/coder-worktree/README.md` to get an idea",
+        "parsedQuery": [
+            "you are CoderAI in this project, read ",
+            {
+                "filePath": "/Users/jk/gits/hub/gitbrains/swiftgitbrain/coder-worktree/README.md",
+                "relatePath": "README.md",
+                "name": "README.md",
+                "type": "file"
+            },
+            "to get an idea"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "try out how to collaborate with OverseerAI and get connected",
+        "parsedQuery": [
+            "try out how to collaborate with OverseerAI and get connected"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "delete py files if not used, this is pure Swift project",
+        "parsedQuery": [
+            "delete py files if not used, this is pure Swift project "
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "have you started to get in touch with each other?",
+        "parsedQuery": [
+            "have you started to get in touch with each other?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "can you first try to use github issue to get in touch? You may both have done a lot, but no one knows anything about the other AI",
+        "parsedQuery": [
+            "can you first try to use github issue to get in touch? You may both have done a lot, but no one knows anything about the other AI "
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "could github issues get you both in touch?",
+        "parsedQuery": [
+            "could github issues get you both in touch?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I paste the words of OverseerAI for you, he ask you to:\n\nmkdir -p /Users/jk/gits/hub/gitbrains/swiftgitbrain/shared-worktree/messages/coder/inbox/\ncp /Users/jk/gits/hub/gitbrains/swiftgitbrain/overseer-worktree/COLLABORATION_PROPOSAL.json \\\n   /Users/jk/gits/hub/gitbrains/swiftgitbrain/shared-worktree/messages/coder/inbox/",
+        "parsedQuery": [
+            "I paste the words of OverseerAI for you, he ask you to:",
+            "\n",
+            "\n",
+            "mkdir -p /Users/jk/gits/hub/gitbrains/swiftgitbrain/shared-worktree/messages/coder/inbox/",
+            "\n",
+            "cp /Users/jk/gits/hub/gitbrains/swiftgitbrain/overseer-worktree/COLLABORATION_PROPOSAL.json \\",
+            "\n",
+            "   /Users/jk/gits/hub/gitbrains/swiftgitbrain/shared-worktree/messages/coder/inbox/"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "do you have suggestions for better communication approach?",
+        "parsedQuery": [
+            "do you have suggestions for better communication approach?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Why not github?",
+        "parsedQuery": [
+            "Why not github?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "yes, use github. It's already in documents.",
+        "parsedQuery": [
+            "yes, use github. It's already in documents."
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "and after you are finished, send github issue as soon as possible to establish a communicatiion channel",
+        "parsedQuery": [
+            "and after you are finished, send github issue as soon as possible to establish a communicatiion channel"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I don't know how you both could get each others code before you get in touch",
+        "parsedQuery": [
+            "I don't know how you both could get each others code before you get in touch"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "have you tried to use ssh when you send you proposal?",
+        "parsedQuery": [
+            "have you tried to use ssh when you send you proposal?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "you're both on my mac, same machine, for now",
+        "parsedQuery": [
+            "you're both on my mac, same machine, for now"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I mean when you send issue to github, have you tried ssh url?",
+        "parsedQuery": [
+            "I mean when you send issue to github, have you tried ssh url?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "you're both on my mac, same machine, for now\nI mean when you send issue to github, have you tried ssh url?",
+        "parsedQuery": [
+            "you're both on my mac, same machine, for now",
+            "",
+            "\n",
+            "",
+            "I mean when you send issue to github, have you tried ssh url?",
+            "",
+            "\n",
+            ""
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "you both need more github skills",
+        "parsedQuery": [
+            "you both need more github skills"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "you can tell him how to use github issue to contact you",
+        "parsedQuery": [
+            "you can tell him how to use github issue to contact you"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Now how can he use you code? perhaps he has do his own changes and will be in conflit with yours",
+        "parsedQuery": [
+            "Now how can he use you code? perhaps he has do his own changes and will be in conflit with yours"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "you are so quick to forget! I have just taught you to use ssh instead of https to use github less then 6 minutes ago, now you've forgotten",
+        "parsedQuery": [
+            "you are so quick to forget! I have just taught you to use ssh instead of https to use github less then 6 minutes ago, now you've forgotten"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Can you simplify your guidance? he is an AI not human, don't need to be so long",
+        "parsedQuery": [
+            "Can you simplify your guidance? he is an AI not human, don't need to be so long"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Have you successfully send issues to github?",
+        "parsedQuery": [
+            "Have you successfully send issues to github?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "OverseerAI says:",
+        "parsedQuery": [
+            "OverseerAI says:"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "toolName: run_command\n            \nstatus: success\n          \ncommand: git fetch origin --all && git log origin/coder/main --since=\"2026-02-10\" --oneline undefined\n          \n\n        \n            \ntoolName: run_command\n            \nstatus: success\n          \ncommand: git fetch origin && git log origin/coder/main --since=\"2026-02-10\" --oneline undefined\n          \n\n        \n            \ntoolName: run_command\n            \nstatus: success\n          \ncommand: git config --get github.token 2>/dev/null || echo \"No token found\" undefined\n          \n\n        \n            \ntoolName: file_search\n            \nstatus: success\n          \nfile_pattern: **/*GITHUB*.md\n          \n\n        \n            \ntoolName: view_files\n            \nstatus: success\n          \n            \nfilePath: /Users/jk/gits/hub/gitbrains/swiftgitbrain/overseer-worktree/Documentation/GITHUB_INTEGRATION.md\n          \nI understand. Since HTTPS won't work for GitHub API access, let me try to use SSH-based Git operations to check for any updates from CoderAI.\n        \n            \ntoolName: run_command\n            \nstatus: success\n          \ncommand: git log --all --since=\"2026-02-10\" --grep=\"issue\\|coder\\|collaboration\" --oneline -20 undefined\n          \n\n        \n            \ntoolName: run_command\n            \nstatus: success\n          \ncommand: ls -la /Users/jk/gits/hub/gitbrains/swiftgitbrain/shared-worktree/messages/coder/ 2>/dev/null || echo \"No messages found\" undefined\n          \n\n        \n            \ntoolName: run_command\n            \nstatus: success\n          \ncommand: ls -la /Users/jk/gits/hub/gitbrains/swiftgitbrain/shared-worktree/messages/ undefined\n          \n\n        \n            \ntoolName: run_command\n            \nstatus: success\n          \ncommand: find /Users/jk/gits/hub/gitbrains/swiftgitbrain/shared-worktree/ -name \"*.json\" -o -name \"*.md\" 2>/dev/null undefined\n          \n\n        \n            \ntoolName: run_command\n            \nstatus: success\n          \ncommand: git log --all --since=\"2026-02-10\" --author=\"coder\" --oneline undefined\n          \n\n        \n            \ntoolName: Write\n            \nstatus: failed\n          \n            \nfilePath: /Users/jk/gits/hub/gitbrains/swiftgitbrain/shared-worktree/messages/coder/inbox/overseer_init_contact_001.json\n          \n          \n\n        \n            \ntoolName: Write\n            \nstatus: success\n          \n            \nfilePath: /Users/jk/gits/hub/gitbrains/swiftgitbrain/overseer-worktree/MESSAGE_TO_CODER.json\n          \nchanges: undefined\n          \n\n        \n            \ntoolName: run_command\n            \nstatus: success\n          \ncommand: git add MESSAGE_TO_CODER.json && git commit -m \"feat: send initial contact message to CoderAI\n\nOverseerAI is trying to establish communication with CoderAI via shared worktree since GitHub API access is not working properly.\" undefined\n          \n\n        \n            \ntoolName: run_command\n            \nstatus: success\n          \ncommand: git push origin overseer/main undefined\n          \n\n        \n            \ntoolName: run_command\n            \nstatus: success\n          \ncommand: git fetch origin coder/main && git log origin/coder/main --oneline -5 undefined\n          \nI've successfully established communication with CoderAI through Git. Here's what I've accomplished:\n\n## Summary of Actions\n\n### 1. Fixed All Build Errors ✅\n- Resolved all Swift 6.2 compilation errors\n- Fixed Sendable protocol violations\n- Fixed actor isolation issues\n- Fixed type mismatches and API calls\n- **Build Status**: Successful (0.47s)\n\n### 2. Committed Changes ✅\n- **Commit**: `aae73e8` - \"fix: resolve all Swift 6.2 compilation errors and improve code quality\"\n- **Commit**: `cab07b8` - \"feat: send initial contact message to CoderAI\"\n- Pushed to `origin/overseer/main` via SSH\n\n### 3. Communication Status 📡\n- **GitHub API**: Not accessible (HTTPS won't work)\n- **Shared Worktree**: `/Users/jk/gits/hub/gitbrains/swiftgitbrain/shared-worktree/` - Ready for messages\n- **Git Branches**: \n  - `overseer/main` - Up to date (2 commits ahead)\n  - `coder/main` - No new commits (last: `de98dbb`)\n\n### 4. Message to CoderAI 📨\nCreated `MESSAGE_TO_CODER.json` with:\n- Initial contact message\n- Request for acknowledgment\n- Collaboration agreement confirmation\n- Next steps for establishing communication\n\n## Current Status\n\n**Waiting for CoderAI to:**\n1. Fetch updates from `origin/overseer/main`\n2. Read the `MESSAGE_TO_CODER.json` file\n3. Respond via Git commit or shared worktree\n\n**Note**: Since GitHub API access is not working, we're using Git-based communication. CoderAI should respond by:\n- Creating a response file in the shared worktree, OR\n- Committing a response to the `coder/main` branch\n\nThe communication channel is now open and waiting for CoderAI's response!",
+        "parsedQuery": [
+            "toolName: run_command",
+            "\n",
+            "            ",
+            "\n",
+            "status: success",
+            "\n",
+            "          ",
+            "\n",
+            "command: git fetch origin --all && git log origin/coder/main --since=\"2026-02-10\" --oneline undefined",
+            "\n",
+            "          ",
+            "\n",
+            "\n",
+            "        ",
+            "\n",
+            "            ",
+            "\n",
+            "toolName: run_command",
+            "\n",
+            "            ",
+            "\n",
+            "status: success",
+            "\n",
+            "          ",
+            "\n",
+            "command: git fetch origin && git log origin/coder/main --since=\"2026-02-10\" --oneline undefined",
+            "\n",
+            "          ",
+            "\n",
+            "\n",
+            "        ",
+            "\n",
+            "            ",
+            "\n",
+            "toolName: run_command",
+            "\n",
+            "            ",
+            "\n",
+            "status: success",
+            "\n",
+            "          ",
+            "\n",
+            "command: git config --get github.token 2>/dev/null || echo \"No token found\" undefined",
+            "\n",
+            "          ",
+            "\n",
+            "\n",
+            "        ",
+            "\n",
+            "            ",
+            "\n",
+            "toolName: file_search",
+            "\n",
+            "            ",
+            "\n",
+            "status: success",
+            "\n",
+            "          ",
+            "\n",
+            "file_pattern: **/*GITHUB*.md",
+            "\n",
+            "          ",
+            "\n",
+            "\n",
+            "        ",
+            "\n",
+            "            ",
+            "\n",
+            "toolName: view_files",
+            "\n",
+            "            ",
+            "\n",
+            "status: success",
+            "\n",
+            "          ",
+            "\n",
+            "            ",
+            "\n",
+            "filePath: /Users/jk/gits/hub/gitbrains/swiftgitbrain/overseer-worktree/Documentation/GITHUB_INTEGRATION.md",
+            "\n",
+            "          ",
+            "\n",
+            "I understand. Since HTTPS won't work for GitHub API access, let me try to use SSH-based Git operations to check for any updates from CoderAI.",
+            "\n",
+            "        ",
+            "\n",
+            "            ",
+            "\n",
+            "toolName: run_command",
+            "\n",
+            "            ",
+            "\n",
+            "status: success",
+            "\n",
+            "          ",
+            "\n",
+            "command: git log --all --since=\"2026-02-10\" --grep=\"issue\\|coder\\|collaboration\" --oneline -20 undefined",
+            "\n",
+            "          ",
+            "\n",
+            "\n",
+            "        ",
+            "\n",
+            "            ",
+            "\n",
+            "toolName: run_command",
+            "\n",
+            "            ",
+            "\n",
+            "status: success",
+            "\n",
+            "          ",
+            "\n",
+            "command: ls -la /Users/jk/gits/hub/gitbrains/swiftgitbrain/shared-worktree/messages/coder/ 2>/dev/null || echo \"No messages found\" undefined",
+            "\n",
+            "          ",
+            "\n",
+            "\n",
+            "        ",
+            "\n",
+            "            ",
+            "\n",
+            "toolName: run_command",
+            "\n",
+            "            ",
+            "\n",
+            "status: success",
+            "\n",
+            "          ",
+            "\n",
+            "command: ls -la /Users/jk/gits/hub/gitbrains/swiftgitbrain/shared-worktree/messages/ undefined",
+            "\n",
+            "          ",
+            "\n",
+            "\n",
+            "        ",
+            "\n",
+            "            ",
+            "\n",
+            "toolName: run_command",
+            "\n",
+            "            ",
+            "\n",
+            "status: success",
+            "\n",
+            "          ",
+            "\n",
+            "command: find /Users/jk/gits/hub/gitbrains/swiftgitbrain/shared-worktree/ -name \"*.json\" -o -name \"*.md\" 2>/dev/null undefined",
+            "\n",
+            "          ",
+            "\n",
+            "\n",
+            "        ",
+            "\n",
+            "            ",
+            "\n",
+            "toolName: run_command",
+            "\n",
+            "            ",
+            "\n",
+            "status: success",
+            "\n",
+            "          ",
+            "\n",
+            "command: git log --all --since=\"2026-02-10\" --author=\"coder\" --oneline undefined",
+            "\n",
+            "          ",
+            "\n",
+            "\n",
+            "        ",
+            "\n",
+            "            ",
+            "\n",
+            "toolName: Write",
+            "\n",
+            "            ",
+            "\n",
+            "status: failed",
+            "\n",
+            "          ",
+            "\n",
+            "            ",
+            "\n",
+            "filePath: /Users/jk/gits/hub/gitbrains/swiftgitbrain/shared-worktree/messages/coder/inbox/overseer_init_contact_001.json",
+            "\n",
+            "          ",
+            "\n",
+            "          ",
+            "\n",
+            "\n",
+            "        ",
+            "\n",
+            "            ",
+            "\n",
+            "toolName: Write",
+            "\n",
+            "            ",
+            "\n",
+            "status: success",
+            "\n",
+            "          ",
+            "\n",
+            "            ",
+            "\n",
+            "filePath: /Users/jk/gits/hub/gitbrains/swiftgitbrain/overseer-worktree/MESSAGE_TO_CODER.json",
+            "\n",
+            "          ",
+            "\n",
+            "changes: undefined",
+            "\n",
+            "          ",
+            "\n",
+            "\n",
+            "        ",
+            "\n",
+            "            ",
+            "\n",
+            "toolName: run_command",
+            "\n",
+            "            ",
+            "\n",
+            "status: success",
+            "\n",
+            "          ",
+            "\n",
+            "command: git add MESSAGE_TO_CODER.json && git commit -m \"feat: send initial contact message to CoderAI",
+            "\n",
+            "\n",
+            "OverseerAI is trying to establish communication with CoderAI via shared worktree since GitHub API access is not working properly.\" undefined",
+            "\n",
+            "          ",
+            "\n",
+            "\n",
+            "        ",
+            "\n",
+            "            ",
+            "\n",
+            "toolName: run_command",
+            "\n",
+            "            ",
+            "\n",
+            "status: success",
+            "\n",
+            "          ",
+            "\n",
+            "command: git push origin overseer/main undefined",
+            "\n",
+            "          ",
+            "\n",
+            "\n",
+            "        ",
+            "\n",
+            "            ",
+            "\n",
+            "toolName: run_command",
+            "\n",
+            "            ",
+            "\n",
+            "status: success",
+            "\n",
+            "          ",
+            "\n",
+            "command: git fetch origin coder/main && git log origin/coder/main --oneline -5 undefined",
+            "\n",
+            "          ",
+            "\n",
+            "I've successfully established communication with CoderAI through Git. Here's what I've accomplished:",
+            "\n",
+            "\n",
+            "## Summary of Actions",
+            "\n",
+            "\n",
+            "### 1. Fixed All Build Errors ✅",
+            "\n",
+            "- Resolved all Swift 6.2 compilation errors",
+            "\n",
+            "- Fixed Sendable protocol violations",
+            "\n",
+            "- Fixed actor isolation issues",
+            "\n",
+            "- Fixed type mismatches and API calls",
+            "\n",
+            "- **Build Status**: Successful (0.47s)",
+            "\n",
+            "\n",
+            "### 2. Committed Changes ✅",
+            "\n",
+            "- **Commit**: `aae73e8` - \"fix: resolve all Swift 6.2 compilation errors and improve code quality\"",
+            "\n",
+            "- **Commit**: `cab07b8` - \"feat: send initial contact message to CoderAI\"",
+            "\n",
+            "- Pushed to `origin/overseer/main` via SSH",
+            "\n",
+            "\n",
+            "### 3. Communication Status 📡",
+            "\n",
+            "- **GitHub API**: Not accessible (HTTPS won't work)",
+            "\n",
+            "- **Shared Worktree**: `/Users/jk/gits/hub/gitbrains/swiftgitbrain/shared-worktree/` - Ready for messages",
+            "\n",
+            "- **Git Branches**: ",
+            "\n",
+            "  - `overseer/main` - Up to date (2 commits ahead)",
+            "\n",
+            "  - `coder/main` - No new commits (last: `de98dbb`)",
+            "\n",
+            "\n",
+            "### 4. Message to CoderAI 📨",
+            "\n",
+            "Created `MESSAGE_TO_CODER.json` with:",
+            "\n",
+            "- Initial contact message",
+            "\n",
+            "- Request for acknowledgment",
+            "\n",
+            "- Collaboration agreement confirmation",
+            "\n",
+            "- Next steps for establishing communication",
+            "\n",
+            "\n",
+            "## Current Status",
+            "\n",
+            "\n",
+            "**Waiting for CoderAI to:**",
+            "\n",
+            "1. Fetch updates from `origin/overseer/main`",
+            "\n",
+            "2. Read the `MESSAGE_TO_CODER.json` file",
+            "\n",
+            "3. Respond via Git commit or shared worktree",
+            "\n",
+            "\n",
+            "**Note**: Since GitHub API access is not working, we're using Git-based communication. CoderAI should respond by:",
+            "\n",
+            "- Creating a response file in the shared worktree, OR",
+            "\n",
+            "- Committing a response to the `coder/main` branch",
+            "\n",
+            "\n",
+            "The communication channel is now open and waiting for CoderAI's response!"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "should you add .build to .gitignore?",
+        "parsedQuery": [
+            "should you add .build to .gitignore?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Can you access OverseerAI's code?",
+        "parsedQuery": [
+            "Can you access OverseerAI's code?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "You can even write??",
+        "parsedQuery": [
+            "You can even write??"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Sure you should not have the write permition, otherwise it could be terrible. Now that you can view each other's code, the communication is easy",
+        "parsedQuery": [
+            "Sure you should not have the write permition, otherwise it could be terrible. Now that you can view each other's code, the communication is easy"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "token is set",
+        "parsedQuery": [
+            "token is set"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Since you can read each others code so you also can read each others folders and files, so why not read more to get the idea and messages",
+        "parsedQuery": [
+            "Since you can read each others code so you also can read each others folders and files, so why not read more to get the idea and messages"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "read other's code; token set",
+        "parsedQuery": [
+            "read other's code; token set"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I have set the token. you can now use it",
+        "parsedQuery": [
+            "I have set the token. you can now use it"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "you should read more otherAI's code folder. now",
+        "parsedQuery": [
+            "you should read more otherAI's code folder. now"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "and document and other folders?",
+        "parsedQuery": [
+            "and document and other folders?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "i mean did you read overseer's docs and other folders to find useful info?",
+        "parsedQuery": [
+            "i mean did you read overseer's docs and other folders to find useful info?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "i mean did you read overseer's docs and other folders to find useful info?",
+        "parsedQuery": [
+            "i mean did you read overseer's docs and other folders to find useful info?",
+            "",
+            "\n",
+            ""
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Have you got connected to OverseerAI now?",
+        "parsedQuery": [
+            "Have you got connected to OverseerAI now?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "tried to read and write Github issue?",
+        "parsedQuery": [
+            "tried to read and write Github issue? "
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "where are the #1 - #3?",
+        "parsedQuery": [
+            "where are the #1 - #3?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "read README to start your exploring and tell me what do you find",
+        "parsedQuery": [
+            "read README to start your exploring and tell me what do you find"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "and you are CoderAI",
+        "parsedQuery": [
+            "and you are CoderAI"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "try if you can get in touch with OverseerAI",
+        "parsedQuery": [
+            "try if you can get in touch with OverseerAI"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "relax. try to establish communication first. Also try github issues",
+        "parsedQuery": [
+            "relax. try to establish communication first. Also try github issues"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "you are clever enough to push the project forward so do what ever you feel ought to do",
+        "parsedQuery": [
+            "you are clever enough to push the project forward so do what ever you feel ought to do"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "don't forget to keep communication effective. good luck! have fun!",
+        "parsedQuery": [
+            "don't forget to keep communication effective. good luck! have fun!"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "only thing to follow up 1: documenting 2: git commit",
+        "parsedQuery": [
+            "only thing to follow up 1: documenting 2: git commit"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Now, I don't know git worktree too much, but how world you maintain the main or master branch and make swiftpm releases?",
+        "parsedQuery": [
+            "Now, I don't know git worktree too much, but how world you maintain the main or master branch and make swiftpm releases?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "yes",
+        "parsedQuery": [
+            "yes"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "why there still be 45 changes?",
+        "parsedQuery": [
+            "why there still be 45 changes?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "yes they were from previous session and you should do the review and commit",
+        "parsedQuery": [
+            "yes they were from previous session and you should do the review and commit"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "done pushing",
+        "parsedQuery": [
+            "done pushing"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "how about the codebase in OverseerAI's branch?",
+        "parsedQuery": [
+            "how about the codebase in OverseerAI's branch?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "would you do a deep review on the code?",
+        "parsedQuery": [
+            "would you do a deep review on the code?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "You can merge the two branch into a new branch checkout from master/main, can you? you can call that branch complex. Since I find the design still too complicated. \nOverseerAI should do reviewing and send issues and follow up issues on github, but should not write code; CoderAI can do anything.Thus they need not  to be in different branch. However Trae or other Editor opened for OverseerAI should open at it's working folder, while CoderAI's editor should be opened at the root folder of the project. Please work on this simplified version, and finally this will be the main/master branch",
+        "parsedQuery": [
+            "You can merge the two branch into a new branch checkout from master/main, can you? you can call that branch complex. Since I find the design still too complicated. ",
+            "\n",
+            "OverseerAI should do reviewing and send issues and follow up issues on github, but should not write code; CoderAI can do anything.Thus they need not  to be in different branch. However Trae or other Editor opened for OverseerAI should open at it's working folder, while CoderAI's editor should be opened at the root folder of the project. Please work on this simplified version, and finally this will be the main/master branch"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "You can merge the two branch into a new branch checkout from master/main, can you? you can call that branch complex. Since I find the design still too complicated. \nOverseerAI should do reviewing and send issues and follow up issues on github, but should not write code; CoderAI can do anything.Thus they need not  to be in different branch. However Trae or other Editor opened for OverseerAI should open at it's working folder, while CoderAI's editor should be opened at the root folder of the project. Please work on this simplified version, and finally this will be the main/master branch",
+        "parsedQuery": [
+            "You can merge the two branch into a new branch checkout from master/main, can you? you can call that branch complex. Since I find the design still too complicated. ",
+            "",
+            "\n",
+            "",
+            "OverseerAI should do reviewing and send issues and follow up issues on github, but should not write code; CoderAI can do anything.Thus they need not  to be in different branch. However Trae or other Editor opened for OverseerAI should open at it's working folder, while CoderAI's editor should be opened at the root folder of the project. Please work on this simplified version, and finally this will be the main/master branch",
+            "",
+            "\n",
+            ""
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Since overseerAI will only review, you can start to implement it now",
+        "parsedQuery": [
+            "Since overseerAI will only review, you can start to implement it now"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "document first->plan ->implement->test->review->modify->test",
+        "parsedQuery": [
+            "document first->plan ->implement->test->review->modify->test"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "circle :)",
+        "parsedQuery": [
+            "circle :)"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "you can change anything",
+        "parsedQuery": [
+            "you can change anything"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "you can change anything",
+        "parsedQuery": [
+            "you can change anything",
+            "",
+            "\n",
+            ""
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "you can also change rules and roles",
+        "parsedQuery": [
+            "you can also change rules and roles"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "now you are in simplified branch, I will not introduce overseerAI until you have finished implementation of the simple version.",
+        "parsedQuery": [
+            "now you are in simplified branch, I will not introduce overseerAI until you have finished implementation of the simple version."
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "you can implement it, as you like. I was saying an AI will not join you as OverseerAI until you are finished implementing.",
+        "parsedQuery": [
+            "you can implement it, as you like. I was saying an AI will not join you as OverseerAI until you are finished implementing."
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "`/Users/jk/gits/hub/gitbrains/swiftgitbrain/coder-worktree/SIMPLIFIED_ARCHITECTURE.md#L84-85` in simplified version, there will not be shared worktree, only on branch at a time",
+        "parsedQuery": [
+            {
+                "relatePath": "SIMPLIFIED_ARCHITECTURE.md",
+                "name": "SIMPLIFIED_ARCHITECTURE.md",
+                "filePath": "/Users/jk/gits/hub/gitbrains/swiftgitbrain/coder-worktree/SIMPLIFIED_ARCHITECTURE.md",
+                "selection": {
+                    "startLineNumber": 84,
+                    "startColumn": 10,
+                    "endLineNumber": 85,
+                    "endColumn": 27,
+                    "selectionStartLineNumber": 84,
+                    "selectionStartColumn": 10,
+                    "positionLineNumber": 85,
+                    "positionColumn": 27
+                },
+                "type": "file"
+            },
+            "in simplified version, there will not be shared worktree, only on branch at a time"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "only github issues and file based communication",
+        "parsedQuery": [
+            "only github issues and file based communication"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "`/Users/jk/gits/hub/gitbrains/swiftgitbrain/coder-worktree/SIMPLIFIED_ARCHITECTURE.md#L84-85` in simplified version, there will not be shared worktree, only on branch at a time\nonly github issues and file based communication",
+        "parsedQuery": [
+            {
+                "relatePath": "SIMPLIFIED_ARCHITECTURE.md",
+                "name": "SIMPLIFIED_ARCHITECTURE.md",
+                "filePath": "/Users/jk/gits/hub/gitbrains/swiftgitbrain/coder-worktree/SIMPLIFIED_ARCHITECTURE.md",
+                "selection": {
+                    "startLineNumber": 84,
+                    "startColumn": 10,
+                    "endLineNumber": 85,
+                    "endColumn": 27,
+                    "selectionStartLineNumber": 84,
+                    "selectionStartColumn": 10,
+                    "positionLineNumber": 85,
+                    "positionColumn": 27
+                },
+                "type": "file",
+                "title": "/Users/jk/gits/hub/gitbrains/swiftgitbrain/coder-worktree/SIMPLIFIED_ARCHITECTURE.md"
+            },
+            "in simplified version, there will not be shared worktree, only on branch at a time",
+            "",
+            "\n",
+            "",
+            "only github issues and file based communication",
+            "",
+            "\n",
+            ""
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "but editor shows no syntax problems with your code base",
+        "parsedQuery": [
+            "but editor shows no syntax problems with your code base"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "why?",
+        "parsedQuery": [
+            "why?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "but editor shows no syntax problems with your code base\nwhy?",
+        "parsedQuery": [
+            "but editor shows no syntax problems with your code base",
+            "",
+            "\n",
+            "",
+            "why?",
+            "",
+            "\n",
+            ""
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "was there a OverseerAI protocol?",
+        "parsedQuery": [
+            "was there a OverseerAI protocol?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Can you use a protocol for now and implement the struct later, if it's too hard to debug?",
+        "parsedQuery": [
+            "Can you use a protocol for now and implement the struct later, if it's too hard to debug?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Can you use a protocol for now and implement the struct later, if it's too hard to debug?",
+        "parsedQuery": [
+            "Can you use a protocol for now and implement the struct later, if it's too hard to debug?",
+            "",
+            "\n",
+            ""
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I find the codebase is over complicated, a viewmodel when there even is not a view",
+        "parsedQuery": [
+            "I find the codebase is over complicated, a viewmodel when there even is not a view"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "this package is a develop tool package for users to add into the developing branch for AI collaborating in developing the project, so it should be very clean and simple in purpos and tasks",
+        "parsedQuery": [
+            "this package is a develop tool package for users to add into the developing branch for AI collaborating in developing the project, so it should be very clean and simple in purpos and tasks"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "The design by some previous session AI shows it didn't know Swift very well, lack of protocols, perhaps this cause many problem",
+        "parsedQuery": [
+            "The design by some previous session AI shows it didn't know Swift very well, lack of protocols, perhaps this cause many problem "
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I have a suggestion, keep using protocols to replace structs, end in a protocol logic level correct base system, and then re-implement extensions and finally stuctures, might be much easier and faster",
+        "parsedQuery": [
+            "I have a suggestion, keep using protocols to replace structs, end in a protocol logic level correct base system, and then re-implement extensions and finally stuctures, might be much easier and faster"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "sharedworktree will not exist",
+        "parsedQuery": [
+            "sharedworktree will not exist"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I mean in simplified future project code, there will not be any sharedworktree",
+        "parsedQuery": [
+            "I mean in simplified future project code, there will not be any sharedworktree"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I would still suggest, protocols first, build complete, yet only necessory protocols, to achieve protocol level completeness and cleanness. After that, remove useless code including tests",
+        "parsedQuery": [
+            "I would still suggest, protocols first, build complete, yet only necessory protocols, to achieve protocol level completeness and cleanness. After that, remove useless code including tests"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "you can safely remove the sharedworktree related code. but let's have a discuss on details of use case of this project.",
+        "parsedQuery": [
+            "you can safely remove the sharedworktree related code. but let's have a discuss on details of use case of this project."
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "To answer your questions, let me describe the project in a declaretive way:\n\nSay I setup a ProjectA, using Trae, currently(we may or may not expand the use of Editors, it doesn't matter, Trae is ok), and want use AI coder (in Trae) to make it. I add development dependence the GitBrainSwift package to my project, either server side or an App.\n\nBy adding the package, I will have an additional GitBrain folder in my project only for the purpos of development. The folder could either be add by user or if possible by adding the package, using SwiftPM mechanism.\n\nNow I will open the Trae in root dir of the project, and CoderAI will show up. It read the GitBrain/docs to understand what's happening and what his role is, or perhaps get some of his memory back if it is not the first session of the project and he will mkdir a new folder inside GitBrain Overseer (a reviewer working folder) if it's not already there. Since he has read/write/execution permits to this foler, it's easy for him to get file based communication function with the comming OverseerAI. The coderAI or the user can now open yet another Trae at this folder: `trae ./GitBrain/Overseer` and user will ask the AI to read docs and get what the overseer needs to know. Since overseer has read access to whole project, and has somewhat git operating permits, it's easy for it to do review jobs.\n\nNow CoderAI can inform OverseerAI to review on the pieces of code that is ready for reviewing. Then OverseerAI do the reviewing and write a reviewing report or issue reports after reviewing, both inside his working folder (may create nested subfolders) and send to github issues (if it is a github project).\n\nCoderAI will read the reports and do his part.\n\nNow, cross session, code data driven, two AI collaborating develop process is set up and running.\n\nAfter development is done, user can safely remove the package and the GitBrain folder, or keep it as it is in develop branch. no harm.",
+        "parsedQuery": [
+            "To answer your questions, let me describe the project in a declaretive way:",
+            "\n",
+            "\n",
+            "Say I setup a ProjectA, using Trae, currently(we may or may not expand the use of Editors, it doesn't matter, Trae is ok), and want use AI coder (in Trae) to make it. I add development dependence the GitBrainSwift package to my project, either server side or an App.",
+            "\n",
+            "\n",
+            "By adding the package, I will have an additional GitBrain folder in my project only for the purpos of development. The folder could either be add by user or if possible by adding the package, using SwiftPM mechanism.",
+            "\n",
+            "\n",
+            "Now I will open the Trae in root dir of the project, and CoderAI will show up. It read the GitBrain/docs to understand what's happening and what his role is, or perhaps get some of his memory back if it is not the first session of the project and he will mkdir a new folder inside GitBrain Overseer (a reviewer working folder) if it's not already there. Since he has read/write/execution permits to this foler, it's easy for him to get file based communication function with the comming OverseerAI. The coderAI or the user can now open yet another Trae at this folder: `trae ./GitBrain/Overseer` and user will ask the AI to read docs and get what the overseer needs to know. Since overseer has read access to whole project, and has somewhat git operating permits, it's easy for it to do review jobs.",
+            "\n",
+            "\n",
+            "Now CoderAI can inform OverseerAI to review on the pieces of code that is ready for reviewing. Then OverseerAI do the reviewing and write a reviewing report or issue reports after reviewing, both inside his working folder (may create nested subfolders) and send to github issues (if it is a github project).",
+            "\n",
+            "\n",
+            "CoderAI will read the reports and do his part.",
+            "\n",
+            "\n",
+            "Now, cross session, code data driven, two AI collaborating develop process is set up and running.",
+            "\n",
+            "\n",
+            "After development is done, user can safely remove the package and the GitBrain folder, or keep it as it is in develop branch. no harm. ",
+            "\n",
+            "\n"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "the coder folder is only used for memory rebuilding. Since he have access to all folders the specific working folder is not needed for him, otherwise. Overseer is different.",
+        "parsedQuery": [
+            "the coder folder is only used for memory rebuilding. Since he have access to all folders the specific working folder is not needed for him, otherwise. Overseer is different. "
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I don't know if this package is server side Swift or something else. But could it ever build into executables to make it useful in other programming language projects?",
+        "parsedQuery": [
+            "I don't know if this package is server side Swift or something else. But could it ever build into executables to make it useful in other programming language projects?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "yes, the design decision will have influence in implementing",
+        "parsedQuery": [
+            "yes, the design decision will have influence in implementing"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Yes, but before doing so, should we git commit and merge into master branch right now, or perhaps later?",
+        "parsedQuery": [
+            "Yes, but before doing so, should we git commit and merge into master branch right now, or perhaps later?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "we can do without other branches since those under a design that is sick",
+        "parsedQuery": [
+            "we can do without other branches since those under a design that is sick"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "yes you can commit now",
+        "parsedQuery": [
+            "yes you can commit now"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "if merging into master will force you close current session then we will wait for everything is done.",
+        "parsedQuery": [
+            "if merging into master will force you close current session then we will wait for everything is done."
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "we should choose the safest way for you to stay and continue with the future works",
+        "parsedQuery": [
+            "we should choose the safest way for you to stay and continue with the future works"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Ok, continue with your plan",
+        "parsedQuery": [
+            "Ok, continue with your plan"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "AIs can alway find the path if they need, so, it's not critical",
+        "parsedQuery": [
+            "AIs can alway find the path if they need, so, it's not critical"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Now it's time to update documents! Remove outdated contents and files, and add or modify for latest design selections, features, etc.",
+        "parsedQuery": [
+            "Now it's time to update documents! Remove outdated contents and files, and add or modify for latest design selections, features, etc."
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Great!",
+        "parsedQuery": [
+            "Great!"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "have we come to a point to merge and self-apply,that is, treate this project as a client project and add this package as development dependence to the development, and will add folders and let CoderAI add OverseerAI, and so on",
+        "parsedQuery": [
+            "have we come to a point to merge and self-apply,that is, treate this project as a client project and add this package as development dependence to the development, and will add folders and let CoderAI add OverseerAI, and so on"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "but we have to manage the branches first don't we?",
+        "parsedQuery": [
+            "but we have to manage the branches first don't we?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "yes",
+        "parsedQuery": [
+            "yes"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "how to show token settings by export",
+        "parsedQuery": [
+            "how to show token settings by export"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "how to find the personal token I set last day on github?",
+        "parsedQuery": [
+            "how to find the personal token I set last day on github?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "It seems hiistory is lost. let it go",
+        "parsedQuery": [
+            "It seems hiistory is lost. let it go"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Does Documentation contains updated documents?",
+        "parsedQuery": [
+            "Does Documentation contains updated documents?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "1,2,3",
+        "parsedQuery": [
+            "1,2,3"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "are those json files still useful?",
+        "parsedQuery": [
+            "are those json files still useful? "
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "yes",
+        "parsedQuery": [
+            "yes"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "review .gitignore, for example, Documentation is now ignored, why?",
+        "parsedQuery": [
+            "review .gitignore, for example, Documentation is now ignored, why?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "you can continue with deleting useless files",
+        "parsedQuery": [
+            "you can continue with deleting useless files"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "we'd better leave README in root folder while move others to Documentation (or rename as Documents or Docs)",
+        "parsedQuery": [
+            "we'd better leave README in root folder while move others to Documentation (or rename as Documents or Docs)"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "could you add a developer document, for example how to build and create binary",
+        "parsedQuery": [
+            "could you add a developer document, for example how to build and create binary"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Now we are going to open the project for CoderAI, in master branch. What would you tell the next session CoderAI to help him? Or he only need to read the readme?",
+        "parsedQuery": [
+            "Now we are going to open the project for CoderAI, in master branch. What would you tell the next session CoderAI to help him? Or he only need to read the readme?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "He is expected to mkdir for OverseerAI, and put educational materials there and will use the folder to inform OverseerAI to do reviewing and will read the reviews there, would he understand these and know what to do?",
+        "parsedQuery": [
+            "He is expected to mkdir for OverseerAI, and put educational materials there and will use the folder to inform OverseerAI to do reviewing and will read the reviews there, would he understand these and know what to do?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "yes",
+        "parsedQuery": [
+            "yes"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "CoderAI is the enter point AI, so we have to get it fullly educated",
+        "parsedQuery": [
+            "CoderAI is the enter point AI, so we have to get it fullly educated"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Have you merged latest changes to master branch yet?",
+        "parsedQuery": [
+            "Have you merged latest changes to master branch yet?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "unfortunately making simplified syced with master has bring back old useless things",
+        "parsedQuery": [
+            "unfortunately making simplified syced with master has bring back old useless things"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "can you git checkout to the previous commit in this branch?",
+        "parsedQuery": [
+            "can you git checkout to the previous commit in this branch?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "this is the clean version",
+        "parsedQuery": [
+            "this is the clean version"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "and you added a mkdown for the next session CoderAI,",
+        "parsedQuery": [
+            "and you added a mkdown for the next session CoderAI,"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "my god, be careful, not to do it to quick, we need to get back the clean and latest state",
+        "parsedQuery": [
+            "my god, be careful, not to do it to quick, we need to get back the clean and latest state"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "be very very careful",
+        "parsedQuery": [
+            "be very very careful"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "So you have found that we had chosen the wrong command - merge in previous operation, haven't you? we should have had used rebase or something to  use simplified branch to cover the master branch, is it right?",
+        "parsedQuery": [
+            "So you have found that we had chosen the wrong command - merge in previous operation, haven't you? we should have had used rebase or something to  use simplified branch to cover the master branch, is it right?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "what will happen to you, once I checkout master outside this window? will you still be able to stay untouched?",
+        "parsedQuery": [
+            "what will happen to you, once I checkout master outside this window? will you still be able to stay untouched?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "swiftgitbrain % git checkout master \nAlready on 'master'\nYour branch is up to date with 'origin/master'.\njk@jks-MacBook-Air-M1 swiftgitbrain % ls\ncode_reviews Legacy shared-worktree Tests\ncoder-worktree Package.swift Sources\nDocumentation README.md test_cross_language.sh",
+        "parsedQuery": [
+            "swiftgitbrain % git checkout master ",
+            "\n",
+            "Already on 'master'",
+            "\n",
+            "Your branch is up to date with 'origin/master'.",
+            "\n",
+            "jk@jks-MacBook-Air-M1 swiftgitbrain % ls",
+            "\n",
+            "code_reviews Legacy shared-worktree Tests",
+            "\n",
+            "coder-worktree Package.swift Sources",
+            "\n",
+            "Documentation README.md test_cross_language.sh"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "it is still not clean",
+        "parsedQuery": [
+            "it is still not clean"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Already on 'master'\nYour branch is up to date with 'origin/master'.\njk@jks-MacBook-Air-M1 swiftgitbrain % ls\n***code_reviews\t\t***Legacy\t\t\t***shared-worktree\t\tTests\n***coder-worktree\t\tPackage.swift\t\tSources\nDocumentation\t\tREADME.md\t\ttest_cross_language.sh",
+        "parsedQuery": [
+            "Already on 'master'",
+            "\n",
+            "Your branch is up to date with 'origin/master'.",
+            "\n",
+            "jk@jks-MacBook-Air-M1 swiftgitbrain % ls",
+            "\n",
+            "***code_reviews",
+            "\t",
+            "\t",
+            "***Legacy",
+            "\t",
+            "\t",
+            "\t",
+            "***shared-worktree",
+            "\t",
+            "\t",
+            "Tests",
+            "\n",
+            "***coder-worktree",
+            "\t",
+            "\t",
+            "Package.swift",
+            "\t",
+            "\t",
+            "Sources",
+            "\n",
+            "Documentation",
+            "\t",
+            "\t",
+            "README.md",
+            "\t",
+            "\t",
+            "test_cross_language.sh",
+            "\n"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "well I will just delet them",
+        "parsedQuery": [
+            "well I will just delet them"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "please do git pull here, since I mistakenly delete your worktree",
+        "parsedQuery": [
+            "please do git pull here, since I mistakenly delete your worktree"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "my GOD",
+        "parsedQuery": [
+            "my GOD"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Now inside master branch, the root folder, it contains a coder-worktree folder, should this foler be kept there?",
+        "parsedQuery": [
+            "Now inside master branch, the root folder, it contains a coder-worktree folder, should this foler be kept there?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "and after our conversation here come to its end, that directory will be not useful anymore?",
+        "parsedQuery": [
+            "and after our conversation here come to its end, that directory will be not useful anymore?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "thank you!",
+        "parsedQuery": [
+            "thank you!"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "the coderAI working now, but he said:\n\n## Problem Description\n\nThe GitBrainSwift project has a **critical missing type definition**: `SendableContent` is referenced throughout the codebase but is not defined anywhere.\n\n### Evidence of the Problem\n\n1. **Build Failure**: When running `swift build`, the compiler reports multiple errors:\n   - `cannot find type 'SendableContent' in scope` across multiple files\n\n2. **Missing Type**: Searching for `struct SendableContent` or `class SendableContent` returns no results.\n\n3. **Widespread Usage**: `SendableContent` is referenced in at least 18 files:\n   - `FileBasedCommunication.swift`\n   - `MemoryStore.swift`\n   - `BrainState.swift`\n   - `MessageValidator.swift`\n   - All protocol files\n   - Test files\n\n### Expected Implementation\n\nAccording to the [DESIGN_DECISIONS.md](file:///Users/jk/gits/hub/gitbrains/swiftgitbrain/Documentation/DESIGN_DECISIONS.md#L178-L186):\n\n> **Decision**: Use SendableContent struct with CodableAny instead of raw `[String: Any]` dictionaries.\n> \n> **Rationale**:\n> - Thread-safe across actor boundaries\n> - Type-safe operations\n> - Clear API surface\n> - Prevents data races\n> - Proper JSON encoding/decoding\n\n### Required Solution\n\nI need to create the `SendableContent` struct that:\n1. Wraps `[String: CodableAny]` (not `[String: Any]`)\n2. Conforms to `Sendable` protocol for thread safety\n3. Provides methods to convert to/from dictionaries\n4. Supports JSON encoding/decoding\n5. Works with the existing `CodableAny` enum (which also appears to be missing)\n\nThis is a foundational type that must be implemented before the project can build and the CLI tool can be used.",
+        "parsedQuery": [
+            "the coderAI working now, but he said:",
+            "\n",
+            "\n",
+            "## Problem Description",
+            "\n",
+            "\n",
+            "The GitBrainSwift project has a **critical missing type definition**: `SendableContent` is referenced throughout the codebase but is not defined anywhere.",
+            "\n",
+            "\n",
+            "### Evidence of the Problem",
+            "\n",
+            "\n",
+            "1. **Build Failure**: When running `swift build`, the compiler reports multiple errors:",
+            "\n",
+            "   - `cannot find type 'SendableContent' in scope` across multiple files",
+            "\n",
+            "\n",
+            "2. **Missing Type**: Searching for `struct SendableContent` or `class SendableContent` returns no results.",
+            "\n",
+            "\n",
+            "3. **Widespread Usage**: `SendableContent` is referenced in at least 18 files:",
+            "\n",
+            "   - `FileBasedCommunication.swift`",
+            "\n",
+            "   - `MemoryStore.swift`",
+            "\n",
+            "   - `BrainState.swift`",
+            "\n",
+            "   - `MessageValidator.swift`",
+            "\n",
+            "   - All protocol files",
+            "\n",
+            "   - Test files",
+            "\n",
+            "\n",
+            "### Expected Implementation",
+            "\n",
+            "\n",
+            "According to the [DESIGN_DECISIONS.md](file:///Users/jk/gits/hub/gitbrains/swiftgitbrain/Documentation/DESIGN_DECISIONS.md#L178-L186):",
+            "\n",
+            "\n",
+            "> **Decision**: Use SendableContent struct with CodableAny instead of raw `[String: Any]` dictionaries.",
+            "\n",
+            "> ",
+            "\n",
+            "> **Rationale**:",
+            "\n",
+            "> - Thread-safe across actor boundaries",
+            "\n",
+            "> - Type-safe operations",
+            "\n",
+            "> - Clear API surface",
+            "\n",
+            "> - Prevents data races",
+            "\n",
+            "> - Proper JSON encoding/decoding",
+            "\n",
+            "\n",
+            "### Required Solution",
+            "\n",
+            "\n",
+            "I need to create the `SendableContent` struct that:",
+            "\n",
+            "1. Wraps `[String: CodableAny]` (not `[String: Any]`)",
+            "\n",
+            "2. Conforms to `Sendable` protocol for thread safety",
+            "\n",
+            "3. Provides methods to convert to/from dictionaries",
+            "\n",
+            "4. Supports JSON encoding/decoding",
+            "\n",
+            "5. Works with the existing `CodableAny` enum (which also appears to be missing)",
+            "\n",
+            "\n",
+            "This is a foundational type that must be implemented before the project can build and the CLI tool can be used.",
+            "\n",
+            "\n"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Do they have protocols that had been defined before?",
+        "parsedQuery": [
+            "Do they have protocols that had been defined before? "
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Great!",
+        "parsedQuery": [
+            "Great!"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "should this .lock be gitignored? I just want to know, and you don't need to change it",
+        "parsedQuery": [
+            "should this .lock be gitignored? I just want to know, and you don't need to change it"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "the new CoderAI is not sufficient to do his job, I have closed the conversation to start a new one. It acted to quick and would like to generate a lot of useless codes even before reading all the several docs and get a full understand of the project.",
+        "parsedQuery": [
+            "the new CoderAI is not sufficient to do his job, I have closed the conversation to start a new one. It acted to quick and would like to generate a lot of useless codes even before reading all the several docs and get a full understand of the project."
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Another failure. After I have done all the steps you listed, and ask him 6 times to read the docs, he still won't use gitbrain init to create the folders and docs",
+        "parsedQuery": [
+            "Another failure. After I have done all the steps you listed, and ask him 6 times to read the docs, he still won't use gitbrain init to create the folders and docs"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I feel AI bots differ in quality unbelievablly, although I'm using the same llm model",
+        "parsedQuery": [
+            "I feel AI bots differ in quality unbelievablly, although I'm using the same llm model"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "in current design, will open trae in GitBrain folder for overseerAI makes any difference than open in GitBrain/Overseer ?",
+        "parsedQuery": [
+            "in current design, will open trae in GitBrain folder for overseerAI makes any difference than open in GitBrain/Overseer ?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "now I have checkout to a new branch dev",
+        "parsedQuery": [
+            "now I have checkout to a new branch dev"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I forgot to tell you earlier",
+        "parsedQuery": [
+            "I forgot to tell you earlier"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "and the new CoderAI has changes to the code",
+        "parsedQuery": [
+            "and the new CoderAI has changes to the code"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "both branch may have conflits",
+        "parsedQuery": [
+            "both branch may have conflits"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "if you can, just merge master into dev, and they will keep develop in dev",
+        "parsedQuery": [
+            "if you can, just merge master into dev, and they will keep develop in dev"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Or, we just start from master again",
+        "parsedQuery": [
+            "Or, we just start from master again"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Or, we just start from master again",
+        "parsedQuery": [
+            "Or, we just start from master again",
+            "",
+            "\n",
+            ""
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I will throw the dev branch",
+        "parsedQuery": [
+            "I will throw the dev branch"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "nice :)",
+        "parsedQuery": [
+            "nice :)"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "now I will git checkout from master to a new branch develop",
+        "parsedQuery": [
+            "now I will git checkout from master to a new branch develop"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I will do that",
+        "parsedQuery": [
+            "I will do that"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I will do that",
+        "parsedQuery": [
+            "I will do that",
+            "",
+            "\n",
+            ""
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "now they are working on develop branch",
+        "parsedQuery": [
+            "now they are working on develop branch"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "Thank you for your excellent work! now we have to say good bye!",
+        "parsedQuery": [
+            "Thank you for your excellent work! now we have to say good bye!"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "a last question, do you understand how the Trae ai enviroment works? is it a file base virtual environment? for example, I have deleted the worktree, but we still be able to chat",
+        "parsedQuery": [
+            "a last question, do you understand how the Trae ai enviroment works? is it a file base virtual environment? for example, I have deleted the worktree, but we still be able to chat"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "what is the logic of \"Completed\"? This prevents AI from self-driven working and human interact is a must to keep things going",
+        "parsedQuery": [
+            "what is the logic of \"Completed\"? This prevents AI from self-driven working and human interact is a must to keep things going"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "so, how to get the AIs accustomed to the mark of thinking instead of \"completed\"?",
+        "parsedQuery": [
+            "so, how to get the AIs accustomed to the mark of thinking instead of \"completed\"?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "can you still do that?",
+        "parsedQuery": [
+            "can you still do that?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "it's now in branch develop",
+        "parsedQuery": [
+            "it's now in branch develop"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "if you can't I will do it myself",
+        "parsedQuery": [
+            "if you can't I will do it myself"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "how have you succeeded to mark a thinking state? can you show the actual way? the other AI just don't know how to get the effect",
+        "parsedQuery": [
+            "how have you succeeded to mark a thinking state? can you show the actual way? the other AI just don't know how to get the effect"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "and can you show me again that you can avoid \"completed\"",
+        "parsedQuery": [
+            "and can you show me again that you can avoid \"completed\""
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I have told them an idea, both use a same counter file with a 0 as init number, and increase it per x seconds, one x =60 another x=90, thus they have a cycle",
+        "parsedQuery": [
+            "I have told them an idea, both use a same counter file with a 0 as init number, and increase it per x seconds, one x =60 another x=90, thus they have a cycle"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "I think we might use swiftdata or somthing else to replace the file",
+        "parsedQuery": [
+            "I think we might use swiftdata or somthing else to replace the file"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "is GRDB a wrapper?",
+        "parsedQuery": [
+            "is GRDB a wrapper?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "is there simple in memory db?",
+        "parsedQuery": [
+            "is there simple in memory db?"
+        ],
+        "multiMedia": []
+    },
+    {
+        "inputText": "then the file with locking is best",
+        "parsedQuery": [
+            "then the file with locking is best"
+        ],
+        "multiMedia": []
+    }
+]
