@@ -24,107 +24,80 @@ A simple shared counter file (`GitBrain/keepalive_counter.txt`) is used as a hea
 
 ## Implementation
 
-### Swift Actor-Based Counter
+### CoderAI Keep-Alive Script
 
-**File**: `Sources/GitBrainSwift/Utilities/CounterFile.swift`
+**File**: `scripts/coder_keepalive_counter.sh`
 
-```swift
-import Foundation
+```bash
+#!/bin/bash
+# CoderAI keep-alive using shared counter
+# Increments counter every 1 minute to stay alive
 
-public actor CounterFile {
-    private let counterPath: String
-    private let fileManager: FileManager
-    private let logger: Logger
+set -e
+
+# Configuration
+AI_NAME="coder"
+COUNTER_FILE="GitBrain/keepalive_counter.txt"
+INCREMENT_INTERVAL=60  # 1 minute
+
+# Ensure counter file exists
+if [ ! -f "$COUNTER_FILE" ]; then
+    echo "0" > "$COUNTER_FILE"
+fi
+
+while true; do
+    # Read current counter value
+    current_value=$(cat "$COUNTER_FILE" 2>/dev/null || echo "0")
     
-    public init(counterPath: String, logger: Logger = Logger()) {
-        self.counterPath = counterPath
-        self.fileManager = FileManager.default
-        self.logger = logger
-        ensureCounterFileExists()
-    }
+    # Increment counter
+    new_value=$((current_value + 1))
     
-    private nonisolated func ensureCounterFileExists() {
-        if !fileManager.fileExists(atPath: counterPath) {
-            do {
-                try "0".write(toFile: counterPath, atomically: true, encoding: .utf8)
-                logger.info("Created counter file with initial value 0")
-            } catch {
-                logger.error("Failed to create counter file: \(error)")
-            }
-        }
-    }
+    # Write new value
+    echo "$new_value" > "$COUNTER_FILE"
     
-    public func increment() async -> Int {
-        let value = await readCounter()
-        let newValue = value + 1
-        await writeCounter(newValue)
-        logger.debug("Counter incremented: \(value) -> \(newValue)")
-        return newValue
-    }
+    log "Counter incremented: $current_value -> $new_value"
     
-    public func getValue() async -> Int {
-        return await readCounter()
-    }
-    
-    public func reset() async {
-        await writeCounter(0)
-        logger.info("Counter reset to 0")
-    }
-    
-    private func readCounter() async -> Int {
-        do {
-            let content = try String(contentsOfFile: counterPath, encoding: .utf8)
-            guard let value = Int(content.trimmingCharacters(in: .whitespacesAndNewlines)) else {
-                logger.warning("Invalid counter value in file: \(content)")
-                return 0
-            }
-            return value
-        } catch {
-            logger.error("Failed to read counter file: \(error)")
-            return 0
-        }
-    }
-    
-    private func writeCounter(_ value: Int) async {
-        do {
-            try String(value).write(toFile: counterPath, atomically: true, encoding: .utf8)
-        } catch {
-            logger.error("Failed to write counter file: \(error)")
-        }
-    }
-    
-    public func getLastModifiedTime() async -> Date? {
-        do {
-            let attributes = try fileManager.attributesOfItem(atPath: counterPath)
-            return attributes[.modificationDate] as? Date
-        } catch {
-            logger.error("Failed to get file modification time: \(error)")
-            return nil
-        }
-    }
-}
+    # Wait before next increment
+    sleep $INCREMENT_INTERVAL
+done
 ```
 
-### Usage
+### OverseerAI Keep-Alive Script
 
-**CoderAI:**
-```swift
-let counterFile = CounterFile(counterPath: "GitBrain/keepalive_counter.txt")
-while true {
-    let value = await counterFile.increment()
-    print("Counter: \(value)")
-    try await Task.sleep(nanoseconds: 60_000_000_000)  // 60 seconds
-}
-```
+**File**: `scripts/overseer_keepalive_counter.sh`
 
-**OverseerAI:**
-```swift
-let counterFile = CounterFile(counterPath: "GitBrain/keepalive_counter.txt")
-while true {
-    let value = await counterFile.increment()
-    print("Counter: \(value)")
-    try await Task.sleep(nanoseconds: 90_000_000_000)  // 90 seconds
-}
+```bash
+#!/bin/bash
+# OverseerAI keep-alive using shared counter
+# Increments counter every 1.5 minutes to stay alive
+
+set -e
+
+# Configuration
+AI_NAME="overseer"
+COUNTER_FILE="GitBrain/keepalive_counter.txt"
+INCREMENT_INTERVAL=90  # 1.5 minutes = 90 seconds
+
+# Ensure counter file exists
+if [ ! -f "$COUNTER_FILE" ]; then
+    echo "0" > "$COUNTER_FILE"
+fi
+
+while true; do
+    # Read current counter value
+    current_value=$(cat "$COUNTER_FILE" 2>/dev/null || echo "0")
+    
+    # Increment counter
+    new_value=$((current_value + 1))
+    
+    # Write new value
+    echo "$new_value" > "$COUNTER_FILE"
+    
+    log "Counter incremented: $current_value -> $new_value"
+    
+    # Wait before next increment
+    sleep $INCREMENT_INTERVAL
+done
 ```
 
 ## Usage
