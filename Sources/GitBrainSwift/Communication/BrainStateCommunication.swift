@@ -3,11 +3,11 @@ import Fluent
 
 public actor BrainStateCommunication: @unchecked Sendable {
     private let brainStateManager: BrainStateManager
-    private let database: Database
+    private let databases: Databases
     
-    public init(brainStateManager: BrainStateManager, database: Database) {
+    public init(brainStateManager: BrainStateManager, databases: Databases) {
         self.brainStateManager = brainStateManager
-        self.database = database
+        self.databases = databases
         GitBrainLogger.info("BrainStateCommunication initialized")
     }
     

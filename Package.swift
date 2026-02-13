@@ -18,6 +18,10 @@ let package = Package(
         .executable(
             name: "gitbrain-migrate",
             targets: ["GitBrainMigrationCLI"]
+        ),
+        .executable(
+            name: "brainstate-test",
+            targets: ["BrainStateCommunicationTest"]
         )
     ],
     dependencies: [
@@ -53,6 +57,11 @@ let package = Package(
             name: "GitBrainSwiftBenchmarks",
             dependencies: ["GitBrainSwift"],
             path: "Benchmarks"
+        ),
+        .executableTarget(
+            name: "BrainStateCommunicationTest",
+            dependencies: ["GitBrainSwift"],
+            path: "Sources/BrainStateCommunicationTest"
         )
     ]
 )
