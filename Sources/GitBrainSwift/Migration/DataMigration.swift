@@ -131,12 +131,13 @@ public struct DataMigration: Sendable {
         self.retryPolicy = retryPolicy
     }
     
-    private func retry<T>(_ operation: @escaping () async throws -> T, item: String, phase: String, progress: MigrationProgressProtocol?) async throws -> T {
+    private func retry<T>(_ operation: @escaping () async throws -> T, item: String, phase: String, progress: MigrationProgressProtocol?) async throws -> (result: T, attempts: Int) {
         var lastError: Error?
         
         for attempt in 0..<retryPolicy.maxRetries {
             do {
-                return try await operation()
+                let result = try await operation()
+                return (result, attempt + 1)
             } catch {
                 lastError = error
                 
@@ -206,7 +207,7 @@ public struct DataMigration: Sendable {
         
         for item in snapshot.knowledgeItems {
             do {
-                try await retry({
+                let _ = try await retry({
                     try await knowledgeRepo.add(
                         category: item.category,
                         key: item.key,
@@ -223,7 +224,7 @@ public struct DataMigration: Sendable {
         
         for state in snapshot.brainStates {
             do {
-                try await retry({
+                let _ = try await retry({
                     try await brainStateRepo.save(
                         aiName: state.aiName,
                         role: state.role,
@@ -309,7 +310,7 @@ public struct DataMigration: Sendable {
                 guard key != ".DS_Store" else { continue }
                 
                 do {
-                    try await retry({
+                    let _ = try await retry({
                         let data = try Data(contentsOf: keyURL)
                         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
                         
@@ -332,7 +333,7 @@ public struct DataMigration: Sendable {
                     }
                 } catch {
                     GitBrainLogger.error("Failed to migrate item \(category)/\(key): \(error)")
-                    migrationErrors.append(MigrationErrorDetail(item: "\(category)/\(key)", error: error.localizedDescription, phase: "Transfer", retryCount: 0))
+                    migrationErrors.append(MigrationErrorDetail(item: "\(category)/\(key)", error: error.localizedDescription, phase: "Transfer", retryCount: retryPolicy.maxRetries))
                     failedItems += 1
                     progress?.reportError(error: error, context: "Migrating \(category)/\(key)")
                 }
@@ -390,7 +391,7 @@ public struct DataMigration: Sendable {
             guard aiName != ".DS_Store" else { continue }
             
             do {
-                try await retry({
+                let _ = try await retry({
                     let data = try Data(contentsOf: stateFile)
                     let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
                     
@@ -412,7 +413,7 @@ public struct DataMigration: Sendable {
                 progress?.reportProgress(phase: "Transfer", current: currentState, total: stateFiles.count, message: "Migrated \(currentState)/\(stateFiles.count) states")
             } catch {
                 GitBrainLogger.error("Failed to migrate brain state for \(aiName): \(error)")
-                migrationErrors.append(MigrationErrorDetail(item: aiName, error: error.localizedDescription, phase: "Transfer", retryCount: 0))
+                migrationErrors.append(MigrationErrorDetail(item: aiName, error: error.localizedDescription, phase: "Transfer", retryCount: retryPolicy.maxRetries))
                 failedStates += 1
                 progress?.reportError(error: error, context: "Migrating brain state for \(aiName)")
             }
