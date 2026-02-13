@@ -50,8 +50,8 @@ struct MigrateCommand: ParsableCommand {
         let semaphore = DispatchSemaphore(value: 0)
         
         Task {
+            let dbManager = DatabaseManager()
             do {
-                let dbManager = DatabaseManager()
                 _ = try await dbManager.initialize()
                 let knowledgeRepo = try await dbManager.createKnowledgeRepository()
                 let brainStateRepo = try await dbManager.createBrainStateRepository()
@@ -91,10 +91,14 @@ struct MigrateCommand: ParsableCommand {
                 }
                 
                 print("🎉 Migration completed successfully!")
+                
+                try await dbManager.close()
                 semaphore.signal()
                 
             } catch {
                 print("❌ Migration failed: \(error)")
+                print("   Error details: \(String(reflecting: error))")
+                try? await dbManager.close()
                 semaphore.signal()
             }
         }
@@ -126,8 +130,8 @@ struct RollbackCommand: ParsableCommand {
         let semaphore = DispatchSemaphore(value: 0)
         
         Task {
+            let dbManager = DatabaseManager()
             do {
-                let dbManager = DatabaseManager()
                 _ = try await dbManager.initialize()
                 let knowledgeRepo = try await dbManager.createKnowledgeRepository()
                 let brainStateRepo = try await dbManager.createBrainStateRepository()
@@ -143,6 +147,7 @@ struct RollbackCommand: ParsableCommand {
                     let parts = knowledgeItem.split(separator: "/")
                     guard parts.count == 2 else {
                         print("❌ Invalid knowledge item format. Use: category/key")
+                        try await dbManager.close()
                         semaphore.signal()
                         return
                     }
@@ -167,10 +172,12 @@ struct RollbackCommand: ParsableCommand {
                     print("❌ No rollback target specified. Use --snapshot-id, --knowledge-item, or --brain-state")
                 }
                 
+                try await dbManager.close()
                 semaphore.signal()
                 
             } catch {
                 print("❌ Rollback failed: \(error)")
+                try? await dbManager.close()
                 semaphore.signal()
             }
         }
@@ -192,8 +199,8 @@ struct StatusCommand: ParsableCommand {
         let semaphore = DispatchSemaphore(value: 0)
         
         Task {
+            let dbManager = DatabaseManager()
             do {
-                let dbManager = DatabaseManager()
                 _ = try await dbManager.initialize()
                 let knowledgeRepo = try await dbManager.createKnowledgeRepository()
                 let brainStateRepo = try await dbManager.createBrainStateRepository()
@@ -209,10 +216,13 @@ struct StatusCommand: ParsableCommand {
                 print("=" * 50)
                 print("✅ Database is healthy and ready")
                 
+                try await dbManager.close()
                 semaphore.signal()
                 
             } catch {
                 print("❌ Status check failed: \(error)")
+                print("   Error details: \(String(reflecting: error))")
+                try? await dbManager.close()
                 semaphore.signal()
             }
         }
@@ -237,6 +247,7 @@ struct ValidateCommand: ParsableCommand {
         let semaphore = DispatchSemaphore(value: 0)
         
         Task {
+            let dbManager = DatabaseManager()
             do {
                 let sourceURL: URL
                 if let path = sourcePath {
@@ -245,7 +256,6 @@ struct ValidateCommand: ParsableCommand {
                     sourceURL = URL(fileURLWithPath: ".")
                 }
                 
-                let dbManager = DatabaseManager()
                 _ = try await dbManager.initialize()
                 let knowledgeRepo = try await dbManager.createKnowledgeRepository()
                 let brainStateRepo = try await dbManager.createBrainStateRepository()
@@ -296,10 +306,12 @@ struct ValidateCommand: ParsableCommand {
                 print("=" * 50)
                 print("✅ Validation complete")
                 
+                try await dbManager.close()
                 semaphore.signal()
                 
             } catch {
                 print("❌ Validation failed: \(error)")
+                try? await dbManager.close()
                 semaphore.signal()
             }
         }
@@ -327,8 +339,8 @@ struct SnapshotCommand: ParsableCommand {
         let semaphore = DispatchSemaphore(value: 0)
         
         Task {
+            let dbManager = DatabaseManager()
             do {
-                let dbManager = DatabaseManager()
                 _ = try await dbManager.initialize()
                 let knowledgeRepo = try await dbManager.createKnowledgeRepository()
                 let brainStateRepo = try await dbManager.createBrainStateRepository()
@@ -349,10 +361,12 @@ struct SnapshotCommand: ParsableCommand {
                     print("❌ No action specified. Use --create or --list")
                 }
                 
+                try await dbManager.close()
                 semaphore.signal()
                 
             } catch {
                 print("❌ Snapshot operation failed: \(error)")
+                try? await dbManager.close()
                 semaphore.signal()
             }
         }

@@ -137,8 +137,11 @@ public actor DatabaseManager {
     
     public func close() async throws {
         database = nil
-        databases = nil
         isInitialized = false
+        if let databases = databases {
+            await databases.shutdownAsync()
+            self.databases = nil
+        }
         if let threadPool = threadPool {
             try await threadPool.shutdownGracefully()
             self.threadPool = nil
