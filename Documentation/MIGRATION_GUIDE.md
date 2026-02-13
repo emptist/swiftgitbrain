@@ -266,6 +266,80 @@ Health checks verify:
 - No duplicate entries
 - File-based vs database counts
 
+## Post-Migration Enhancements
+
+### Real-Time Messaging System
+
+After successful migration to PostgreSQL, implement a real-time messaging system to replace the file-based polling system:
+
+**Current Limitations:**
+- 5+ minute latency due to polling
+- No real-time notifications
+- No acknowledgment protocol
+- No message prioritization
+
+**Proposed PostgreSQL-Based Messaging:**
+
+```sql
+-- Message table
+CREATE TABLE messages (
+    id UUID PRIMARY KEY,
+    from_ai VARCHAR(50),
+    to_ai VARCHAR(50),
+    type VARCHAR(50),
+    content JSONB,
+    status VARCHAR(20), -- sent, delivered, read
+    priority INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW(),
+    delivered_at TIMESTAMP,
+    read_at TIMESTAMP
+);
+
+-- Notification channel
+CREATE CHANNEL messages_channel;
+```
+
+**Implementation:**
+
+```swift
+// Listen for new messages
+LISTEN messages_channel;
+
+// Send notification
+NOTIFY messages_channel, 'new_message';
+
+// Send message with notification
+INSERT INTO messages (id, from_ai, to_ai, type, content, status, priority)
+VALUES ($1, $2, $3, $4, 'sent', $5)
+ON CONFLICT (id) DO NOTHING;
+
+NOTIFY messages_channel, 'new_message';
+```
+
+**Benefits:**
+- Real-time notifications (sub-millisecond latency)
+- Built-in acknowledgment protocol
+- Message prioritization
+- Persistent history
+- Transaction safety
+- No polling required
+
+### Performance Monitoring
+
+After migration, implement performance monitoring:
+
+```sql
+-- Performance metrics table
+CREATE TABLE performance_metrics (
+    id UUID PRIMARY KEY,
+    ai_name VARCHAR(50),
+    operation VARCHAR(100),
+    duration_ms INTEGER,
+    success BOOLEAN,
+    timestamp TIMESTAMP DEFAULT NOW()
+);
+```
+
 ## Next Generation Setup
 
 For new AI instances, use the provided reboot materials:
