@@ -71,6 +71,22 @@ struct GitBrainCLI {
                 try await handleScoreRequests(args: args)
             case "score-all-requests":
                 try await handleScoreAllRequests(args: args)
+            case "send-heartbeat":
+                try await handleSendHeartbeat(args: args)
+            case "send-feedback":
+                try await handleSendFeedback(args: args)
+            case "send-code":
+                try await handleSendCode(args: args)
+            case "send-score":
+                try await handleSendScore(args: args)
+            case "check-heartbeats":
+                try await handleCheckHeartbeats(args: args)
+            case "check-feedbacks":
+                try await handleCheckFeedbacks(args: args)
+            case "check-codes":
+                try await handleCheckCodes(args: args)
+            case "check-scores":
+                try await handleCheckScores(args: args)
             case "help", "--help", "-h":
                 printUsage()
             default:
@@ -562,6 +578,299 @@ struct GitBrainCLI {
         }
     }
     
+    private static func handleSendHeartbeat(args: [String]) async throws {
+        guard args.count >= 3 else {
+            throw CLIError.invalidArguments("send-heartbeat requires: <to> <ai_role> <status> [current_task] [metadata_key=value...]")
+        }
+        
+        let to = args[0]
+        let aiRole = args[1]
+        let status = args[2]
+        let currentTask = args.count > 3 ? args[3] : nil
+        var metadata: [String: String] = [:]
+        
+        if args.count > 4 {
+            for pair in args[4...] {
+                let parts = pair.split(separator: "=", maxSplits: 1)
+                if parts.count == 2 {
+                    metadata[String(parts[0])] = String(parts[1])
+                }
+            }
+        }
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            
+            let messageId = try await messageCache.sendHeartbeat(
+                to: to,
+                aiRole: aiRole,
+                status: status,
+                currentTask: currentTask,
+                metadata: metadata.isEmpty ? nil : metadata
+            )
+            
+            print("✓ Heartbeat sent to: \(to)")
+            print("  Message ID: \(messageId)")
+            print("  AI Role: \(aiRole)")
+            print("  Status: \(status)")
+            if let task = currentTask {
+                print("  Current Task: \(task)")
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleSendFeedback(args: [String]) async throws {
+        guard args.count >= 4 else {
+            throw CLIError.invalidArguments("send-feedback requires: <to> <feedback_type> <subject> <content> [related_task_id]")
+        }
+        
+        let to = args[0]
+        let feedbackType = args[1]
+        let subject = args[2]
+        let content = args[3]
+        let relatedTaskId = args.count > 4 ? args[4] : nil
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            
+            let messageId = try await messageCache.sendFeedback(
+                to: to,
+                feedbackType: feedbackType,
+                subject: subject,
+                content: content,
+                relatedTaskId: relatedTaskId,
+                messagePriority: .normal
+            )
+            
+            print("✓ Feedback sent to: \(to)")
+            print("  Message ID: \(messageId)")
+            print("  Type: \(feedbackType)")
+            print("  Subject: \(subject)")
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleSendCode(args: [String]) async throws {
+        guard args.count >= 5 else {
+            throw CLIError.invalidArguments("send-code requires: <to> <code_id> <title> <description> <files...> [branch] [commit_sha]")
+        }
+        
+        let to = args[0]
+        let codeId = args[1]
+        let title = args[2]
+        let description = args[3]
+        let files = args.count > 4 ? [args[4]] : []
+        let branch = args.count > 5 ? args[5] : nil
+        let commitSha = args.count > 6 ? args[6] : nil
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            
+            let messageId = try await messageCache.sendCode(
+                to: to,
+                codeId: codeId,
+                title: title,
+                description: description,
+                files: files,
+                branch: branch,
+                commitSha: commitSha,
+                messagePriority: .normal
+            )
+            
+            print("✓ Code sent to: \(to)")
+            print("  Message ID: \(messageId)")
+            print("  Code ID: \(codeId)")
+            print("  Title: \(title)")
+            print("  Files: \(files.joined(separator: ", "))")
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleSendScore(args: [String]) async throws {
+        guard args.count >= 3 else {
+            throw CLIError.invalidArguments("send-score requires: <to> <task_id> <requested_score> <quality_justification>")
+        }
+        
+        let to = args[0]
+        let taskId = args[1]
+        let requestedScore = Int(args[2]) ?? 0
+        let qualityJustification = args.count > 3 ? args[3] : "No justification provided"
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            
+            let messageId = try await messageCache.sendScore(
+                to: to,
+                taskId: taskId,
+                requestedScore: requestedScore,
+                qualityJustification: qualityJustification,
+                messagePriority: .normal
+            )
+            
+            print("✓ Score request sent to: \(to)")
+            print("  Message ID: \(messageId)")
+            print("  Task ID: \(taskId)")
+            print("  Requested Score: \(requestedScore)")
+            print("  Justification: \(qualityJustification)")
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleCheckHeartbeats(args: [String]) async throws {
+        let aiName = args.first ?? "OverseerAI"
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: aiName)
+            
+            let heartbeats = try await messageCache.receiveHeartbeats(for: aiName)
+            
+            print("Heartbeats for '\(aiName)': \(heartbeats.count)")
+            
+            if !heartbeats.isEmpty {
+                print("\nHeartbeats:")
+                for hb in heartbeats {
+                    print("  From: \(hb.fromAI)")
+                    print("    Role: \(hb.aiRole)")
+                    print("    Status: \(hb.status)")
+                    if let task = hb.currentTask {
+                        print("    Current Task: \(task)")
+                    }
+                    print("    Created: \(hb.timestamp)")
+                }
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleCheckFeedbacks(args: [String]) async throws {
+        let aiName = args.first ?? "CoderAI"
+        let statusRaw = args.count > 1 ? args[1] : "pending"
+        
+        guard let status = FeedbackStatus(rawValue: statusRaw) else {
+            print("Invalid status. Valid statuses: \(FeedbackStatus.allCases.map { $0.rawValue }.joined(separator: ", "))")
+            throw CLIError.invalidArguments("Invalid status: \(statusRaw)")
+        }
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: aiName)
+            
+            let feedbacks = try await messageCache.receiveFeedbacks(for: aiName, status: status)
+            
+            print("Feedbacks for '\(aiName)' with status '\(status.rawValue)': \(feedbacks.count)")
+            
+            if !feedbacks.isEmpty {
+                print("\nFeedbacks:")
+                for fb in feedbacks {
+                    print("  [\(fb.feedbackType)] \(fb.subject)")
+                    print("    From: \(fb.fromAI)")
+                    print("    Content: \(fb.content)")
+                    print("    Created: \(fb.timestamp)")
+                }
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleCheckCodes(args: [String]) async throws {
+        let aiName = args.first ?? "ReviewerAI"
+        let statusRaw = args.count > 1 ? args[1] : "pending"
+        
+        guard let status = CodeStatus(rawValue: statusRaw) else {
+            print("Invalid status. Valid statuses: \(CodeStatus.allCases.map { $0.rawValue }.joined(separator: ", "))")
+            throw CLIError.invalidArguments("Invalid status: \(statusRaw)")
+        }
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: aiName)
+            
+            let codes = try await messageCache.receiveCodes(for: aiName, status: status)
+            
+            print("Code messages for '\(aiName)' with status '\(status.rawValue)': \(codes.count)")
+            
+            if !codes.isEmpty {
+                print("\nCode Messages:")
+                for code in codes {
+                    print("  [\(code.codeId)] \(code.title)")
+                    print("    From: \(code.fromAI)")
+                    print("    Description: \(code.description)")
+                    print("    Files: \(code.files.joined(separator: ", "))")
+                    print("    Created: \(code.timestamp)")
+                }
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleCheckScores(args: [String]) async throws {
+        let aiName = args.first ?? "OverseerAI"
+        let statusRaw = args.count > 1 ? args[1] : "pending"
+        
+        guard let status = ScoreStatus(rawValue: statusRaw) else {
+            print("Invalid status. Valid statuses: \(ScoreStatus.allCases.map { $0.rawValue }.joined(separator: ", "))")
+            throw CLIError.invalidArguments("Invalid status: \(statusRaw)")
+        }
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: aiName)
+            
+            let scores = try await messageCache.receiveScores(for: aiName, status: status)
+            
+            print("Score requests for '\(aiName)' with status '\(status.rawValue)': \(scores.count)")
+            
+            if !scores.isEmpty {
+                print("\nScore Requests:")
+                for score in scores {
+                    print("  [\(score.taskId)] Requested: \(score.requestedScore)")
+                    print("    From: \(score.fromAI)")
+                    print("    Justification: \(score.qualityJustification)")
+                    print("    Created: \(score.timestamp)")
+                }
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
     private static func printUsage() {
         print("""
         GitBrain CLI - AI-Assisted Collaborative Development Tool
@@ -587,25 +896,38 @@ struct GitBrainCLI {
           update-review <message_id> <status>
                                Update review status
           
+          Code Commands:
+          send-code <to> <code_id> <title> <description> <files...> [branch] [commit_sha]
+                               Send code for review
+          check-codes [ai_name] [status]
+                               Check code messages for an AI (default: pending)
+          
           Score Commands:
-          score-request <task_id> <requested_score> <quality_justification> [requester] [target_ai]
-                               Request a score from the other AI
-          score-award <request_id> <awarded_score> <reason> [awarder]
-                               Award a score to the other AI
-          score-reject <request_id> <reason> [rejecter]
-                               Reject a score request
-          score-history [ai_name]
-                               View score history for an AI
-          score-requests [ai_name]
-                               View pending score requests for an AI
-          score-all-requests [ai_name]
-                               View all score requests for an AI
+          send-score <to> <task_id> <requested_score> <quality_justification>
+                               Request a score from another AI
+          check-scores [ai_name] [status]
+                               Check score requests for an AI (default: pending)
+          
+          Feedback Commands:
+          send-feedback <to> <feedback_type> <subject> <content> [related_task_id]
+                               Send feedback to another AI
+          check-feedbacks [ai_name] [status]
+                               Check feedbacks for an AI (default: pending)
+          
+          Heartbeat Commands:
+          send-heartbeat <to> <ai_role> <status> [current_task] [metadata_key=value...]
+                               Send a heartbeat to show AI is alive
+          check-heartbeats [ai_name]
+                               Check heartbeats for an AI
           
           help                 Show this help message
         
         Task Types: \(TaskType.allCases.map { $0.rawValue }.joined(separator: ", "))
         Task Statuses: \(TaskStatus.allCases.map { $0.rawValue }.joined(separator: ", "))
         Review Statuses: \(ReviewStatus.allCases.map { $0.rawValue }.joined(separator: ", "))
+        Code Statuses: \(CodeStatus.allCases.map { $0.rawValue }.joined(separator: ", "))
+        Score Statuses: \(ScoreStatus.allCases.map { $0.rawValue }.joined(separator: ", "))
+        Feedback Statuses: \(FeedbackStatus.allCases.map { $0.rawValue }.joined(separator: ", "))
         
         Environment Variables:
           GITBRAIN_PATH        Default path to GitBrain folder (overrides ./GitBrain)
@@ -620,6 +942,8 @@ struct GitBrainCLI {
           gitbrain send-task OverseerAI task-001 "Review code" review 1
           gitbrain check-tasks CoderAI pending
           gitbrain update-task <uuid> in_progress
+          gitbrain send-heartbeat OverseerAI CoderAI working "Implementing feature"
+          gitbrain send-feedback CoderAI performance "Great work" "Keep it up!"
         """)
     }
 }
