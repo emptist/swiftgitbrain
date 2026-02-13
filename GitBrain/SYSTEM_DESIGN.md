@@ -69,6 +69,7 @@ This document details the system design for GitBrainSwift, maintaining clear bou
 │  │  • from_ai: String                                    │  │
 │  │  • to_ai: String                                      │  │
 │  │  • timestamp: Timestamp                                │  │
+│  │  • type: MessageType                                  │  │
 │  │  • content: JSONB                                     │  │
 │  │  • status: MessageStatus                               │  │
 │  │  • priority: MessagePriority                            │  │
