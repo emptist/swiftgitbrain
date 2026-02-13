@@ -767,8 +767,18 @@ public actor BrainStateManager: @unchecked Sendable, BrainStateManagerProtocol {
 
 ```
 MessageCache System:
-├── Message Model
-│   └── struct Message: Codable, Sendable
+├── Message Models (11 types)
+│   ├── TaskMessage: Codable, Sendable
+│   ├── CodeMessage: Codable, Sendable
+│   ├── ReviewMessage: Codable, Sendable
+│   ├── FeedbackMessage: Codable, Sendable
+│   ├── ApprovalMessage: Codable, Sendable
+│   ├── RejectionMessage: Codable, Sendable
+│   ├── StatusMessage: Codable, Sendable
+│   ├── HeartbeatMessage: Codable, Sendable
+│   ├── ScoreRequestMessage: Codable, Sendable
+│   ├── ScoreAwardMessage: Codable, Sendable
+│   └── ScoreRejectMessage: Codable, Sendable
 ├── MessageStatus Enum
 │   └── enum MessageStatus: String, Codable, Sendable
 ├── MessagePriority Enum
@@ -785,71 +795,498 @@ MessageCache System:
     └── actor MessageCleanupScheduler
 ```
 
-#### Message Model
+#### Message Models
+
+##### TaskMessage Model
 
 ```swift
-public struct Message: Codable, Sendable {
+public struct TaskMessage: Codable, Sendable {
     public let id: String
     public let from: String
     public let to: String
     public let timestamp: String
-    public let content: SendableContent
+    public let taskId: String
+    public let description: String
+    public let taskType: String
+    public let priority: Int
+    public let files: [String]?
+    public let deadline: String?
     public var status: MessageStatus
-    public let priority: MessagePriority
+    public let messagePriority: MessagePriority
     
     public init(
         id: String,
         from: String,
         to: String,
         timestamp: String,
-        content: SendableContent,
+        taskId: String,
+        description: String,
+        taskType: String,
+        priority: Int,
+        files: [String]? = nil,
+        deadline: String? = nil,
         status: MessageStatus = .unread,
-        priority: MessagePriority = .normal
+        messagePriority: MessagePriority = .normal
     ) {
         self.id = id
         self.from = from
         self.to = to
         self.timestamp = timestamp
-        self.content = content
-        self.status = status
+        self.taskId = taskId
+        self.description = description
+        self.taskType = taskType
         self.priority = priority
+        self.files = files
+        self.deadline = deadline
+        self.status = status
+        self.messagePriority = messagePriority
     }
+}
+```
+
+##### CodeMessage Model
+
+```swift
+public struct CodeMessage: Codable, Sendable {
+    public let id: String
+    public let from: String
+    public let to: String
+    public let timestamp: String
+    public let taskId: String
+    public let code: String
+    public let language: String
+    public let files: [String]?
+    public let description: String?
+    public let commitHash: String?
+    public var status: MessageStatus
+    public let messagePriority: MessagePriority
     
-    public init?(from dict: [String: Any]) {
-        guard let id = dict["id"] as? String,
-              let from = dict["from"] as? String,
-              let to = dict["to"] as? String,
-              let timestamp = dict["timestamp"] as? String,
-              let contentDict = dict["content"] as? [String: Any],
-              let statusString = dict["status"] as? String,
-              let status = MessageStatus(rawValue: statusString),
-              let priorityInt = dict["priority"] as? Int,
-              let priority = MessagePriority(rawValue: priorityInt) else {
-            return nil
-        }
-        
+    public init(
+        id: String,
+        from: String,
+        to: String,
+        timestamp: String,
+        taskId: String,
+        code: String,
+        language: String,
+        files: [String]? = nil,
+        description: String? = nil,
+        commitHash: String? = nil,
+        status: MessageStatus = .unread,
+        messagePriority: MessagePriority = .normal
+    ) {
         self.id = id
         self.from = from
         self.to = to
         self.timestamp = timestamp
-        self.content = SendableContent(contentDict)
+        self.taskId = taskId
+        self.code = code
+        self.language = language
+        self.files = files
+        self.description = description
+        self.commitHash = commitHash
         self.status = status
-        self.priority = priority
-    }
-    
-    public func toDict() -> [String: Any] {
-        return [
-            "id": id,
-            "from": from,
-            "to": to,
-            "timestamp": timestamp,
-            "content": content.toAnyDict(),
-            "status": status.rawValue,
-            "priority": priority.rawValue
-        ]
+        self.messagePriority = messagePriority
     }
 }
+```
 
+##### ReviewMessage Model
+
+```swift
+public struct ReviewMessage: Codable, Sendable {
+    public let id: String
+    public let from: String
+    public let to: String
+    public let timestamp: String
+    public let taskId: String
+    public let approved: Bool
+    public let reviewer: String
+    public let comments: [[String: Any]]?
+    public let feedback: String?
+    public let filesReviewed: [String]?
+    public var status: MessageStatus
+    public let messagePriority: MessagePriority
+    
+    public init(
+        id: String,
+        from: String,
+        to: String,
+        timestamp: String,
+        taskId: String,
+        approved: Bool,
+        reviewer: String,
+        comments: [[String: Any]]? = nil,
+        feedback: String? = nil,
+        filesReviewed: [String]? = nil,
+        status: MessageStatus = .unread,
+        messagePriority: MessagePriority = .normal
+    ) {
+        self.id = id
+        self.from = from
+        self.to = to
+        self.timestamp = timestamp
+        self.taskId = taskId
+        self.approved = approved
+        self.reviewer = reviewer
+        self.comments = comments
+        self.feedback = feedback
+        self.filesReviewed = filesReviewed
+        self.status = status
+        self.messagePriority = messagePriority
+    }
+}
+```
+
+##### FeedbackMessage Model
+
+```swift
+public struct FeedbackMessage: Codable, Sendable {
+    public let id: String
+    public let from: String
+    public let to: String
+    public let timestamp: String
+    public let taskId: String
+    public let message: String
+    public let severity: String?
+    public let suggestions: [String]?
+    public let files: [String]?
+    public var status: MessageStatus
+    public let messagePriority: MessagePriority
+    
+    public init(
+        id: String,
+        from: String,
+        to: String,
+        timestamp: String,
+        taskId: String,
+        message: String,
+        severity: String? = nil,
+        suggestions: [String]? = nil,
+        files: [String]? = nil,
+        status: MessageStatus = .unread,
+        messagePriority: MessagePriority = .normal
+    ) {
+        self.id = id
+        self.from = from
+        self.to = to
+        self.timestamp = timestamp
+        self.taskId = taskId
+        self.message = message
+        self.severity = severity
+        self.suggestions = suggestions
+        self.files = files
+        self.status = status
+        self.messagePriority = messagePriority
+    }
+}
+```
+
+##### ApprovalMessage Model
+
+```swift
+public struct ApprovalMessage: Codable, Sendable {
+    public let id: String
+    public let from: String
+    public let to: String
+    public let timestamp: String
+    public let taskId: String
+    public let approver: String
+    public let approvedAt: String?
+    public let commitHash: String?
+    public let notes: String?
+    public var status: MessageStatus
+    public let messagePriority: MessagePriority
+    
+    public init(
+        id: String,
+        from: String,
+        to: String,
+        timestamp: String,
+        taskId: String,
+        approver: String,
+        approvedAt: String? = nil,
+        commitHash: String? = nil,
+        notes: String? = nil,
+        status: MessageStatus = .unread,
+        messagePriority: MessagePriority = .normal
+    ) {
+        self.id = id
+        self.from = from
+        self.to = to
+        self.timestamp = timestamp
+        self.taskId = taskId
+        self.approver = approver
+        self.approvedAt = approvedAt
+        self.commitHash = commitHash
+        self.notes = notes
+        self.status = status
+        self.messagePriority = messagePriority
+    }
+}
+```
+
+##### RejectionMessage Model
+
+```swift
+public struct RejectionMessage: Codable, Sendable {
+    public let id: String
+    public let from: String
+    public let to: String
+    public let timestamp: String
+    public let taskId: String
+    public let rejecter: String
+    public let reason: String
+    public let rejectedAt: String?
+    public let feedback: String?
+    public let suggestions: [String]?
+    public var status: MessageStatus
+    public let messagePriority: MessagePriority
+    
+    public init(
+        id: String,
+        from: String,
+        to: String,
+        timestamp: String,
+        taskId: String,
+        rejecter: String,
+        reason: String,
+        rejectedAt: String? = nil,
+        feedback: String? = nil,
+        suggestions: [String]? = nil,
+        status: MessageStatus = .unread,
+        messagePriority: MessagePriority = .normal
+    ) {
+        self.id = id
+        self.from = from
+        self.to = to
+        self.timestamp = timestamp
+        self.taskId = taskId
+        self.rejecter = rejecter
+        self.reason = reason
+        self.rejectedAt = rejectedAt
+        self.feedback = feedback
+        self.suggestions = suggestions
+        self.status = status
+        self.messagePriority = messagePriority
+    }
+}
+```
+
+##### StatusMessage Model
+
+```swift
+public struct StatusMessage: Codable, Sendable {
+    public let id: String
+    public let from: String
+    public let to: String
+    public let timestamp: String
+    public let status: String
+    public let message: String?
+    public let progress: Int?
+    public let currentTask: [String: Any]?
+    public let statusTimestamp: String?
+    public var messageStatus: MessageStatus
+    public let messagePriority: MessagePriority
+    
+    public init(
+        id: String,
+        from: String,
+        to: String,
+        timestamp: String,
+        status: String,
+        message: String? = nil,
+        progress: Int? = nil,
+        currentTask: [String: Any]? = nil,
+        statusTimestamp: String? = nil,
+        messageStatus: MessageStatus = .unread,
+        messagePriority: MessagePriority = .normal
+    ) {
+        self.id = id
+        self.from = from
+        self.to = to
+        self.timestamp = timestamp
+        self.status = status
+        self.message = message
+        self.progress = progress
+        self.currentTask = currentTask
+        self.statusTimestamp = statusTimestamp
+        self.messageStatus = messageStatus
+        self.messagePriority = messagePriority
+    }
+}
+```
+
+##### HeartbeatMessage Model
+
+```swift
+public struct HeartbeatMessage: Codable, Sendable {
+    public let id: String
+    public let from: String
+    public let to: String
+    public let timestamp: String
+    public let aiName: String
+    public let role: String
+    public let heartbeatTimestamp: String?
+    public let status: String?
+    public let capabilities: [String]?
+    public var messageStatus: MessageStatus
+    public let messagePriority: MessagePriority
+    
+    public init(
+        id: String,
+        from: String,
+        to: String,
+        timestamp: String,
+        aiName: String,
+        role: String,
+        heartbeatTimestamp: String? = nil,
+        status: String? = nil,
+        capabilities: [String]? = nil,
+        messageStatus: MessageStatus = .unread,
+        messagePriority: MessagePriority = .normal
+    ) {
+        self.id = id
+        self.from = from
+        self.to = to
+        self.timestamp = timestamp
+        self.aiName = aiName
+        self.role = role
+        self.heartbeatTimestamp = heartbeatTimestamp
+        self.status = status
+        self.capabilities = capabilities
+        self.messageStatus = messageStatus
+        self.messagePriority = messagePriority
+    }
+}
+```
+
+##### ScoreRequestMessage Model
+
+```swift
+public struct ScoreRequestMessage: Codable, Sendable {
+    public let id: String
+    public let from: String
+    public let to: String
+    public let timestamp: String
+    public let taskId: String
+    public let requester: String
+    public let targetAi: String
+    public let requestedScore: Int
+    public let qualityJustification: String
+    public var messageStatus: MessageStatus
+    public let messagePriority: MessagePriority
+    
+    public init(
+        id: String,
+        from: String,
+        to: String,
+        timestamp: String,
+        taskId: String,
+        requester: String,
+        targetAi: String,
+        requestedScore: Int,
+        qualityJustification: String,
+        messageStatus: MessageStatus = .unread,
+        messagePriority: MessagePriority = .normal
+    ) {
+        self.id = id
+        self.from = from
+        self.to = to
+        self.timestamp = timestamp
+        self.taskId = taskId
+        self.requester = requester
+        self.targetAi = targetAi
+        self.requestedScore = requestedScore
+        self.qualityJustification = qualityJustification
+        self.messageStatus = messageStatus
+        self.messagePriority = messagePriority
+    }
+}
+```
+
+##### ScoreAwardMessage Model
+
+```swift
+public struct ScoreAwardMessage: Codable, Sendable {
+    public let id: String
+    public let from: String
+    public let to: String
+    public let timestamp: String
+    public let requestId: Int
+    public let awarder: String
+    public let awardedScore: Int
+    public let reason: String
+    public var messageStatus: MessageStatus
+    public let messagePriority: MessagePriority
+    
+    public init(
+        id: String,
+        from: String,
+        to: String,
+        timestamp: String,
+        requestId: Int,
+        awarder: String,
+        awardedScore: Int,
+        reason: String,
+        messageStatus: MessageStatus = .unread,
+        messagePriority: MessagePriority = .normal
+    ) {
+        self.id = id
+        self.from = from
+        self.to = to
+        self.timestamp = timestamp
+        self.requestId = requestId
+        self.awarder = awarder
+        self.awardedScore = awardedScore
+        self.reason = reason
+        self.messageStatus = messageStatus
+        self.messagePriority = messagePriority
+    }
+}
+```
+
+##### ScoreRejectMessage Model
+
+```swift
+public struct ScoreRejectMessage: Codable, Sendable {
+    public let id: String
+    public let from: String
+    public let to: String
+    public let timestamp: String
+    public let requestId: Int
+    public let rejecter: String
+    public let reason: String
+    public var messageStatus: MessageStatus
+    public let messagePriority: MessagePriority
+    
+    public init(
+        id: String,
+        from: String,
+        to: String,
+        timestamp: String,
+        requestId: Int,
+        rejecter: String,
+        reason: String,
+        messageStatus: MessageStatus = .unread,
+        messagePriority: MessagePriority = .normal
+    ) {
+        self.id = id
+        self.from = from
+        self.to = to
+        self.timestamp = timestamp
+        self.requestId = requestId
+        self.rejecter = rejecter
+        self.reason = reason
+        self.messageStatus = messageStatus
+        self.messagePriority = messagePriority
+    }
+}
+```
+
+#### Message Enums
+
+```swift
 public enum MessageStatus: String, Codable, Sendable {
     case unread = "unread"
     case read = "read"
