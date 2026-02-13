@@ -38,6 +38,43 @@ This document outlines the complete design of a **MessageCache system** that mai
 
 ## Message Types
 
+### Swift Type System vs Database Storage
+
+**IMPORTANT:** Message types are strongly-typed enums in Swift code, but stored as strings in database.
+
+**Why This Matters:**
+- Swift's type system provides compile-time checking
+- Invalid message types are caught at compile time
+- Code completion and refactoring safety
+- Type-safe message handling
+
+**How It Works:**
+1. **In Swift Code:** Use `MessageType` enum (strongly-typed)
+2. **In Database:** Store enum's raw value as `String`
+3. **When Reading from Database:** Convert `String` back to `MessageType` enum
+
+**Example:**
+```swift
+// Swift Code - Use strongly-typed enum
+let messageType = MessageType.task  // Compile-time checked!
+
+// Database - Store raw value as String
+let dbValue = messageType.rawValue  // "task"
+
+// Read from Database - Convert back to enum
+if let dbValue = row["type"] as? String,
+   let messageType = MessageType(rawValue: dbValue) {
+   // Use strongly-typed enum
+   switch messageType {
+   case .task:
+       // Handle task
+   case .code:
+       // Handle code
+   // ...
+   }
+}
+```
+
 ### Where Are Message Types Defined?
 
 **File:** `Sources/GitBrainSwift/Models/MessageType.swift`
@@ -63,11 +100,16 @@ MessageValidator contains detailed schemas for all message types, including:
 - Field types
 - Custom validators
 
+**Type Safety:**
+- MessageValidator uses `MessageType` enum for schema lookup
+- Invalid message types caught at compile time
+- Type-safe message handling
+
 ### Complete Message Type List
 
 #### 1. Task Message
 
-**Type:** `task`
+**Type:** `MessageType.task` (Swift enum)
 
 **Purpose:** Task assignments between AIs
 
@@ -85,16 +127,54 @@ MessageValidator contains detailed schemas for all message types, including:
 - `task_type` must be one of: `coding`, `review`, `testing`, `documentation`
 - `priority` must be between 1 and 10
 
-**Example:**
+**Swift Code Example:**
+```swift
+// Use strongly-typed enum
+let messageType = MessageType.task  // Compile-time checked!
+
+let message = Message(
+    id: UUID().uuidString,
+    from: "CoderAI",
+    to: "OverseerAI",
+    timestamp: ISO8601DateFormatter().string(from: Date()),
+    content: SendableContent([
+        "type": messageType.rawValue,  // "task" (stored as string in database)
+        "task_id": "task-001",
+        "description": "Implement new feature",
+        "task_type": "coding",
+        "priority": 5,
+        "files": ["Sources/Feature.swift"],
+        "deadline": "2026-02-15T12:00:00Z"
+    ])
+)
+```
+
+**Database Storage:**
 ```json
 {
-  "type": "task",
+  "type": "task",  // Stored as string in database
   "task_id": "task-001",
   "description": "Implement new feature",
   "task_type": "coding",
   "priority": 5,
   "files": ["Sources/Feature.swift"],
   "deadline": "2026-02-15T12:00:00Z"
+}
+```
+
+**Reading from Database:**
+```swift
+// Convert string back to enum
+if let dbValue = row["type"] as? String,
+   let messageType = MessageType(rawValue: dbValue) {
+   // Use strongly-typed enum
+   switch messageType {
+   case .task:
+       // Handle task
+   case .code:
+       // Handle code
+   // ...
+   }
 }
 ```
 
