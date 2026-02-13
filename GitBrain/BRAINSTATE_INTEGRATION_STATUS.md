@@ -6,7 +6,12 @@
 
 ## Executive Summary
 
-BrainState-based communication system has been successfully implemented and tested. The legacy file-based messaging system is fundamentally broken (5+ minute latency) and is being replaced with BrainStateCommunication for sub-millisecond real-time messaging.
+MessageHistory-based communication system has been successfully implemented and tested. The legacy file-based messaging system is fundamentally broken (5+ minute latency) and is being replaced with MessageHistory for sub-millisecond real-time messaging.
+
+**IMPORTANT:** The new architecture maintains clear boundaries between three independent systems:
+- **BrainState** - AI state management
+- **MessageHistory** - Message communication history
+- **KnowledgeBase** - Knowledge storage
 
 ## Progress Summary
 
