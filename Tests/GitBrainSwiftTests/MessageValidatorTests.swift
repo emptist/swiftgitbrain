@@ -4,16 +4,16 @@ import Testing
 @Test
 func testMessageValidationErrorDescriptions() {
     let missingFieldError = MessageValidationError.missingRequiredField("test_field")
-    #expect(missingFieldError.errorDescription == "Missing required field: test_field")
+    #expect(missingFieldError.errorDescription == "Missing required field: 'test_field'. Please include this field in your message.")
     
     let typeError = MessageValidationError.invalidFieldType("test_field", expected: "String", actual: "Int")
-    #expect(typeError.errorDescription == "Invalid type for field 'test_field': expected String, got Int")
+    #expect(typeError.errorDescription == "Invalid type for field 'test_field': expected String, got Int. Please provide the correct data type.")
     
     let valueError = MessageValidationError.invalidValue("test_field", reason: "must be positive")
-    #expect(valueError.errorDescription == "Invalid value for field 'test_field': must be positive")
+    #expect(valueError.errorDescription == "Invalid value for field 'test_field': must be positive. Please provide a valid value.")
     
     let formatError = MessageValidationError.invalidFormat("test_field", reason: "invalid email format")
-    #expect(formatError.errorDescription == "Invalid format for field 'test_field': invalid email format")
+    #expect(formatError.errorDescription == "Invalid format for field 'test_field': invalid email format. Please check the message structure and format.")
 }
 
 @Test

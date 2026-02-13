@@ -122,13 +122,13 @@ public enum PluginError: Error, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .pluginAlreadyRegistered(let name):
-            return "Plugin '\(name)' is already registered"
+            return "Plugin '\(name)' is already registered. Please use a different name or unregister the existing plugin first."
         case .pluginNotFound(let name):
-            return "Plugin '\(name)' not found"
+            return "Plugin '\(name)' not found. Please verify the plugin name or register the plugin before using it."
         case .pluginInitializationFailed(let name, let error):
-            return "Plugin '\(name)' initialization failed: \(error.localizedDescription)"
+            return "Plugin '\(name)' initialization failed: \(error.localizedDescription). Please check the plugin implementation and dependencies."
         case .pluginExecutionFailed(let name, let error):
-            return "Plugin '\(name)' execution failed: \(error.localizedDescription)"
+            return "Plugin '\(name)' execution failed: \(error.localizedDescription). Please check the plugin code and try again."
         }
     }
 }

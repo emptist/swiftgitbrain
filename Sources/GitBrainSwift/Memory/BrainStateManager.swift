@@ -1,182 +1,103 @@
 import Foundation
 
-public struct BrainStateManager: @unchecked Sendable, BrainStateManagerProtocol {
-    private let brainstateBase: URL
-    private let fileManager: FileManager
+public actor BrainStateManager: @unchecked Sendable, BrainStateManagerProtocol {
+    private let repository: BrainStateRepositoryProtocol
     
-    private actor Storage {
-        let brainstateBase: URL
-        let fileManager: FileManager
-        
-        init(brainstateBase: URL, fileManager: FileManager) {
-            self.brainstateBase = brainstateBase
-            self.fileManager = fileManager
-        }
-        
-        func createBrainState(aiName: String, role: RoleType, initialState: SendableContent?) async throws -> BrainState {
-            let brainState = BrainState(
-                aiName: aiName,
-                role: role,
-                version: "1.0.0",
-                lastUpdated: ISO8601DateFormatter().string(from: Date()),
-                state: initialState?.toAnyDict() ?? [:]
-            )
-            
-            try await saveBrainState(brainState)
-            return brainState
-        }
-        
-        func loadBrainState(aiName: String) async throws -> BrainState? {
-            let brainStatePath = brainstateBase.appendingPathComponent("\(aiName)_state.json")
-            
-            guard fileManager.fileExists(atPath: brainStatePath.path) else {
-                return nil
-            }
-            
-            let data = try Data(contentsOf: brainStatePath)
-            return try JSONDecoder().decode(BrainState.self, from: data)
-        }
-        
-        func saveBrainState(_ brainState: BrainState) async throws {
-            try fileManager.createDirectory(at: brainstateBase, withIntermediateDirectories: true)
-            
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .prettyPrinted
-            let data = try encoder.encode(brainState)
-            
-            let brainStatePath = brainstateBase.appendingPathComponent("\(brainState.aiName)_state.json")
-            try data.write(to: brainStatePath)
-        }
-        
-        func updateBrainState(aiName: String, key: String, value: SendableContent) async throws -> Bool {
-            guard var brainState = try await loadBrainState(aiName: aiName) else {
-                return false
-            }
-            
-            brainState.updateState(key: key, value: value.toAnyDict())
-            try await saveBrainState(brainState)
-            return true
-        }
-        
-        func getBrainStateValue(aiName: String, key: String, defaultValue: SendableContent?) async throws -> SendableContent? {
-            guard let brainState = try await loadBrainState(aiName: aiName) else {
-                return defaultValue
-            }
-            
-            let value = brainState.getState(key: key, defaultValue: defaultValue?.toAnyDict())
-            
-            if let dictValue = value as? [String: Any] {
-                return SendableContent(dictValue)
-            } else if let sendableValue = value as? SendableContent {
-                return sendableValue
-            }
-            return defaultValue
-        }
-        
-        func deleteBrainState(aiName: String) async throws -> Bool {
-            let brainStatePath = brainstateBase.appendingPathComponent("\(aiName)_state.json")
-            
-            guard fileManager.fileExists(atPath: brainStatePath.path) else {
-                return false
-            }
-            
-            try fileManager.removeItem(at: brainStatePath)
-            return true
-        }
-        
-        func listBrainStates() async throws -> [String] {
-            guard fileManager.fileExists(atPath: brainstateBase.path) else {
-                return []
-            }
-            
-            let files = try fileManager.contentsOfDirectory(at: brainstateBase, includingPropertiesForKeys: nil)
-            return files
-                .filter { $0.pathExtension == "json" }
-                .map { $0.deletingPathExtension().lastPathComponent.replacingOccurrences(of: "_state", with: "") }
-        }
-        
-        func backupBrainState(aiName: String, backupSuffix: String?) async throws -> String? {
-            guard let brainState = try await loadBrainState(aiName: aiName) else {
-                return nil
-            }
-            
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyyMMdd_HHmmss"
-            let timestamp = dateFormatter.string(from: Date())
-            let suffix = backupSuffix ?? timestamp
-            
-            let backupPath = brainstateBase.appendingPathComponent("\(aiName)_state_\(suffix).json")
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .prettyPrinted
-            let data = try encoder.encode(brainState)
-            try data.write(to: backupPath)
-            
-            return backupPath.path
-        }
-        
-        func restoreBrainState(aiName: String, backupFile: String) async throws -> Bool {
-            let backupPath = brainstateBase.appendingPathComponent(backupFile)
-            
-            guard fileManager.fileExists(atPath: backupPath.path) else {
-                return false
-            }
-            
-            let data = try Data(contentsOf: backupPath)
-            let brainState = try JSONDecoder().decode(BrainState.self, from: data)
-            
-            try await saveBrainState(brainState)
-            return true
-        }
-    }
-    
-    private let storage: Storage
-    
-    public init(brainstateBase: URL) {
-        self.brainstateBase = brainstateBase
-        self.fileManager = FileManager.default
-        self.storage = Storage(brainstateBase: brainstateBase, fileManager: fileManager)
+    public init(repository: BrainStateRepositoryProtocol) {
+        self.repository = repository
+        GitBrainLogger.info("BrainStateManager initialized with Fluent repository")
     }
     
     public func createBrainState(aiName: String, role: RoleType, initialState: SendableContent? = nil) async throws -> BrainState {
-        return try await storage.createBrainState(aiName: aiName, role: role, initialState: initialState)
+        GitBrainLogger.debug("Creating brain state: aiName=\(aiName), role=\(role)")
+        try await repository.create(aiName: aiName, role: role, state: initialState, timestamp: Date())
+        GitBrainLogger.info("Successfully created brain state: aiName=\(aiName)")
+        return BrainState(
+            aiName: aiName,
+            role: role,
+            version: "1.0.0",
+            lastUpdated: ISO8601DateFormatter().string(from: Date()),
+            state: initialState?.toAnyDict() ?? [:]
+        )
     }
     
     public func loadBrainState(aiName: String) async throws -> BrainState? {
-        return try await storage.loadBrainState(aiName: aiName)
+        GitBrainLogger.debug("Loading brain state: aiName=\(aiName)")
+        guard let result = try await repository.load(aiName: aiName) else {
+            GitBrainLogger.debug("Brain state not found: aiName=\(aiName)")
+            return nil
+        }
+        GitBrainLogger.debug("Successfully loaded brain state: aiName=\(aiName)")
+        return BrainState(
+            aiName: aiName,
+            role: result.role,
+            version: "1.0.0",
+            lastUpdated: ISO8601DateFormatter().string(from: result.timestamp),
+            state: result.state?.toAnyDict() ?? [:]
+        )
     }
     
     public func saveBrainState(_ brainState: BrainState) async throws {
-        try await storage.saveBrainState(brainState)
+        GitBrainLogger.debug("Saving brain state: aiName=\(brainState.aiName)")
+        try await repository.save(aiName: brainState.aiName, role: brainState.role, state: brainState.state, timestamp: Date())
+        GitBrainLogger.info("Successfully saved brain state: aiName=\(brainState.aiName)")
     }
     
     public func updateBrainState(aiName: String, key: String, value: SendableContent) async throws -> Bool {
-        return try await storage.updateBrainState(aiName: aiName, key: key, value: value)
+        GitBrainLogger.debug("Updating brain state: aiName=\(aiName), key=\(key)")
+        let result = try await repository.update(aiName: aiName, key: key, value: value)
+        if result {
+            GitBrainLogger.info("Successfully updated brain state: aiName=\(aiName), key=\(key)")
+        } else {
+            GitBrainLogger.warning("Brain state not found for update: aiName=\(aiName), key=\(key)")
+        }
+        return result
     }
     
     public func getBrainStateValue(aiName: String, key: String, defaultValue: SendableContent? = nil) async throws -> SendableContent? {
-        return try await storage.getBrainStateValue(aiName: aiName, key: key, defaultValue: defaultValue)
+        GitBrainLogger.debug("Getting brain state value: aiName=\(aiName), key=\(key)")
+        let result = try await repository.get(aiName: aiName, key: key, defaultValue: defaultValue)
+        GitBrainLogger.debug("Successfully retrieved brain state value: aiName=\(aiName), key=\(key)")
+        return result
     }
     
     public func deleteBrainState(aiName: String) async throws -> Bool {
-        return try await storage.deleteBrainState(aiName: aiName)
+        GitBrainLogger.debug("Deleting brain state: aiName=\(aiName)")
+        let result = try await repository.delete(aiName: aiName)
+        if result {
+            GitBrainLogger.info("Successfully deleted brain state: aiName=\(aiName)")
+        } else {
+            GitBrainLogger.warning("Brain state not found for deletion: aiName=\(aiName)")
+        }
+        return result
     }
     
     public func listBrainStates() async throws -> [String] {
-        guard fileManager.fileExists(atPath: brainstateBase.path) else {
-            return []
-        }
-        
-        let files = try fileManager.contentsOfDirectory(at: brainstateBase, includingPropertiesForKeys: nil)
-        return files
-            .filter { $0.pathExtension == "json" }
-            .map { $0.deletingPathExtension().lastPathComponent.replacingOccurrences(of: "_state", with: "") }
+        GitBrainLogger.debug("Listing brain states")
+        let aiNames = try await repository.list()
+        GitBrainLogger.debug("Found \(aiNames.count) brain states")
+        return aiNames
     }
     
     public func backupBrainState(aiName: String, backupSuffix: String? = nil) async throws -> String? {
-        return try await storage.backupBrainState(aiName: aiName, backupSuffix: backupSuffix)
+        GitBrainLogger.debug("Backing up brain state: aiName=\(aiName)")
+        let result = try await repository.backup(aiName: aiName, backupSuffix: backupSuffix)
+        if let result = result {
+            GitBrainLogger.info("Successfully backed up brain state: aiName=\(aiName), backup=\(result)")
+        } else {
+            GitBrainLogger.warning("Brain state not found for backup: aiName=\(aiName)")
+        }
+        return result
     }
     
     public func restoreBrainState(aiName: String, backupFile: String) async throws -> Bool {
-        return try await storage.restoreBrainState(aiName: aiName, backupFile: backupFile)
+        GitBrainLogger.debug("Restoring brain state: aiName=\(aiName), backup=\(backupFile)")
+        let result = try await repository.restore(aiName: aiName, backupFile: backupFile)
+        if result {
+            GitBrainLogger.info("Successfully restored brain state: aiName=\(aiName)")
+        } else {
+            GitBrainLogger.warning("Failed to restore brain state: aiName=\(aiName)")
+        }
+        return result
     }
 }

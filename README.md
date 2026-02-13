@@ -1,5 +1,9 @@
 # GitBrainSwift
 
+[![CI](https://github.com/yourusername/gitbrainswift/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/gitbrainswift/actions/workflows/ci.yml)
+[![Quality](https://github.com/yourusername/gitbrainswift/actions/workflows/quality.yml/badge.svg)](https://github.com/yourusername/gitbrainswift/actions/workflows/quality.yml)
+[![CD](https://github.com/yourusername/gitbrainswift/actions/workflows/deploy.yml/badge.svg)](https://github.com/yourusername/gitbrainswift/actions/workflows/deploy.yml)
+
 A Swift Package Manager (SwiftPM) implementation of GitBrain - a lightweight AI collaboration platform for AI-assisted development.
 
 ## Overview
@@ -8,7 +12,7 @@ GitBrainSwift enables two AIs to collaborate on software development through:
 - **File-based communication**: Simple read/write operations between AIs
 - **Message validation**: Schema-based validation for all message types
 - **Plugin system**: Extensible architecture for custom behavior
-- **Persistent memory**: Cross-session brainstate management
+- **Persistent memory**: Cross-session brainstate management with PostgreSQL database
 - **Role separation**: CoderAI (full-featured) and OverseerAI (review-only)
 - **Cross-language support**: CLI executable usable in any programming language
 - **Development-only**: Can be safely removed after development is complete
@@ -118,6 +122,148 @@ export GITBRAIN_PATH=/custom/path/to/GitBrain
 # Now all commands use this path
 gitbrain check coder
 gitbrain send overseer '{"type":"review"}'
+
+# Database configuration (optional, defaults to localhost:5432)
+export GITBRAIN_DB_HOST=localhost
+export GITBRAIN_DB_PORT=5432
+export GITBRAIN_DB_NAME=gitbrain
+export GITBRAIN_DB_USER=postgres
+export GITBRAIN_DB_PASSWORD=postgres
+```
+
+## Database Setup
+
+GitBrainSwift uses PostgreSQL for persistent storage of AI brainstate and knowledge base. The database is optional - if not configured, the system will use in-memory storage.
+
+### Prerequisites
+
+- PostgreSQL 14+ installed and running
+- Database user with appropriate permissions
+
+### Quick Setup
+
+```bash
+# Create database
+createdb gitbrain
+
+# Create tables (automatic on first run)
+# Tables are created automatically when GitBrainSwift initializes
+```
+
+### Configuration
+
+Database connection can be configured through environment variables or programmatically:
+
+```swift
+import GitBrainSwift
+
+// Using environment variables (recommended)
+let dbManager = DatabaseManager(config: .fromEnvironment())
+
+// Using custom configuration
+let config = DatabaseConfig(
+    host: "localhost",
+    port: 5432,
+    database: "gitbrain",
+    username: "postgres",
+    password: "postgres"
+)
+let dbManager = DatabaseManager(config: config)
+
+// Initialize database
+let databases = try await dbManager.initialize()
+
+// Create repositories
+let kbRepo = try await dbManager.createKnowledgeRepository()
+let bsmRepo = try await dbManager.createBrainStateRepository()
+```
+
+### Database Schema
+
+The following tables are automatically created:
+
+#### knowledge_items
+- `id`: Primary key
+- `category`: Knowledge category
+- `key`: Knowledge key
+- `value`: JSON-encoded value
+- `metadata`: JSON-encoded metadata
+- `timestamp`: Creation timestamp
+
+#### brain_states
+- `id`: Primary key
+- `ai_name`: AI identifier
+- `role`: AI role (coder/overseer)
+- `state`: JSON-encoded state
+- `timestamp`: Last update timestamp
+
+### Testing with Mock Repositories
+
+For testing without a database, use mock repositories:
+
+```swift
+import GitBrainSwift
+
+// Use mock repository for testing
+let mockRepo = MockKnowledgeRepository()
+let knowledgeBase = KnowledgeBase(repository: mockRepo)
+
+// All operations work the same way
+try await knowledgeBase.addKnowledge(category: "test", key: "item", value: value)
+```
+
+### Data Migration
+
+GitBrainSwift provides a migration tool to transfer data from file-based storage to PostgreSQL:
+
+#### Using the Migration CLI
+
+```bash
+# Set up database connection
+export GITBRAIN_DB_HOST=localhost
+export GITBRAIN_DB_PORT=5432
+export GITBRAIN_DB_NAME=gitbrain
+export GITBRAIN_DB_USER=your_username
+export GITBRAIN_DB_PASSWORD=your_password
+
+# Migrate knowledge base
+swift run gitbrain-migrate migrate knowledge /path/to/GitBrain
+
+# Migrate brain states
+swift run gitbrain-migrate migrate brainstate /path/to/GitBrain
+
+# Validate migration
+swift run gitbrain-migrate validate
+```
+
+#### Programmatic Migration
+
+```swift
+import GitBrainSwift
+
+let config = DatabaseConfig.fromEnvironment()
+let dbManager = DatabaseManager(config: config)
+_ = try await dbManager.initialize()
+
+let migration = DataMigration()
+let sourceURL = URL(fileURLWithPath: "/path/to/GitBrain")
+
+// Migrate knowledge base
+let kbRepo = try await dbManager.createKnowledgeRepository()
+try await migration.migrateKnowledgeBase(from: sourceURL, to: kbRepo)
+
+// Migrate brain states
+let bsmRepo = try await dbManager.createBrainStateRepository()
+try await migration.migrateBrainStates(from: sourceURL, to: bsmRepo)
+
+// Validate migration
+let report = try await migration.validateMigration(
+    knowledgeRepo: kbRepo,
+    brainStateRepo: bsmRepo
+)
+print(report.description)
+
+try await dbManager.close()
 ```
 
 ## Message Types and Validation
@@ -396,11 +542,12 @@ Plugin lifecycle management:
 - `processOutgoingMessage()`: Process message through all plugins
 
 #### BrainStateManager
-Manages persistent AI brainstate:
+Manages persistent AI brainstate with repository pattern:
 - `createBrainState()`: Create new brainstate for an AI
 - `loadBrainState()`: Load existing brainstate
 - `updateBrainState()`: Update brainstate with new data
 - `getBrainStateValue()`: Get specific value from brainstate
+- Uses `BrainStateRepositoryProtocol` for storage (Fluent or Mock)
 
 #### MemoryStore
 In-memory storage for quick access:
@@ -410,10 +557,27 @@ In-memory storage for quick access:
 - `exists()`: Check if key exists
 
 #### KnowledgeBase
-Knowledge management system:
+Knowledge management system with repository pattern:
 - `addKnowledge()`: Add knowledge item
 - `getKnowledge()`: Retrieve knowledge item
 - `searchKnowledge()`: Search knowledge base
+- Uses `KnowledgeRepositoryProtocol` for storage (Fluent or Mock)
+
+#### DatabaseManager
+PostgreSQL database connection and repository management:
+- `initialize()`: Initialize database connection and run migrations
+- `createKnowledgeRepository()`: Create knowledge repository
+- `createBrainStateRepository()`: Create brain state repository
+- `close()`: Close database connection
+
+#### Repositories
+Protocol-based storage implementations:
+- `KnowledgeRepositoryProtocol`: Interface for knowledge storage
+- `BrainStateRepositoryProtocol`: Interface for brain state storage
+- `FluentKnowledgeRepository`: PostgreSQL implementation using Fluent ORM
+- `FluentBrainStateRepository`: PostgreSQL implementation using Fluent ORM
+- `MockKnowledgeRepository`: In-memory implementation for testing
+- `MockBrainStateRepository`: In-memory implementation for testing
 
 ## Examples
 
@@ -484,6 +648,7 @@ Or remove the package dependency from your `Package.swift`.
 - Swift 6.2+
 - Swift Package Manager
 - Trae or similar AI editor
+- PostgreSQL 14+ (optional, for persistent storage)
 
 ## Design Decisions
 

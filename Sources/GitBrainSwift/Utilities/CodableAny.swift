@@ -102,4 +102,48 @@ extension CodableAny {
         }
         return false
     }
+    
+    func toAny() -> Any {
+        switch self {
+        case .string(let value):
+            return value
+        case .int(let value):
+            return value
+        case .double(let value):
+            return value
+        case .bool(let value):
+            return value
+        case .array(let value):
+            return value.map { $0.toAny() }
+        case .dictionary(let value):
+            return value.mapValues { $0.toAny() }
+        case .null:
+            return NSNull()
+        }
+    }
+    
+    func toAnyJSON() -> Any {
+        switch self {
+        case .string(let value):
+            return value
+        case .int(let value):
+            return value
+        case .double(let value):
+            return value
+        case .bool(let value):
+            return value
+        case .array(let value):
+            return value.map { $0.toAnyJSON() }
+        case .dictionary(let value):
+            return value.mapValues { $0.toAnyJSON() }
+        case .null:
+            return NSNull()
+        }
+    }
+}
+
+extension Dictionary where Key == String, Value == CodableAny {
+    func toAnyDict() -> [String: Any] {
+        return self.mapValues { $0.toAny() }
+    }
 }

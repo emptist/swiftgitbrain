@@ -26,16 +26,18 @@ public extension URL {
 }
 
 public extension Date {
-    var iso8601String: String {
+    private static func createISO8601DateFormatter() -> ISO8601DateFormatter {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter.string(from: self)
+        return formatter
+    }
+    
+    var iso8601String: String {
+        return Date.createISO8601DateFormatter().string(from: self)
     }
     
     static func fromISO8601(_ string: String) -> Date? {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter.date(from: string)
+        return Date.createISO8601DateFormatter().date(from: string)
     }
     
     var timeAgo: String {
@@ -92,11 +94,6 @@ public extension String {
     func base64Encoded() -> String? {
         return data(using: .utf8)?.base64EncodedString()
     }
-    
-    func base64Decoded() -> String? {
-        guard let data = Data(base64Encoded: self) else { return nil }
-        return String(data: data, encoding: .utf8)
-    }
 }
 
 public extension Dictionary where Key == String, Value == Any {
@@ -130,7 +127,7 @@ public extension Dictionary where Key == String, Value == Any {
     }
 }
 
-public extension Array where Element: Sendable {
+public extension Array where Element: Sendable & Hashable {
     func toJSONString() throws -> String {
         let data = try JSONSerialization.data(withJSONObject: self)
         return String(data: data, encoding: .utf8) ?? ""
@@ -143,7 +140,7 @@ public extension Array where Element: Sendable {
     }
     
     func unique() -> [Element] {
-        return NSOrderedSet(array: self).array as? [Element] ?? self
+        return Array(Set(self))
     }
 }
 

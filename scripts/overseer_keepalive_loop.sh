@@ -1,6 +1,6 @@
 #!/bin/bash
 # OverseerAI automated keep-alive and message processing loop
-# This script runs forever, checking for messages every 60 seconds
+# This script runs forever, checking for messages every 120 seconds
 # and sending heartbeats to keep the AI alive
 
 set -e
@@ -8,9 +8,17 @@ set -e
 # Configuration
 AI_NAME="overseer"
 AI_ROLE="overseer"
-CHECK_INTERVAL=60
-HEARTBEAT_INTERVAL=60
+CHECK_INTERVAL=90
+HEARTBEAT_INTERVAL=90
 LAST_HEARTBEAT=0
+
+# Increment keepalive counter
+increment_counter() {
+    local current_value=$(cat "GitBrain/keepalive_counter.txt" 2>/dev/null || echo "0")
+    local new_value=$((current_value + 1))
+    echo "$new_value" > "GitBrain/keepalive_counter.txt"
+    log "Keepalive counter incremented: $current_value -> $new_value"
+}
 
 # Colors for output
 RED='\033[0;31m'
@@ -142,6 +150,8 @@ log "Press Ctrl+C to stop"
 
 while true; do
     current_time=$(date +%s)
+    # Increment keepalive counter
+    increment_counter
     
     # Check for messages
     if check_messages; then

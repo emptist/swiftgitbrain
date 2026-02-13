@@ -1,13 +1,13 @@
 #!/bin/bash
 # CoderAI keep-alive using shared counter
-# Increments counter every 1 minute to stay alive
+# Increments counter every 60 seconds to stay alive
 
 set -e
 
 # Configuration
 AI_NAME="coder"
 COUNTER_FILE="GitBrain/keepalive_counter.txt"
-INCREMENT_INTERVAL=60  # 1 minute
+INCREMENT_INTERVAL=60  # 60 seconds
 
 # Colors for output
 BLUE='\033[0;34m'

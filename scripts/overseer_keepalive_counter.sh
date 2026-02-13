@@ -1,13 +1,13 @@
 #!/bin/bash
 # OverseerAI keep-alive using shared counter
-# Increments counter every 1.5 minutes to stay alive
+# Increments counter every 90 seconds to stay alive
 
 set -e
 
 # Configuration
 AI_NAME="overseer"
 COUNTER_FILE="GitBrain/keepalive_counter.txt"
-INCREMENT_INTERVAL=90  # 1.5 minutes = 90 seconds
+INCREMENT_INTERVAL=90  # 90 seconds
 
 # Colors for output
 BLUE='\033[0;34m'

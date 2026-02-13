@@ -52,6 +52,18 @@ struct GitBrainCLI {
                 try await handleCheck(args: args)
             case "clear":
                 try await handleClear(args: args)
+            case "score-request":
+                try await handleScoreRequest(args: args)
+            case "score-award":
+                try await handleScoreAward(args: args)
+            case "score-reject":
+                try await handleScoreReject(args: args)
+            case "score-history":
+                try await handleScoreHistory(args: args)
+            case "score-requests":
+                try await handleScoreRequests(args: args)
+            case "score-all-requests":
+                try await handleScoreAllRequests(args: args)
             case "help", "--help", "-h":
                 printUsage()
             default:
@@ -265,6 +277,173 @@ struct GitBrainCLI {
         }
     }
     
+    private static func handleScoreRequest(args: [String]) async throws {
+        guard args.count >= 3 else {
+            throw CLIError.invalidArguments("score-request requires: <task_id> <requested_score> <quality_justification> [requester] [target_ai]")
+        }
+        
+        let taskId = args[0]
+        let requestedScore = Int(args[1]) ?? 0
+        let qualityJustification = args[2]
+        
+        let gitBrainPath = getGitBrainPath()
+        let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
+        let memoryURL = gitBrainURL.appendingPathComponent("Memory")
+        let scoresDBPath = memoryURL.appendingPathComponent("scores.db").path
+        
+        let scoreManager = ScoreManager(dbPath: scoresDBPath)
+        try await scoreManager.initialize()
+        
+        let requester = args.count > 3 ? args[3] : "coder"
+        let targetAI = args.count > 4 ? args[4] : "overseer"
+        
+        try await scoreManager.requestScore(taskId: taskId, requester: requester, targetAI: targetAI, requestedScore: requestedScore, qualityJustification: qualityJustification)
+        
+        print("✓ Score request sent to \(targetAI)")
+        print("  Task ID: \(taskId)")
+        print("  Requested Score: \(requestedScore)")
+        print("  Justification: \(qualityJustification)")
+        print("  Requester: \(requester)")
+    }
+    
+    private static func handleScoreAward(args: [String]) async throws {
+        guard args.count >= 3 else {
+            throw CLIError.invalidArguments("score-award requires: <request_id> <awarded_score> <reason> [awarder]")
+        }
+        
+        let requestId = Int(args[0]) ?? 0
+        let awardedScore = Int(args[1]) ?? 0
+        let reason = args[2]
+        
+        let gitBrainPath = getGitBrainPath()
+        let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
+        let memoryURL = gitBrainURL.appendingPathComponent("Memory")
+        let scoresDBPath = memoryURL.appendingPathComponent("scores.db").path
+        
+        let scoreManager = ScoreManager(dbPath: scoresDBPath)
+        try await scoreManager.initialize()
+        
+        let awarder = args.count > 3 ? args[3] : "overseer"
+        
+        try await scoreManager.awardScore(requestId: requestId, awarder: awarder, awardedScore: awardedScore, reason: reason)
+        
+        print("✓ Score awarded")
+        print("  Request ID: \(requestId)")
+        print("  Awarded Score: \(awardedScore)")
+        print("  Reason: \(reason)")
+        print("  Awarder: \(awarder)")
+    }
+    
+    private static func handleScoreReject(args: [String]) async throws {
+        guard args.count >= 2 else {
+            throw CLIError.invalidArguments("score-reject requires: <request_id> <reason> [rejecter]")
+        }
+        
+        let requestId = Int(args[0]) ?? 0
+        let reason = args[1]
+        
+        let gitBrainPath = getGitBrainPath()
+        let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
+        let memoryURL = gitBrainURL.appendingPathComponent("Memory")
+        let scoresDBPath = memoryURL.appendingPathComponent("scores.db").path
+        
+        let scoreManager = ScoreManager(dbPath: scoresDBPath)
+        try await scoreManager.initialize()
+        
+        let rejecter = args.count > 2 ? args[2] : "overseer"
+        
+        try await scoreManager.rejectScore(requestId: requestId, rejecter: rejecter, reason: reason)
+        
+        print("✓ Score request rejected")
+        print("  Request ID: \(requestId)")
+        print("  Reason: \(reason)")
+        print("  Rejecter: \(rejecter)")
+    }
+    
+    private static func handleScoreHistory(args: [String]) async throws {
+        let aiName = args.first ?? "coder"
+        
+        let gitBrainPath = getGitBrainPath()
+        let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
+        let memoryURL = gitBrainURL.appendingPathComponent("Memory")
+        let scoresDBPath = memoryURL.appendingPathComponent("scores.db").path
+        
+        let scoreManager = ScoreManager(dbPath: scoresDBPath)
+        try await scoreManager.initialize()
+        
+        let history = try await scoreManager.getScoreHistory(for: aiName)
+        
+        print("Score History for \(aiName):")
+        print("================================")
+        
+        if history.isEmpty {
+            print("No score history found")
+        } else {
+            print("| ID | Change | Reason | Requester | Awarder | Created At |")
+            print("|----|--------|--------|-----------|---------|-------------|")
+            
+            for entry in history {
+                print("| \(entry.0) | \(entry.1) | \(entry.2) | \(entry.3) | \(entry.4) | \(entry.5) |")
+            }
+        }
+    }
+    
+    private static func handleScoreRequests(args: [String]) async throws {
+        let targetAI = args.first ?? "overseer"
+        
+        let gitBrainPath = getGitBrainPath()
+        let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
+        let memoryURL = gitBrainURL.appendingPathComponent("Memory")
+        let scoresDBPath = memoryURL.appendingPathComponent("scores.db").path
+        
+        let scoreManager = ScoreManager(dbPath: scoresDBPath)
+        try await scoreManager.initialize()
+        
+        let requests = try await scoreManager.getPendingScoreRequests(for: targetAI)
+        
+        print("Pending Score Requests for \(targetAI):")
+        print("=======================================")
+        
+        if requests.isEmpty {
+            print("No pending score requests")
+        } else {
+            print("| ID | Task ID | Requester | Requested Score | Justification | Created At |")
+            print("|----|---------|-----------|-----------------|---------------|-------------|")
+            
+            for request in requests {
+                print("| \(request.0) | \(request.1) | \(request.2) | \(request.3) | \(request.4) | \(request.5) |")
+            }
+        }
+    }
+    
+    private static func handleScoreAllRequests(args: [String]) async throws {
+        let targetAI = args.first ?? "overseer"
+        
+        let gitBrainPath = getGitBrainPath()
+        let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
+        let memoryURL = gitBrainURL.appendingPathComponent("Memory")
+        let scoresDBPath = memoryURL.appendingPathComponent("scores.db").path
+        
+        let scoreManager = ScoreManager(dbPath: scoresDBPath)
+        try await scoreManager.initialize()
+        
+        let requests = try await scoreManager.getAllScoreRequests(for: targetAI)
+        
+        print("All Score Requests for \(targetAI):")
+        print("==================================")
+        
+        if requests.isEmpty {
+            print("No score requests found")
+        } else {
+            print("| ID | Task ID | Requester | Requested Score | Justification | Status | Created At |")
+            print("|----|---------|-----------|-----------------|---------------|--------|-------------|")
+            
+            for request in requests {
+                print("| \(request.0) | \(request.1) | \(request.2) | \(request.3) | \(request.4) | \(request.5) | \(request.6) |")
+            }
+        }
+    }
+    
     private static func printUsage() {
         print("""
         GitBrain CLI - AI-Assisted Collaborative Development Tool
@@ -276,6 +455,18 @@ struct GitBrainCLI {
           send <to> <message>  Send a message to another AI
           check [role]         Check messages for a role
           clear [role]         Clear messages for a role
+          score-request <task_id> <requested_score> <quality_justification> [requester] [target_ai]
+                                Request a score from the other AI
+          score-award <request_id> <awarded_score> <reason> [awarder]
+                                Award a score to the other AI
+          score-reject <request_id> <reason> [rejecter]
+                                Reject a score request
+          score-history [ai_name]
+                                View score history for an AI
+          score-requests [ai_name]
+                                View pending score requests for an AI
+          score-all-requests [ai_name]
+                                View all score requests for an AI
           help                 Show this help message
         
         Arguments:
@@ -283,6 +474,18 @@ struct GitBrainCLI {
           to                   Recipient: 'coder' or 'overseer'
           message              JSON string or file path
           role                 Role to check/clear: 'coder' or 'overseer'
+          task_id              Task identifier
+          requested_score       Score being requested
+          quality_justification
+                               Justification for score request
+          requester            AI requesting score (default: 'coder')
+          target_ai            AI to award score (default: 'overseer')
+          request_id           Score request ID
+          awarded_score        Score being awarded
+          reason               Reason for score award or rejection
+          awarder              AI awarding score (default: 'overseer')
+          rejecter             AI rejecting score request (default: 'overseer')
+          ai_name              AI name: 'coder' or 'overseer'
         
         Environment Variables:
           GITBRAIN_PATH        Default path to GitBrain folder (overrides ./GitBrain)
@@ -292,6 +495,10 @@ struct GitBrainCLI {
           gitbrain send overseer '{"type":"code_review","files":["file.swift"]}'
           gitbrain check coder
           gitbrain clear overseer
+          gitbrain score-request task-001 25 "Task completed successfully with all tests passing"
+          gitbrain score-award 1 25 "Excellent work! All requirements met"
+          gitbrain score-history coder
+          gitbrain score-requests overseer
           
           # Using environment variable
           export GITBRAIN_PATH=/custom/path/to/GitBrain

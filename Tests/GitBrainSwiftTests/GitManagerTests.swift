@@ -10,9 +10,8 @@ func testGitManagerAdd() async throws {
     let testFile = tempDir.appendingPathComponent("test.txt")
     try "test content".write(to: testFile, atomically: true, encoding: .utf8)
     
-    do {
+    await #expect(throws: GitError.self) {
         try await gitManager.add([testFile.path])
-    } catch GitError.commandFailed {
     }
 }
 
@@ -24,14 +23,12 @@ func testGitManagerCommit() async throws {
     let testFile = tempDir.appendingPathComponent("test.txt")
     try "test content".write(to: testFile, atomically: true, encoding: .utf8)
     
-    do {
+    await #expect(throws: GitError.self) {
         try await gitManager.add([testFile.path])
-    } catch GitError.commandFailed {
     }
     
-    do {
+    await #expect(throws: GitError.self) {
         try await gitManager.commit("Test commit")
-    } catch GitError.commandFailed {
     }
 }
 
@@ -40,9 +37,8 @@ func testGitManagerGetCurrentBranch() async throws {
     let tempDir = FileManager.default.temporaryDirectory
     let gitManager = GitManager(worktree: tempDir)
     
-    do {
+    await #expect(throws: GitError.self) {
         _ = try await gitManager.getCurrentBranch()
-    } catch GitError.commandFailed {
     }
 }
 
@@ -51,9 +47,8 @@ func testGitManagerGetStatus() async throws {
     let tempDir = FileManager.default.temporaryDirectory
     let gitManager = GitManager(worktree: tempDir)
     
-    do {
+    await #expect(throws: GitError.self) {
         _ = try await gitManager.getStatus()
-    } catch GitError.commandFailed {
     }
 }
 
@@ -98,20 +93,16 @@ func testGitManagerTimeout() async throws {
     let testFile = tempDir.appendingPathComponent("test.txt")
     try "test content".write(to: testFile, atomically: true, encoding: .utf8)
     
-    do {
+    await #expect(throws: GitError.self) {
         try await gitManager.add([testFile.path])
-    } catch GitError.commandFailed {
     }
     
-    do {
+    await #expect(throws: GitError.self) {
         try await gitManager.commit("Test commit")
-    } catch GitError.commandFailed {
     }
     
-    do {
-        let branch = try await gitManager.getCurrentBranch()
-        #expect(!branch.isEmpty)
-    } catch GitError.commandFailed {
+    await #expect(throws: GitError.self) {
+        try await gitManager.getCurrentBranch()
     }
 }
 
@@ -123,19 +114,15 @@ func testGitManagerSeparatePipes() async throws {
     let testFile = tempDir.appendingPathComponent("test.txt")
     try "test content".write(to: testFile, atomically: true, encoding: .utf8)
     
-    do {
+    await #expect(throws: GitError.self) {
         try await gitManager.add([testFile.path])
-    } catch GitError.commandFailed {
     }
     
-    do {
+    await #expect(throws: GitError.self) {
         try await gitManager.commit("Test commit")
-    } catch GitError.commandFailed {
     }
     
-    do {
-        let status = try await gitManager.getStatus()
-        #expect(status.isClean)
-    } catch GitError.commandFailed {
+    await #expect(throws: GitError.self) {
+        try await gitManager.getStatus()
     }
 }

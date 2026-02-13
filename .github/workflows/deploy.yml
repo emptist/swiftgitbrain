@@ -1,0 +1,45 @@
+name: CD
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+
+jobs:
+  deploy:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v1
+      with:
+        swift-version: 6.2
+    
+    - name: Install dependencies
+      run: swift package resolve
+    
+    - name: Build project
+      run: swift build -c release
+    
+    - name: Run tests
+      run: swift test
+    
+    - name: Create release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          *.swift
+          Package.swift
+          Package.resolved
+        draft: false
+        generate_release_notes: true
+    
+    - name: Publish to Swift Package Index
+      if: startsWith(github.ref, 'refs/tags/v')
+      run: |
+        swift package --allow-network-connections

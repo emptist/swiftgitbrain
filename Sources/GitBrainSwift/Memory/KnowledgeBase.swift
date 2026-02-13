@@ -1,147 +1,70 @@
 import Foundation
 
 public actor KnowledgeBase: KnowledgeBaseProtocol {
-    private struct KnowledgeItem: Sendable {
-        let value: SendableContent
-        let metadata: SendableContent
-        let timestamp: Date
-    }
+    private let repository: KnowledgeRepositoryProtocol
     
-    private let base: URL
-    private let fileManager: FileManager
-    private var inMemoryStorage: [String: [String: KnowledgeItem]] = [:]
-    
-    public init(base: URL) {
-        self.base = base
-        self.fileManager = FileManager.default
-    }
-    
-    private func getCategoryPath(category: String) -> URL {
-        return base.appendingPathComponent(category)
-    }
-    
-    private func getItemPath(category: String, key: String) -> URL {
-        return getCategoryPath(category: category).appendingPathComponent("\(key).json")
+    public init(repository: KnowledgeRepositoryProtocol) {
+        self.repository = repository
+        GitBrainLogger.info("KnowledgeBase initialized with Fluent repository")
     }
     
     public func addKnowledge(category: String, key: String, value: SendableContent, metadata: SendableContent? = nil) async throws {
-        try fileManager.createDirectory(at: getCategoryPath(category: category), withIntermediateDirectories: true)
-        
-        let item = KnowledgeItem(
-            value: value,
-            metadata: metadata ?? SendableContent([:]),
-            timestamp: Date()
-        )
-        
-        if inMemoryStorage[category] == nil {
-            inMemoryStorage[category] = [:]
-        }
-        inMemoryStorage[category]?[key] = item
-        
-        let itemData: [String: Any] = [
-            "value": value.data,
-            "metadata": metadata?.data ?? [:],
-            "timestamp": ISO8601DateFormatter().string(from: item.timestamp)
-        ]
-        
-        let data = try JSONSerialization.data(withJSONObject: itemData)
-        try data.write(to: getItemPath(category: category, key: key))
+        GitBrainLogger.debug("Adding knowledge: category=\(category), key=\(key)")
+        try await repository.add(category: category, key: key, value: value, metadata: metadata ?? SendableContent([:]), timestamp: Date())
+        GitBrainLogger.info("Successfully added knowledge: category=\(category), key=\(key)")
     }
     
     public func getKnowledge(category: String, key: String) async throws -> SendableContent? {
-        if let item = inMemoryStorage[category]?[key] {
-            return item.value
-        }
-        
-        let itemPath = getItemPath(category: category, key: key)
-        guard fileManager.fileExists(atPath: itemPath.path) else {
+        GitBrainLogger.debug("Getting knowledge: category=\(category), key=\(key)")
+        guard let result = try await repository.get(category: category, key: key) else {
+            GitBrainLogger.debug("Knowledge not found: category=\(category), key=\(key)")
             return nil
         }
-        
-        let data = try Data(contentsOf: itemPath)
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let valueData = json["value"] as? [String: Any] else {
-            return nil
-        }
-        
-        let value = SendableContent(valueData)
-        
-        let metadataData = json["metadata"] as? [String: Any] ?? [:]
-        let metadata = SendableContent(metadataData)
-        
-        if inMemoryStorage[category] == nil {
-            inMemoryStorage[category] = [:]
-        }
-        inMemoryStorage[category]?[key] = KnowledgeItem(
-            value: value,
-            metadata: metadata,
-            timestamp: ISO8601DateFormatter().date(from: json["timestamp"] as? String ?? "") ?? Date()
-        )
-        
-        return value
+        GitBrainLogger.debug("Successfully retrieved knowledge: category=\(category), key=\(key)")
+        return result.value
     }
     
     public func updateKnowledge(category: String, key: String, value: SendableContent, metadata: SendableContent? = nil) async throws -> Bool {
-        guard try await getKnowledge(category: category, key: key) != nil else {
-            return false
+        GitBrainLogger.debug("Updating knowledge: category=\(category), key=\(key)")
+        let result = try await repository.update(category: category, key: key, value: value, metadata: metadata ?? SendableContent([:]), timestamp: Date())
+        if result {
+            GitBrainLogger.info("Successfully updated knowledge: category=\(category), key=\(key)")
+        } else {
+            GitBrainLogger.warning("Knowledge not found for update: category=\(category), key=\(key)")
         }
-        
-        try await addKnowledge(category: category, key: key, value: value, metadata: metadata)
-        return true
+        return result
     }
     
     public func deleteKnowledge(category: String, key: String) async throws -> Bool {
-        let itemPath = getItemPath(category: category, key: key)
-        
-        guard fileManager.fileExists(atPath: itemPath.path) else {
-            return false
+        GitBrainLogger.debug("Deleting knowledge: category=\(category), key=\(key)")
+        let result = try await repository.delete(category: category, key: key)
+        if result {
+            GitBrainLogger.info("Successfully deleted knowledge: category=\(category), key=\(key)")
+        } else {
+            GitBrainLogger.warning("Knowledge not found for deletion: category=\(category), key=\(key)")
         }
-        
-        try fileManager.removeItem(at: itemPath)
-        inMemoryStorage[category]?.removeValue(forKey: key)
-        return true
+        return result
     }
     
     public func listCategories() async throws -> [String] {
-        guard fileManager.fileExists(atPath: base.path) else {
-            return []
-        }
-        
-        let categories = try fileManager.contentsOfDirectory(at: base, includingPropertiesForKeys: nil)
+        GitBrainLogger.debug("Listing categories")
+        let categories = try await repository.listCategories()
+        GitBrainLogger.debug("Found \(categories.count) categories")
         return categories
-            .filter { $0.hasDirectoryPath }
-            .map { $0.lastPathComponent }
-            .sorted()
     }
     
     public func listKeys(category: String) async throws -> [String] {
-        let categoryPath = getCategoryPath(category: category)
-        guard fileManager.fileExists(atPath: categoryPath.path) else {
-            return []
-        }
-        
-        let files = try fileManager.contentsOfDirectory(at: categoryPath, includingPropertiesForKeys: nil)
-        return files
-            .filter { $0.pathExtension == "json" }
-            .map { $0.deletingPathExtension().lastPathComponent }
-            .sorted()
+        GitBrainLogger.debug("Listing keys for category: \(category)")
+        let keys = try await repository.listKeys(category: category)
+        GitBrainLogger.debug("Found \(keys.count) keys in category: \(category)")
+        return keys
     }
     
     public func searchKnowledge(category: String, query: String) async throws -> [SendableContent] {
-        let keys = try await listKeys(category: category)
-        var results: [SendableContent] = []
-        
-        for key in keys {
-            if let value = try await getKnowledge(category: category, key: key) {
-                let valueString = try JSONSerialization.data(withJSONObject: value.data)
-                if let valueStr = String(data: valueString, encoding: .utf8) {
-                    if valueStr.localizedCaseInsensitiveContains(query) {
-                        results.append(value)
-                    }
-                }
-            }
-        }
-        
-        return results
+        GitBrainLogger.debug("Searching knowledge: category=\(category), query=\(query)")
+        let results = try await repository.search(category: category, query: query)
+        let values = results.map { $0.value }
+        GitBrainLogger.info("Search completed: category=\(category), query=\(query), results=\(values.count)")
+        return values
     }
 }

@@ -31,7 +31,7 @@ public struct SendableContent: Codable, Sendable {
 
     public func toAnyDict() -> [String: Any] {
         return data.reduce(into: [String: Any]()) { dict, pair in
-            dict[pair.key] = pair.value.toAny()
+            dict[pair.key] = pair.value.toAnyJSON()
         }
     }
 
@@ -81,27 +81,6 @@ public struct SendableContent: Codable, Sendable {
             return .dictionary(dictValue.mapValues { convertToCodableAny($0) })
         default:
             return .null
-        }
-    }
-}
-
-extension CodableAny {
-    func toAny() -> Any {
-        switch self {
-        case .string(let value):
-            return value
-        case .int(let value):
-            return value
-        case .double(let value):
-            return value
-        case .bool(let value):
-            return value
-        case .array(let value):
-            return value.map { $0.toAny() }
-        case .dictionary(let value):
-            return value.mapValues { $0.toAny() }
-        case .null:
-            return NSNull()
         }
     }
 }

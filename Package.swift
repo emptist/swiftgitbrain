@@ -14,13 +14,23 @@ let package = Package(
         .executable(
             name: "gitbrain",
             targets: ["GitBrainCLI"]
+        ),
+        .executable(
+            name: "gitbrain-migrate",
+            targets: ["GitBrainMigrationCLI"]
         )
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "git@github.com:vapor/fluent.git", from: "4.0.0"),
+        .package(url: "git@github.com:vapor/fluent-postgres-driver.git", from: "2.0.0")
+    ],
     targets: [
         .target(
             name: "GitBrainSwift",
-            dependencies: [],
+            dependencies: [
+                .product(name: "Fluent", package: "fluent"),
+                .product(name: "FluentPostgresDriver", package: "fluent-postgres-driver")
+            ],
             path: "Sources/GitBrainSwift"
         ),
         .executableTarget(
@@ -28,10 +38,20 @@ let package = Package(
             dependencies: ["GitBrainSwift"],
             path: "Sources/GitBrainCLI"
         ),
+        .executableTarget(
+            name: "GitBrainMigrationCLI",
+            dependencies: ["GitBrainSwift"],
+            path: "Sources/GitBrainMigrationCLI"
+        ),
         .testTarget(
             name: "GitBrainSwiftTests",
             dependencies: ["GitBrainSwift"],
             path: "Tests/GitBrainSwiftTests"
+        ),
+        .executableTarget(
+            name: "GitBrainSwiftBenchmarks",
+            dependencies: ["GitBrainSwift"],
+            path: "Benchmarks"
         )
     ]
 )

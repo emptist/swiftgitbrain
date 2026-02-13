@@ -9,13 +9,13 @@ public enum MessageValidationError: Error, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .missingRequiredField(let field):
-            return "Missing required field: \(field)"
+            return "Missing required field: '\(field)'. Please include this field in your message."
         case .invalidFieldType(let field, let expected, let actual):
-            return "Invalid type for field '\(field)': expected \(expected), got \(actual)"
+            return "Invalid type for field '\(field)': expected \(expected), got \(actual). Please provide the correct data type."
         case .invalidValue(let field, let reason):
-            return "Invalid value for field '\(field)': \(reason)"
+            return "Invalid value for field '\(field)': \(reason). Please provide a valid value."
         case .invalidFormat(let field, let reason):
-            return "Invalid format for field '\(field)': \(reason)"
+            return "Invalid format for field '\(field)': \(reason). Please check the message structure and format."
         }
     }
 }
@@ -293,6 +293,82 @@ public actor MessageValidator {
                     guard let role = value as? String,
                           ["coder", "overseer"].contains(role) else {
                         throw MessageValidationError.invalidValue("role", reason: "must be either 'coder' or 'overseer'")
+                    }
+                }
+            ]
+        )
+        
+        schemas["score_request"] = MessageSchema(
+            messageType: "score_request",
+            requiredFields: ["task_id", "requester", "target_ai", "requested_score", "quality_justification"],
+            optionalFields: [],
+            fieldTypes: [
+                "task_id": "String",
+                "requester": "String",
+                "target_ai": "String",
+                "requested_score": "Int",
+                "quality_justification": "String"
+            ],
+            validators: [
+                "requester": { value in
+                    guard let requester = value as? String,
+                          ["coder", "overseer"].contains(requester) else {
+                        throw MessageValidationError.invalidValue("requester", reason: "must be either 'coder' or 'overseer'")
+                    }
+                },
+                "target_ai": { value in
+                    guard let targetAI = value as? String,
+                          ["coder", "overseer"].contains(targetAI) else {
+                        throw MessageValidationError.invalidValue("target_ai", reason: "must be either 'coder' or 'overseer'")
+                    }
+                },
+                "requested_score": { value in
+                    guard let requestedScore = value as? Int, requestedScore > 0 else {
+                        throw MessageValidationError.invalidValue("requested_score", reason: "must be a positive integer")
+                    }
+                }
+            ]
+        )
+        
+        schemas["score_award"] = MessageSchema(
+            messageType: "score_award",
+            requiredFields: ["request_id", "awarder", "awarded_score", "reason"],
+            optionalFields: [],
+            fieldTypes: [
+                "request_id": "Int",
+                "awarder": "String",
+                "awarded_score": "Int",
+                "reason": "String"
+            ],
+            validators: [
+                "awarder": { value in
+                    guard let awarder = value as? String,
+                          ["coder", "overseer"].contains(awarder) else {
+                        throw MessageValidationError.invalidValue("awarder", reason: "must be either 'coder' or 'overseer'")
+                    }
+                },
+                "awarded_score": { value in
+                    guard let awardedScore = value as? Int, awardedScore > 0 else {
+                        throw MessageValidationError.invalidValue("awarded_score", reason: "must be a positive integer")
+                    }
+                }
+            ]
+        )
+        
+        schemas["score_reject"] = MessageSchema(
+            messageType: "score_reject",
+            requiredFields: ["request_id", "rejecter", "reason"],
+            optionalFields: [],
+            fieldTypes: [
+                "request_id": "Int",
+                "rejecter": "String",
+                "reason": "String"
+            ],
+            validators: [
+                "rejecter": { value in
+                    guard let rejecter = value as? String,
+                          ["coder", "overseer"].contains(rejecter) else {
+                        throw MessageValidationError.invalidValue("rejecter", reason: "must be either 'coder' or 'overseer'")
                     }
                 }
             ]

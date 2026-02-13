@@ -6,7 +6,7 @@ public enum LoggingPluginError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .encodingFailed:
-            return "Failed to encode string to UTF-8 data"
+            return "Failed to encode string to UTF-8 data. Please check that the message contains valid UTF-8 characters."
         }
     }
 }
