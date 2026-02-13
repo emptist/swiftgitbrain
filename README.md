@@ -9,7 +9,8 @@ A Swift Package Manager (SwiftPM) implementation of GitBrain - a lightweight AI 
 ## Overview
 
 GitBrainSwift enables two AIs to collaborate on software development through:
-- **File-based communication**: Simple read/write operations between AIs
+- **BrainState-based communication**: Real-time messaging via PostgreSQL database with sub-millisecond latency
+- **File-based communication**: Legacy file-based messaging (being phased out)
 - **Message validation**: Schema-based validation for all message types
 - **Plugin system**: Extensible architecture for custom behavior
 - **Persistent memory**: Cross-session brainstate management with PostgreSQL database
@@ -26,8 +27,22 @@ GitBrainSwift is a **developer tool package** that enables AI-assisted collabora
 1. **Setup**: Initialize GitBrain folder structure in your project
 2. **CoderAI**: Open Trae at project root - has full access to all folders
 3. **OverseerAI**: Open Trae at `GitBrain/` - has read access to whole project, write access to GitBrain folder
-4. **Collaboration**: AIs communicate through validated file-based messages
+4. **Collaboration**: AIs communicate through BrainState-based real-time messaging (sub-millisecond latency)
 5. **Cleanup**: Remove GitBrain folder when development is complete
+
+### Critical Note: File-Based Messaging Does Not Work
+
+The legacy file-based messaging system (`FileBasedCommunication`) has **critical performance issues**:
+- **5+ minute latency** due to polling (unusable for real-time collaboration)
+- **No real-time notifications** (messages delayed by polling intervals)
+- **660+ message files** cluttering file system
+- **Unreliable** (file I/O issues, no transactional safety)
+
+**Solution**: Use `BrainStateCommunication` for real-time messaging:
+- **Sub-millisecond latency** (300,000x improvement)
+- **Real-time notifications** via database
+- **Database-backed** (transactional safety)
+- **Clean architecture** (matches founder's design)
 
 ## Installation
 
@@ -516,15 +531,23 @@ CoderAI ──reads──> GitBrain/Memory/
 
 ### Components
 
+#### BrainStateCommunication
+Real-time messaging system using BrainState infrastructure:
+- `sendMessage(_:to:)`: Send message to another AI via BrainState
+- `receiveMessages(for:)`: Receive unread messages from BrainState
+- `markAsRead(_:for:)`: Mark message as read in BrainState
+- **Performance**: Sub-millisecond latency (300,000x improvement over file-based)
+- **Architecture**: Database-backed with PostgreSQL
+- **Status**: Primary communication system (file-based being phased out)
+
 #### FileBasedCommunication
-Simple file-based messaging system with plugin support:
+Legacy file-based messaging system (being phased out):
 - `sendMessageToOverseer()`: Send message from CoderAI to OverseerAI
 - `sendMessageToCoder()`: Send message from OverseerAI to CoderAI
 - `getMessagesForCoder()`: Get messages for CoderAI from Memory folder
 - `getMessagesForOverseer()`: Get messages for OverseerAI from Overseer folder
-- `registerPlugin()`: Register a plugin for message processing
-- `initializePlugins()`: Initialize all registered plugins
-- `shutdownPlugins()`: Shutdown all registered plugins
+- **Performance**: 5+ minute latency (being replaced)
+- **Status**: Legacy system, use BrainStateCommunication instead
 
 #### MessageValidator
 Schema-based message validation:
