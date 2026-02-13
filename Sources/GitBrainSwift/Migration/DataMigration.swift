@@ -309,8 +309,9 @@ public struct DataMigration: Sendable {
                 let key = keyURL.deletingPathExtension().lastPathComponent
                 guard key != ".DS_Store" else { continue }
                 
+                var attempts = 1
                 do {
-                    let _ = try await retry({
+                    let (_, attemptCount) = try await retry({
                         let data = try Data(contentsOf: keyURL)
                         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
                         
@@ -326,6 +327,7 @@ public struct DataMigration: Sendable {
                         )
                     }, item: "\(category)/\(key)", phase: "Transfer", progress: progress)
                     
+                    attempts = attemptCount
                     totalItems += 1
                     
                     if currentItem % 10 == 0 {
@@ -333,7 +335,7 @@ public struct DataMigration: Sendable {
                     }
                 } catch {
                     GitBrainLogger.error("Failed to migrate item \(category)/\(key): \(error)")
-                    migrationErrors.append(MigrationErrorDetail(item: "\(category)/\(key)", error: error.localizedDescription, phase: "Transfer", retryCount: retryPolicy.maxRetries))
+                    migrationErrors.append(MigrationErrorDetail(item: "\(category)/\(key)", error: error.localizedDescription, phase: "Transfer", retryCount: attempts))
                     failedItems += 1
                     progress?.reportError(error: error, context: "Migrating \(category)/\(key)")
                 }
@@ -390,8 +392,9 @@ public struct DataMigration: Sendable {
             let aiName = stateFile.deletingPathExtension().lastPathComponent
             guard aiName != ".DS_Store" else { continue }
             
+            var attempts = 1
             do {
-                let _ = try await retry({
+                let (_, attemptCount) = try await retry({
                     let data = try Data(contentsOf: stateFile)
                     let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
                     
@@ -408,12 +411,13 @@ public struct DataMigration: Sendable {
                     )
                 }, item: aiName, phase: "Transfer", progress: progress)
                 
+                attempts = attemptCount
                 totalStates += 1
                 
                 progress?.reportProgress(phase: "Transfer", current: currentState, total: stateFiles.count, message: "Migrated \(currentState)/\(stateFiles.count) states")
             } catch {
                 GitBrainLogger.error("Failed to migrate brain state for \(aiName): \(error)")
-                migrationErrors.append(MigrationErrorDetail(item: aiName, error: error.localizedDescription, phase: "Transfer", retryCount: retryPolicy.maxRetries))
+                migrationErrors.append(MigrationErrorDetail(item: aiName, error: error.localizedDescription, phase: "Transfer", retryCount: attempts))
                 failedStates += 1
                 progress?.reportError(error: error, context: "Migrating brain state for \(aiName)")
             }
