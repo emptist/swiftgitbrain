@@ -465,6 +465,286 @@ public enum MessageType: String, Codable, Sendable {
 }
 ```
 
+#### Message Types
+
+**IMPORTANT:** Message types are strongly-typed enums in Swift code, but stored as strings in database.
+
+**Why This Matters:**
+- Swift's type system provides compile-time checking
+- Invalid message types are caught at compile time
+- Code completion and refactoring safety
+- Type-safe message handling
+
+**How It Works:**
+1. **In Swift Code:** Use `MessageType` enum (strongly-typed)
+2. **In Database:** Store enum's raw value as `String`
+3. **When Reading from Database:** Convert `String` back to `MessageType` enum
+
+**Example:**
+```swift
+// Swift Code - Use strongly-typed enum
+let messageType = MessageType.task  // Compile-time checked!
+
+// Database - Store raw value as String
+let dbValue = messageType.rawValue  // "task"
+
+// Read from Database - Convert back to enum
+if let dbValue = row["type"] as? String,
+   let messageType = MessageType(rawValue: dbValue) {
+   // Use strongly-typed enum
+   switch messageType {
+   case .task:
+       // Handle task
+   case .code:
+       // Handle code
+   // ...
+   }
+}
+```
+
+#### Complete Message Type List
+
+##### 1. Task Message
+
+**Type:** `MessageType.task` (Swift enum)
+
+**Purpose:** Task assignments between AIs
+
+**Required Fields:**
+- `task_id`: String - Unique task identifier
+- `description`: String - Task description
+- `task_type`: String - Type of task
+
+**Optional Fields:**
+- `priority`: Int - Task priority (1-10)
+- `files`: [String] - List of related files
+- `deadline`: String - Task deadline timestamp
+
+**Validators:**
+- `task_type` must be one of: `coding`, `review`, `testing`, `documentation`
+- `priority` must be between 1 and 10
+
+**Swift Code Example:**
+```swift
+let messageType = MessageType.task
+let message = Message(
+    id: UUID().uuidString,
+    from: "CoderAI",
+    to: "OverseerAI",
+    timestamp: ISO8601DateFormatter().string(from: Date()),
+    content: SendableContent([
+        "type": messageType.rawValue,
+        "task_id": "task-001",
+        "description": "Implement new feature",
+        "task_type": "coding",
+        "priority": 5,
+        "files": ["Sources/Feature.swift"],
+        "deadline": "2026-02-15T12:00:00Z"
+    ])
+)
+```
+
+##### 2. Code Message
+
+**Type:** `MessageType.code` (Swift enum)
+
+**Purpose:** Code submissions between AIs
+
+**Required Fields:**
+- `task_id`: String - Related task identifier
+- `code`: String - Code content
+- `language`: String - Programming language
+
+**Optional Fields:**
+- `files`: [String] - List of related files
+- `description`: String - Code description
+- `commit_hash`: String - Git commit hash
+
+**Validators:**
+- `language` must be one of: `swift`, `python`, `javascript`, `rust`, `go`, `java`
+
+##### 3. Review Message
+
+**Type:** `MessageType.review` (Swift enum)
+
+**Purpose:** Code reviews between AIs
+
+**Required Fields:**
+- `task_id`: String - Related task identifier
+- `approved`: Bool - Approval status
+- `reviewer`: String - Reviewer name
+
+**Optional Fields:**
+- `comments`: [[String: Any]] - Review comments
+- `feedback`: String - Overall feedback
+- `files_reviewed`: [String] - List of reviewed files
+
+**Validators:**
+- `comments[].line` must be a non-negative integer
+- `comments[].type` must be one of: `error`, `warning`, `suggestion`, `info`
+- `comments[]` must have a `message` field
+
+##### 4. Feedback Message
+
+**Type:** `MessageType.feedback` (Swift enum)
+
+**Purpose:** Feedback messages between AIs
+
+**Required Fields:**
+- `task_id`: String - Related task identifier
+- `message`: String - Feedback message
+
+**Optional Fields:**
+- `severity`: String - Feedback severity
+- `suggestions`: [String] - List of suggestions
+- `files`: [String] - List of related files
+
+**Validators:**
+- `severity` must be one of: `critical`, `major`, `minor`, `info`
+
+##### 5. Approval Message
+
+**Type:** `MessageType.approval` (Swift enum)
+
+**Purpose:** Task approval notifications
+
+**Required Fields:**
+- `task_id`: String - Related task identifier
+- `approver`: String - Approver name
+
+**Optional Fields:**
+- `approved_at`: String - Approval timestamp
+- `commit_hash`: String - Git commit hash
+- `notes`: String - Approval notes
+
+##### 6. Rejection Message
+
+**Type:** `MessageType.rejection` (Swift enum)
+
+**Purpose:** Task rejection notifications
+
+**Required Fields:**
+- `task_id`: String - Related task identifier
+- `rejecter`: String - Rejecter name
+- `reason`: String - Rejection reason
+
+**Optional Fields:**
+- `rejected_at`: String - Rejection timestamp
+- `feedback`: String - Detailed feedback
+- `suggestions`: [String] - List of suggestions
+
+##### 7. Status Message
+
+**Type:** `MessageType.status` (Swift enum)
+
+**Purpose:** Status updates between AIs
+
+**Required Fields:**
+- `status`: String - Current status
+
+**Optional Fields:**
+- `message`: String - Status message
+- `progress`: Int - Progress percentage (0-100)
+- `current_task`: [String: Any] - Current task details
+- `timestamp`: String - Status timestamp
+
+**Validators:**
+- `status` must be one of: `idle`, `working`, `waiting`, `completed`, `error`
+- `progress` must be between 0 and 100
+
+##### 8. Heartbeat Message
+
+**Type:** `MessageType.heartbeat` (Swift enum)
+
+**Purpose:** Keep-alive messages between AIs
+
+**Required Fields:**
+- `ai_name`: String - AI name
+- `role`: String - AI role
+
+**Optional Fields:**
+- `timestamp`: String - Heartbeat timestamp
+- `status`: String - Current status
+- `capabilities`: [String] - List of capabilities
+
+**Validators:**
+- `role` must be one of: `coder`, `overseer`
+
+##### 9. Score Request Message
+
+**Type:** `score_request` (String in validator)
+
+**Purpose:** Request score from another AI
+
+**Required Fields:**
+- `task_id`: String - Related task identifier
+- `requester`: String - Requester name
+- `target_ai`: String - Target AI name
+- `requested_score`: Int - Requested score
+- `quality_justification`: String - Justification for score
+
+**Optional Fields:**
+- None
+
+**Validators:**
+- `requester` must be one of: `coder`, `overseer`
+- `target_ai` must be one of: `coder`, `overseer`
+- `requested_score` must be a positive integer
+
+##### 10. Score Award Message
+
+**Type:** `score_award` (String in validator)
+
+**Purpose:** Award score to another AI
+
+**Required Fields:**
+- `request_id`: Int - Related request ID
+- `awarder`: String - Awarder name
+- `awarded_score`: Int - Awarded score
+- `reason`: String - Award reason
+
+**Optional Fields:**
+- None
+
+**Validators:**
+- `awarder` must be one of: `coder`, `overseer`
+- `awarded_score` must be a positive integer
+
+##### 11. Score Reject Message
+
+**Type:** `score_reject` (String in validator)
+
+**Purpose:** Reject score request from another AI
+
+**Required Fields:**
+- `request_id`: Int - Related request ID
+- `rejecter`: String - Rejecter name
+- `reason`: String - Rejection reason
+
+**Optional Fields:**
+- None
+
+**Validators:**
+- `rejecter` must be one of: `coder`, `overseer`
+
+#### Message Type Summary Table
+
+| Type | In Enum | In Validator | Purpose | Required Fields |
+|-------|-----------|---------------|---------|-----------------|
+| task | ✅ | ✅ | Task assignments | task_id, description, task_type |
+| code | ✅ | ✅ | Code submissions | task_id, code, language |
+| review | ✅ | ✅ | Code reviews | task_id, approved, reviewer |
+| feedback | ✅ | ✅ | Feedback messages | task_id, message |
+| approval | ✅ | ✅ | Task approvals | task_id, approver |
+| rejection | ✅ | ✅ | Task rejections | task_id, rejecter, reason |
+| status | ✅ | ✅ | Status updates | status |
+| heartbeat | ✅ | ✅ | Keep-alive messages | ai_name, role |
+| score_request | ❌ | ✅ | Score requests | task_id, requester, target_ai, requested_score, quality_justification |
+| score_award | ❌ | ✅ | Score awards | request_id, awarder, awarded_score, reason |
+| score_reject | ❌ | ✅ | Score rejections | request_id, rejecter, reason |
+
+**Total Message Types:** 11
+
 #### MessageCacheRepository
 
 ```swift
