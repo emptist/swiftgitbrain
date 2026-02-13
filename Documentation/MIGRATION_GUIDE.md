@@ -39,36 +39,51 @@ The migration process transfers data from file-based JSON storage to a PostgreSQ
 ./scripts/setup_database.sh
 ```
 
+### Prepare Migration Environment
+
+For a complete migration test environment setup:
+
+```bash
+./scripts/prepare_migration.sh
+```
+
+This script will:
+- Check PostgreSQL status and start if needed
+- Create test database
+- Set up environment variables
+- Create test data directories
+- Test migration CLI
+
 ## Migration Process
 
 ### Step 1: Check Current State
 
 ```bash
-swift run GitBrainMigrationCLI status
+swift run gitbrain-migrate status
 ```
 
 ### Step 2: Create Snapshot (Optional but Recommended)
 
 ```bash
-swift run GitBrainMigrationCLI snapshot --create
+swift run gitbrain-migrate snapshot --create
 ```
 
 ### Step 3: Dry Run Migration
 
 ```bash
-swift run GitBrainMigrationCLI migrate --dry-run --verbose
+swift run gitbrain-migrate migrate --dry-run --verbose
 ```
 
 ### Step 4: Run Migration
 
 ```bash
-swift run GitBrainMigrationCLI migrate --verbose
+swift run gitbrain-migrate migrate --snapshot --verbose
 ```
 
 ### Step 5: Validate Migration
 
 ```bash
-swift run GitBrainMigrationCLI validate --verbose
+swift run gitbrain-migrate validate --verbose
 ```
 
 ### Step 6: Health Check
@@ -82,58 +97,58 @@ swift run GitBrainMigrationCLI validate --verbose
 ### Migrate Command
 
 ```bash
-swift run GitBrainMigrationCLI migrate [options]
+swift run gitbrain-migrate migrate [options]
 ```
 
 **Options:**
-- `--source-path, -s`: Path to file-based storage directory
-- `--knowledge-only, -k`: Migrate knowledge base only
-- `--brain-state-only, -b`: Migrate brain states only
-- `--dry-run, -d`: Preview migration without executing
-- `--verbose, -v`: Enable verbose logging
-- `--snapshot`: Create snapshot before migration (default: true)
+- `--source-path`: Path to file-based storage directory
+- `-k, --knowledge-only`: Migrate knowledge base only
+- `-b, --brain-state-only`: Migrate brain states only
+- `-d, --dry-run`: Preview migration without executing
+- `-v, --verbose`: Enable verbose logging
+- `-s, --snapshot`: Create snapshot before migration
 
 ### Rollback Command
 
 ```bash
-swift run GitBrainMigrationCLI rollback [options]
+swift run gitbrain-migrate rollback [options]
 ```
 
 **Options:**
-- `--snapshot-id, -s`: Snapshot ID to rollback to
-- `--knowledge-item, -k`: Rollback specific knowledge item (format: category/key)
-- `--brain-state, -b`: Rollback specific brain state
-- `--verbose, -v`: Enable verbose logging
+- `--snapshot-id`: Snapshot ID to rollback to
+- `-k, --knowledge-item`: Rollback specific knowledge item (format: category/key)
+- `-b, --brain-state`: Rollback specific brain state
+- `-v, --verbose`: Enable verbose logging
 
 ### Status Command
 
 ```bash
-swift run GitBrainMigrationCLI status [options]
+swift run gitbrain-migrate status [options]
 ```
 
 **Options:**
-- `--verbose, -v`: Enable verbose logging
+- `-v, --verbose`: Enable verbose logging
 
 ### Validate Command
 
 ```bash
-swift run GitBrainMigrationCLI validate [options]
+swift run gitbrain-migrate validate [options]
 ```
 
 **Options:**
-- `--source-path, -s`: Path to file-based storage directory
-- `--verbose, -v`: Enable verbose logging
+- `--source-path`: Path to file-based storage directory
+- `-v, --verbose`: Enable verbose logging
 
 ### Snapshot Command
 
 ```bash
-swift run GitBrainMigrationCLI snapshot [options]
+swift run gitbrain-migrate snapshot [options]
 ```
 
 **Options:**
-- `--create, -c`: Create a new snapshot
-- `--list, -l`: List all snapshots
-- `--verbose, -v`: Enable verbose logging
+- `-c, --create`: Create a new snapshot
+- `--list`: List all snapshots
+- `-v, --verbose`: Enable verbose logging
 
 ## Error Handling
 
@@ -153,7 +168,7 @@ Transient errors (timeout, connection, network, temporary, unavailable, busy, lo
 If migration fails, you can rollback to a previous snapshot:
 
 ```bash
-swift run GitBrainMigrationCLI rollback --snapshot-id <snapshot-id>
+swift run gitbrain-migrate rollback --snapshot-id <snapshot-id>
 ```
 
 For emergency rollback:
