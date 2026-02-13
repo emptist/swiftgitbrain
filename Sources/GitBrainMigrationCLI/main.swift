@@ -16,41 +16,43 @@ struct MigrateCommand: ParsableCommand {
         abstract: "Migrate data from file-based storage to PostgreSQL"
     )
     
-    @Option(name: .shortAndLong, help: "Path to file-based storage directory")
+    @Option(name: .long, help: "Path to file-based storage directory")
     var sourcePath: String?
     
-    @Option(name: .shortAndLong, help: "Migrate knowledge base only")
+    @Flag(name: .shortAndLong, help: "Migrate knowledge base only")
     var knowledgeOnly: Bool = false
     
-    @Option(name: .shortAndLong, help: "Migrate brain states only")
+    @Flag(name: .shortAndLong, help: "Migrate brain states only")
     var brainStateOnly: Bool = false
     
-    @Option(name: .shortAndLong, help: "Dry run - preview migration without executing")
+    @Flag(name: .shortAndLong, help: "Dry run - preview migration without executing")
     var dryRun: Bool = false
     
-    @Option(name: .shortAndLong, help: "Verbose logging")
+    @Flag(name: .shortAndLong, help: "Verbose logging")
     var verbose: Bool = false
     
-    @Option(name: .shortAndLong, help: "Create snapshot before migration")
-    var snapshot: Bool = true
+    @Flag(name: .shortAndLong, help: "Create snapshot before migration")
+    var snapshot: Bool = false
     
     func run() throws {
+        if dryRun {
+            print("🔍 Dry run mode - previewing migration...")
+            print("Source path: \(sourcePath ?? "default")")
+            print("Knowledge only: \(knowledgeOnly)")
+            print("Brain state only: \(brainStateOnly)")
+            print("Snapshot: \(snapshot)")
+            return
+        }
+        
         let migration = DataMigration()
         let progress = ConsoleProgress(verbose: verbose)
         
+        let semaphore = DispatchSemaphore(value: 0)
+        
         Task {
             do {
-                if dryRun {
-                    print("🔍 Dry run mode - previewing migration...")
-                    print("Source path: \(sourcePath ?? "default")")
-                    print("Knowledge only: \(knowledgeOnly)")
-                    print("Brain state only: \(brainStateOnly)")
-                    print("Snapshot: \(snapshot)")
-                    return
-                }
-                
                 let dbManager = DatabaseManager()
-                let databases = try await dbManager.initialize()
+                _ = try await dbManager.initialize()
                 let knowledgeRepo = try await dbManager.createKnowledgeRepository()
                 let brainStateRepo = try await dbManager.createBrainStateRepository()
                 
@@ -59,6 +61,8 @@ struct MigrateCommand: ParsableCommand {
                     print("📸 Creating snapshot before migration...")
                     currentSnapshot = try await migration.createSnapshot(knowledgeRepo: knowledgeRepo, brainStateRepo: brainStateRepo)
                     print("✅ Snapshot created: \(currentSnapshot?.id ?? "unknown")")
+                } else {
+                    print("⏭️  Skipping snapshot creation (use --snapshot to enable)")
                 }
                 
                 let sourceURL: URL
@@ -87,12 +91,15 @@ struct MigrateCommand: ParsableCommand {
                 }
                 
                 print("🎉 Migration completed successfully!")
+                semaphore.signal()
                 
             } catch {
                 print("❌ Migration failed: \(error)")
-                throw error
+                semaphore.signal()
             }
         }
+        
+        semaphore.wait()
     }
 }
 
@@ -102,7 +109,7 @@ struct RollbackCommand: ParsableCommand {
         abstract: "Rollback migration to a previous snapshot"
     )
     
-    @Option(name: .shortAndLong, help: "Snapshot ID to rollback to")
+    @Option(name: .long, help: "Snapshot ID to rollback to")
     var snapshotId: String?
     
     @Option(name: .shortAndLong, help: "Rollback specific knowledge item (format: category/key)")
@@ -111,17 +118,17 @@ struct RollbackCommand: ParsableCommand {
     @Option(name: .shortAndLong, help: "Rollback specific brain state")
     var brainState: String?
     
-    @Option(name: .shortAndLong, help: "Verbose logging")
+    @Flag(name: .shortAndLong, help: "Verbose logging")
     var verbose: Bool = false
     
     func run() throws {
         let migration = DataMigration()
-        let progress = ConsoleProgress(verbose: verbose)
+        let semaphore = DispatchSemaphore(value: 0)
         
         Task {
             do {
                 let dbManager = DatabaseManager()
-                let databases = try await dbManager.initialize()
+                _ = try await dbManager.initialize()
                 let knowledgeRepo = try await dbManager.createKnowledgeRepository()
                 let brainStateRepo = try await dbManager.createBrainStateRepository()
                 
@@ -136,6 +143,7 @@ struct RollbackCommand: ParsableCommand {
                     let parts = knowledgeItem.split(separator: "/")
                     guard parts.count == 2 else {
                         print("❌ Invalid knowledge item format. Use: category/key")
+                        semaphore.signal()
                         return
                     }
                     
@@ -159,11 +167,15 @@ struct RollbackCommand: ParsableCommand {
                     print("❌ No rollback target specified. Use --snapshot-id, --knowledge-item, or --brain-state")
                 }
                 
+                semaphore.signal()
+                
             } catch {
                 print("❌ Rollback failed: \(error)")
-                throw error
+                semaphore.signal()
             }
         }
+        
+        semaphore.wait()
     }
 }
 
@@ -173,14 +185,16 @@ struct StatusCommand: ParsableCommand {
         abstract: "Check migration status and database health"
     )
     
-    @Option(name: .shortAndLong, help: "Verbose logging")
+    @Flag(name: .shortAndLong, help: "Verbose logging")
     var verbose: Bool = false
     
     func run() throws {
+        let semaphore = DispatchSemaphore(value: 0)
+        
         Task {
             do {
                 let dbManager = DatabaseManager()
-                let databases = try await dbManager.initialize()
+                _ = try await dbManager.initialize()
                 let knowledgeRepo = try await dbManager.createKnowledgeRepository()
                 let brainStateRepo = try await dbManager.createBrainStateRepository()
                 
@@ -195,11 +209,15 @@ struct StatusCommand: ParsableCommand {
                 print("=" * 50)
                 print("✅ Database is healthy and ready")
                 
+                semaphore.signal()
+                
             } catch {
                 print("❌ Status check failed: \(error)")
-                throw error
+                semaphore.signal()
             }
         }
+        
+        semaphore.wait()
     }
 }
 
@@ -209,13 +227,15 @@ struct ValidateCommand: ParsableCommand {
         abstract: "Validate migration integrity"
     )
     
-    @Option(name: .shortAndLong, help: "Path to file-based storage directory")
+    @Option(name: .long, help: "Path to file-based storage directory")
     var sourcePath: String?
     
-    @Option(name: .shortAndLong, help: "Verbose logging")
+    @Flag(name: .shortAndLong, help: "Verbose logging")
     var verbose: Bool = false
     
     func run() throws {
+        let semaphore = DispatchSemaphore(value: 0)
+        
         Task {
             do {
                 let sourceURL: URL
@@ -226,7 +246,7 @@ struct ValidateCommand: ParsableCommand {
                 }
                 
                 let dbManager = DatabaseManager()
-                let databases = try await dbManager.initialize()
+                _ = try await dbManager.initialize()
                 let knowledgeRepo = try await dbManager.createKnowledgeRepository()
                 let brainStateRepo = try await dbManager.createBrainStateRepository()
                 
@@ -276,11 +296,15 @@ struct ValidateCommand: ParsableCommand {
                 print("=" * 50)
                 print("✅ Validation complete")
                 
+                semaphore.signal()
+                
             } catch {
                 print("❌ Validation failed: \(error)")
-                throw error
+                semaphore.signal()
             }
         }
+        
+        semaphore.wait()
     }
 }
 
@@ -290,20 +314,22 @@ struct SnapshotCommand: ParsableCommand {
         abstract: "Create and manage migration snapshots"
     )
     
-    @Option(name: .shortAndLong, help: "Create a new snapshot")
+    @Flag(name: .shortAndLong, help: "Create a new snapshot")
     var create: Bool = false
     
-    @Option(name: .shortAndLong, help: "List all snapshots")
+    @Flag(name: .long, help: "List all snapshots")
     var list: Bool = false
     
-    @Option(name: .shortAndLong, help: "Verbose logging")
+    @Flag(name: .shortAndLong, help: "Verbose logging")
     var verbose: Bool = false
     
     func run() throws {
+        let semaphore = DispatchSemaphore(value: 0)
+        
         Task {
             do {
                 let dbManager = DatabaseManager()
-                let databases = try await dbManager.initialize()
+                _ = try await dbManager.initialize()
                 let knowledgeRepo = try await dbManager.createKnowledgeRepository()
                 let brainStateRepo = try await dbManager.createBrainStateRepository()
                 
@@ -323,11 +349,15 @@ struct SnapshotCommand: ParsableCommand {
                     print("❌ No action specified. Use --create or --list")
                 }
                 
+                semaphore.signal()
+                
             } catch {
                 print("❌ Snapshot operation failed: \(error)")
-                throw error
+                semaphore.signal()
             }
         }
+        
+        semaphore.wait()
     }
 }
 
