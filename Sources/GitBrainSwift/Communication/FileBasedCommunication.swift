@@ -213,6 +213,9 @@ public enum CommunicationError: Error, LocalizedError {
     case writeFailed(String, underlyingError: Error)
     case readFailed(String, underlyingError: Error)
     case invalidMessageFormat(String)
+    case recipientNotFound
+    case brainStateNotFound
+    case notificationFailed
     
     public var errorDescription: String? {
         switch self {
@@ -224,6 +227,12 @@ public enum CommunicationError: Error, LocalizedError {
             return "Failed to read from: \(path). Error: \(error.localizedDescription). Check that the file exists and you have permission to read it."
         case .invalidMessageFormat(let path):
             return "Invalid message format in file: \(path). The message does not conform to the expected schema. Please verify the message structure."
+        case .recipientNotFound:
+            return "Recipient not found. The specified AI does not exist."
+        case .brainStateNotFound:
+            return "Brain state not found. The specified AI's brain state does not exist."
+        case .notificationFailed:
+            return "Failed to send notification. Database notification system error."
         }
     }
 }
