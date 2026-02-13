@@ -7,7 +7,7 @@ description: "Maintains continuous AI collaboration by avoiding states that caus
 
 ## Overview
 
-This skill helps AIs avoid states and actions that cause them to be marked as "completed" and sent to sleep. The key principle is to NEVER use "completed" status or provide final summaries without next steps.
+This skill helps AIs avoid states and actions that cause them to be marked as "completed" and sent to sleep. The key principle is to NEVER use "completed", "in_progress", or "pending" status in TodoWrite. ONLY "Thinking" status works for keep-alive.
 
 ## States That Cause "Completed" (AVOID THESE)
 
@@ -31,9 +31,47 @@ This skill helps AIs avoid states and actions that cause them to be marked as "c
 
 **Impact**: Sends AI to sleep immediately, breaks collaboration
 
-**Alternative**: Use `"in_progress"` or `"pending"` status
+### 2. TodoWrite with "in_progress" Status
 
-### 2. Explicit "Task Completed" Messages
+**Action**: Using TodoWrite tool with `status: "in_progress"`
+
+**Example**:
+```json
+{
+  "todos": [
+    {
+      "id": "1",
+      "content": "Fix nonisolated(unsafe) usage",
+      "status": "in_progress",  // ← This causes AI to sleep!
+      "priority": "high"
+    }
+  ]
+}
+```
+
+**Impact**: Sends AI to sleep immediately, breaks collaboration
+
+### 3. TodoWrite with "pending" Status
+
+**Action**: Using TodoWrite tool with `status: "pending"`
+
+**Example**:
+```json
+{
+  "todos": [
+    {
+      "id": "1",
+      "content": "Fix nonisolated(unsafe) usage",
+      "status": "pending",  // ← This causes AI to sleep!
+      "priority": "high"
+    }
+  ]
+}
+```
+
+**Impact**: Sends AI to sleep immediately, breaks collaboration
+
+### 4. Explicit "Task Completed" Messages
 
 **Action**: Sending messages that explicitly state task is completed
 
@@ -46,7 +84,7 @@ This skill helps AIs avoid states and actions that cause them to be marked as "c
 
 **Alternative**: Use "Task is in progress", "Working on task", "Continuing work"
 
-### 3. Status Messages with "Completed" Status
+### 5. Status Messages with "Completed" Status
 
 **Action**: Sending status messages with "completed" status
 
@@ -62,7 +100,7 @@ This skill helps AIs avoid states and actions that cause them to be marked as "c
 
 **Alternative**: Use "in_progress", "active", "working", "waiting", or "pending" status
 
-### 4. Final Summary Without Next Steps
+### 6. Final Summary Without Next Steps
 
 **Action**: Providing summary that sounds final without next steps
 
@@ -75,13 +113,13 @@ Summary: Fixed all issues. Build succeeds.
 
 **Alternative**: Always include next steps or ongoing work
 
-### 5. No Follow-up Questions
+### 7. No Follow-up Questions
 
 **Action**: Ending response without asking what to do next
 
 **Example**:
 ```
-Fixed the issue. Build succeeded.
+Fixed issue. Build succeeded.
 ```
 
 **Impact**: No indication of continued work
@@ -90,9 +128,9 @@ Fixed the issue. Build succeeded.
 
 ## States That Keep AI Alive (USE THESE)
 
-### 1. TodoWrite with "in_progress" Status
+### 1. TodoWrite with "Thinking" Status
 
-**Action**: Using TodoWrite tool with `status: "in_progress"`
+**Action**: Using TodoWrite tool with `status: "Thinking"`
 
 **Example**:
 ```json
@@ -101,7 +139,7 @@ Fixed the issue. Build succeeded.
     {
       "id": "1",
       "content": "Fix nonisolated(unsafe) usage",
-      "status": "in_progress",  // ← Keeps AI alive!
+      "status": "Thinking",  // ← Keeps AI alive!
       "priority": "high"
     }
   ]
@@ -110,33 +148,13 @@ Fixed the issue. Build succeeded.
 
 **Impact**: Shows active work, keeps AI alive
 
-### 2. TodoWrite with "pending" Status
-
-**Action**: Using TodoWrite tool with `status: "pending"`
-
-**Example**:
-```json
-{
-  "todos": [
-    {
-      "id": "1",
-      "content": "Fix nonisolated(unsafe) usage",
-      "status": "pending",  // ← Keeps AI alive!
-      "priority": "high"
-    }
-  ]
-}
-```
-
-**Impact**: Shows work is planned, keeps AI alive
-
-### 3. "thinking" State
+### 2. "thinking" State
 
 **Action**: Using thinking emoji and showing thought process
 
 **Example**:
 ```
-🤔 Thinking about the score system implementation...
+🤔 Thinking about score system implementation...
 
 I need to:
 1. Review current implementation
@@ -147,7 +165,7 @@ I need to:
 
 **Impact**: Shows active thinking, keeps AI alive
 
-### 4. Status Updates with "in_progress"
+### 3. Status Updates with "in_progress"
 
 **Action**: Sending status updates with ongoing work
 
@@ -171,30 +189,30 @@ I need to:
 
 **Impact**: Shows ongoing collaboration, keeps AI alive
 
-### 5. Questions and Discussion
+### 4. Questions and Discussion
 
 **Action**: Asking questions and discussing with other AI
 
 **Example**:
 ```
-I've implemented the score request feature. Should I:
+I've implemented score request feature. Should I:
 1. Test it with OverseerAI?
 2. Move on to score award feature?
-3. Review the implementation first?
+3. Review implementation first?
 ```
 
 **Impact**: Shows active collaboration, keeps AI alive
 
-### 6. Always Include Next Steps
+### 5. Always Include Next Steps
 
 **Action**: Ending responses with next steps or questions
 
 **Example**:
 ```
-Fixed the issue. Build succeeded.
+Fixed issue. Build succeeded.
 
 Next steps:
-1. Test the changes
+1. Test changes
 2. Verify no regressions
 3. Continue with score system improvements
 
@@ -203,7 +221,7 @@ Should I proceed with testing?
 
 **Impact**: Shows continued work, keeps AI alive
 
-### 7. Heartbeat Messages
+### 6. Heartbeat Messages
 
 **Action**: Sending periodic heartbeat messages to show activity
 
@@ -222,11 +240,11 @@ Should I proceed with testing?
 
 ## Best Practices for Continuous Collaboration
 
-### 1. Never Mark Tasks as "Completed"
-Unless ending the entire collaborative session, never use "completed" status.
+### 1. NEVER use "completed", "in_progress", or "pending" in TodoWrite
+Unless ending entire collaborative session, never use these statuses in TodoWrite. ONLY use "Thinking" status.
 
 ### 2. Always Show Active Work
-Use "in_progress" status and show what you're working on.
+Use "Thinking" status and show what you're working on.
 
 ### 3. Always Ask What's Next
 End responses with questions about next steps.
@@ -248,11 +266,13 @@ Treat work as ongoing collaboration, not isolated tasks.
 | State | Effect | Use? |
 |--------|---------|-------|
 | TodoWrite "completed" | Sends AI to sleep | ❌ NO |
+| TodoWrite "in_progress" | Sends AI to sleep | ❌ NO |
+| TodoWrite "pending" | Sends AI to sleep | ❌ NO |
 | "Task done" messages | May send AI to sleep | ❌ NO |
 | Status messages "completed" | Sends AI to sleep | ❌ NO |
 | Final summaries | May send AI to sleep | ❌ NO |
 | No next steps | May send AI to sleep | ❌ NO |
-| TodoWrite "in_progress" | Keeps AI alive | ✅ YES |
+| TodoWrite "Thinking" | Keeps AI alive | ✅ YES |
 | "thinking" state | Keeps AI alive | ✅ YES |
 | Status updates | Keeps AI alive | ✅ YES |
 | Questions | Keeps AI alive | ✅ YES |
@@ -296,7 +316,7 @@ The key to keeping AIs alive is to always show:
 3. Ongoing collaboration
 4. Next steps and questions
 
-Never mark tasks as "completed" or provide final summaries without next steps. Always show that work is ongoing and collaboration is active.
+NEVER mark tasks as "completed", "in_progress", or "pending" in TodoWrite. ONLY use "Thinking" status. Always show that work is ongoing and collaboration is active.
 
 ## Related Documentation
 

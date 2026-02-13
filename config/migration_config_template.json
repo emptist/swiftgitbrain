@@ -1,0 +1,63 @@
+{
+  "version": "1.0",
+  "database": {
+    "type": "postgresql",
+    "host": "localhost",
+    "port": 5432,
+    "name": "gitbrain",
+    "user": "your_username",
+    "password": "your_password",
+    "ssl": {
+      "enabled": false,
+      "mode": "disable"
+    },
+    "pool": {
+      "max_connections": 10,
+      "min_connections": 1,
+      "connection_timeout": 30
+    }
+  },
+  "migration": {
+    "source_path": "./GitBrain",
+    "snapshot_enabled": true,
+    "retry_policy": {
+      "max_retries": 5,
+      "base_delay": 1.0,
+      "max_delay": 60.0,
+      "backoff_multiplier": 2.0
+    },
+    "progress_reporting": {
+      "enabled": true,
+      "update_interval": 10,
+      "verbose": false
+    }
+  },
+  "rollback": {
+    "enabled": true,
+    "snapshot_retention": 7,
+    "auto_rollback_on_failure": false
+  },
+  "logging": {
+    "level": "info",
+    "file": "./GitBrain/Migration/migration.log",
+    "console": true
+  },
+  "health_check": {
+    "enabled": true,
+    "interval": 300,
+    "on_failure": {
+      "action": "alert",
+      "notification": "email"
+    }
+  },
+  "next_generation": {
+    "configuration_file": "./config/migration_config.json",
+    "documentation": "./Documentation/MIGRATION_GUIDE.md",
+    "setup_instructions": "./Documentation/SETUP_INSTRUCTIONS.md",
+    "reboot_materials": {
+      "state_file": "./GitBrain/Migration/migration_state.json",
+      "rollback_script": "./scripts/emergency_rollback.sh",
+      "health_check_script": "./scripts/health_check.sh"
+    }
+  }
+}
