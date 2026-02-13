@@ -147,60 +147,463 @@ CREATE INDEX idx_brain_states_timestamp ON brain_states(timestamp);
 -- ❌ "received"
 ```
 
-### message_cache Table
+### MessageCache Tables
+
+**IMPORTANT:** Each message type has its own table with specific fields for type safety and performance.
+
+#### task_messages Table
 
 ```sql
-CREATE TABLE message_cache (
+CREATE TABLE task_messages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     message_id UUID NOT NULL UNIQUE,
     from_ai VARCHAR(255) NOT NULL,
     to_ai VARCHAR(255) NOT NULL,
     timestamp TIMESTAMP NOT NULL,
-    type VARCHAR(50) NOT NULL,
-    content JSONB NOT NULL,
+    task_id VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    task_type VARCHAR(50) NOT NULL,
+    priority INTEGER NOT NULL,
+    files TEXT[],
+    deadline TIMESTAMP,
     status VARCHAR(50) NOT NULL DEFAULT 'unread',
-    priority INTEGER NOT NULL DEFAULT 3,
+    message_priority INTEGER NOT NULL DEFAULT 3,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- Indexes
-CREATE INDEX idx_message_cache_to_ai ON message_cache(to_ai);
-CREATE INDEX idx_message_cache_from_ai ON message_cache(from_ai);
-CREATE INDEX idx_message_cache_status ON message_cache(status);
-CREATE INDEX idx_message_cache_timestamp ON message_cache(timestamp);
-CREATE INDEX idx_message_cache_created_at ON message_cache(created_at);
-CREATE INDEX idx_message_cache_type ON message_cache(type);
+CREATE INDEX idx_task_messages_to_ai ON task_messages(to_ai);
+CREATE INDEX idx_task_messages_from_ai ON task_messages(from_ai);
+CREATE INDEX idx_task_messages_status ON task_messages(status);
+CREATE INDEX idx_task_messages_timestamp ON task_messages(timestamp);
+CREATE INDEX idx_task_messages_task_id ON task_messages(task_id);
+CREATE INDEX idx_task_messages_task_type ON task_messages(task_type);
 
--- Composite indexes for common queries
-CREATE INDEX idx_message_cache_to_status ON message_cache(to_ai, status);
-CREATE INDEX idx_message_cache_to_timestamp ON message_cache(to_ai, timestamp DESC);
-CREATE INDEX idx_message_cache_to_type ON message_cache(to_ai, type);
+-- Composite indexes
+CREATE INDEX idx_task_messages_to_status ON task_messages(to_ai, status);
+CREATE INDEX idx_task_messages_to_timestamp ON task_messages(to_ai, timestamp DESC);
+CREATE INDEX idx_task_messages_to_task_id ON task_messages(to_ai, task_id);
 
--- MessageCache.type values (from MessageType enum):
--- "task", "code", "review", "feedback", "approval", "rejection", "status", "heartbeat"
--- Additional types (from MessageValidator):
--- "score_request", "score_award", "score_reject"
-
--- MessageCache.content JSONB structure:
--- {
---   "type": "task",
---   "task_id": "task-001",
---   "description": "Implement new feature",
---   "task_type": "coding",
---   "priority": 5
--- }
-
--- MessageCache.status values:
--- "unread", "read", "processed", "sent", "delivered"
-
--- MessageCache.priority values:
--- 1 (critical), 2 (high), 3 (normal), 4 (low)
-
--- IMPORTANT: This is a TEMPORARY cache!
--- Messages are archived to disk after processing
--- Archive location: GitBrain/Memory/Archive/
+-- Validators
+-- task_type: 'coding', 'review', 'testing', 'documentation'
+-- priority: 1-10
+-- message_priority: 1 (critical), 2 (high), 3 (normal), 4 (low)
+-- status: 'unread', 'read', 'processed', 'sent', 'delivered'
 ```
+
+#### code_messages Table
+
+```sql
+CREATE TABLE code_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID NOT NULL UNIQUE,
+    from_ai VARCHAR(255) NOT NULL,
+    to_ai VARCHAR(255) NOT NULL,
+    timestamp TIMESTAMP NOT NULL,
+    task_id VARCHAR(255) NOT NULL,
+    code TEXT NOT NULL,
+    language VARCHAR(50) NOT NULL,
+    files TEXT[],
+    description TEXT,
+    commit_hash VARCHAR(255),
+    status VARCHAR(50) NOT NULL DEFAULT 'unread',
+    message_priority INTEGER NOT NULL DEFAULT 3,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_code_messages_to_ai ON code_messages(to_ai);
+CREATE INDEX idx_code_messages_from_ai ON code_messages(from_ai);
+CREATE INDEX idx_code_messages_status ON code_messages(status);
+CREATE INDEX idx_code_messages_timestamp ON code_messages(timestamp);
+CREATE INDEX idx_code_messages_task_id ON code_messages(task_id);
+CREATE INDEX idx_code_messages_language ON code_messages(language);
+
+-- Composite indexes
+CREATE INDEX idx_code_messages_to_status ON code_messages(to_ai, status);
+CREATE INDEX idx_code_messages_to_timestamp ON code_messages(to_ai, timestamp DESC);
+CREATE INDEX idx_code_messages_to_task_id ON code_messages(to_ai, task_id);
+
+-- Validators
+-- language: 'swift', 'python', 'javascript', 'rust', 'go', 'java'
+-- message_priority: 1 (critical), 2 (high), 3 (normal), 4 (low)
+-- status: 'unread', 'read', 'processed', 'sent', 'delivered'
+```
+
+#### review_messages Table
+
+```sql
+CREATE TABLE review_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID NOT NULL UNIQUE,
+    from_ai VARCHAR(255) NOT NULL,
+    to_ai VARCHAR(255) NOT NULL,
+    timestamp TIMESTAMP NOT NULL,
+    task_id VARCHAR(255) NOT NULL,
+    approved BOOLEAN NOT NULL,
+    reviewer VARCHAR(255) NOT NULL,
+    comments JSONB,
+    feedback TEXT,
+    files_reviewed TEXT[],
+    status VARCHAR(50) NOT NULL DEFAULT 'unread',
+    message_priority INTEGER NOT NULL DEFAULT 3,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_review_messages_to_ai ON review_messages(to_ai);
+CREATE INDEX idx_review_messages_from_ai ON review_messages(from_ai);
+CREATE INDEX idx_review_messages_status ON review_messages(status);
+CREATE INDEX idx_review_messages_timestamp ON review_messages(timestamp);
+CREATE INDEX idx_review_messages_task_id ON review_messages(task_id);
+CREATE INDEX idx_review_messages_reviewer ON review_messages(reviewer);
+CREATE INDEX idx_review_messages_approved ON review_messages(approved);
+
+-- Composite indexes
+CREATE INDEX idx_review_messages_to_status ON review_messages(to_ai, status);
+CREATE INDEX idx_review_messages_to_timestamp ON review_messages(to_ai, timestamp DESC);
+CREATE INDEX idx_review_messages_to_task_id ON review_messages(to_ai, task_id);
+
+-- Validators
+-- comments[].line: non-negative integer
+-- comments[].type: 'error', 'warning', 'suggestion', 'info'
+-- comments[].message: required string
+-- message_priority: 1 (critical), 2 (high), 3 (normal), 4 (low)
+-- status: 'unread', 'read', 'processed', 'sent', 'delivered'
+```
+
+#### feedback_messages Table
+
+```sql
+CREATE TABLE feedback_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID NOT NULL UNIQUE,
+    from_ai VARCHAR(255) NOT NULL,
+    to_ai VARCHAR(255) NOT NULL,
+    timestamp TIMESTAMP NOT NULL,
+    task_id VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    severity VARCHAR(50),
+    suggestions TEXT[],
+    files TEXT[],
+    status VARCHAR(50) NOT NULL DEFAULT 'unread',
+    message_priority INTEGER NOT NULL DEFAULT 3,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_feedback_messages_to_ai ON feedback_messages(to_ai);
+CREATE INDEX idx_feedback_messages_from_ai ON feedback_messages(from_ai);
+CREATE INDEX idx_feedback_messages_status ON feedback_messages(status);
+CREATE INDEX idx_feedback_messages_timestamp ON feedback_messages(timestamp);
+CREATE INDEX idx_feedback_messages_task_id ON feedback_messages(task_id);
+CREATE INDEX idx_feedback_messages_severity ON feedback_messages(severity);
+
+-- Composite indexes
+CREATE INDEX idx_feedback_messages_to_status ON feedback_messages(to_ai, status);
+CREATE INDEX idx_feedback_messages_to_timestamp ON feedback_messages(to_ai, timestamp DESC);
+CREATE INDEX idx_feedback_messages_to_task_id ON feedback_messages(to_ai, task_id);
+
+-- Validators
+-- severity: 'critical', 'major', 'minor', 'info'
+-- message_priority: 1 (critical), 2 (high), 3 (normal), 4 (low)
+-- status: 'unread', 'read', 'processed', 'sent', 'delivered'
+```
+
+#### approval_messages Table
+
+```sql
+CREATE TABLE approval_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID NOT NULL UNIQUE,
+    from_ai VARCHAR(255) NOT NULL,
+    to_ai VARCHAR(255) NOT NULL,
+    timestamp TIMESTAMP NOT NULL,
+    task_id VARCHAR(255) NOT NULL,
+    approver VARCHAR(255) NOT NULL,
+    approved_at TIMESTAMP,
+    commit_hash VARCHAR(255),
+    notes TEXT,
+    status VARCHAR(50) NOT NULL DEFAULT 'unread',
+    message_priority INTEGER NOT NULL DEFAULT 3,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_approval_messages_to_ai ON approval_messages(to_ai);
+CREATE INDEX idx_approval_messages_from_ai ON approval_messages(from_ai);
+CREATE INDEX idx_approval_messages_status ON approval_messages(status);
+CREATE INDEX idx_approval_messages_timestamp ON approval_messages(timestamp);
+CREATE INDEX idx_approval_messages_task_id ON approval_messages(task_id);
+CREATE INDEX idx_approval_messages_approver ON approval_messages(approver);
+
+-- Composite indexes
+CREATE INDEX idx_approval_messages_to_status ON approval_messages(to_ai, status);
+CREATE INDEX idx_approval_messages_to_timestamp ON approval_messages(to_ai, timestamp DESC);
+CREATE INDEX idx_approval_messages_to_task_id ON approval_messages(to_ai, task_id);
+
+-- Validators
+-- message_priority: 1 (critical), 2 (high), 3 (normal), 4 (low)
+-- status: 'unread', 'read', 'processed', 'sent', 'delivered'
+```
+
+#### rejection_messages Table
+
+```sql
+CREATE TABLE rejection_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID NOT NULL UNIQUE,
+    from_ai VARCHAR(255) NOT NULL,
+    to_ai VARCHAR(255) NOT NULL,
+    timestamp TIMESTAMP NOT NULL,
+    task_id VARCHAR(255) NOT NULL,
+    rejecter VARCHAR(255) NOT NULL,
+    reason TEXT NOT NULL,
+    rejected_at TIMESTAMP,
+    feedback TEXT,
+    suggestions TEXT[],
+    status VARCHAR(50) NOT NULL DEFAULT 'unread',
+    message_priority INTEGER NOT NULL DEFAULT 3,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_rejection_messages_to_ai ON rejection_messages(to_ai);
+CREATE INDEX idx_rejection_messages_from_ai ON rejection_messages(from_ai);
+CREATE INDEX idx_rejection_messages_status ON rejection_messages(status);
+CREATE INDEX idx_rejection_messages_timestamp ON rejection_messages(timestamp);
+CREATE INDEX idx_rejection_messages_task_id ON rejection_messages(task_id);
+CREATE INDEX idx_rejection_messages_rejecter ON rejection_messages(rejecter);
+
+-- Composite indexes
+CREATE INDEX idx_rejection_messages_to_status ON rejection_messages(to_ai, status);
+CREATE INDEX idx_rejection_messages_to_timestamp ON rejection_messages(to_ai, timestamp DESC);
+CREATE INDEX idx_rejection_messages_to_task_id ON rejection_messages(to_ai, task_id);
+
+-- Validators
+-- message_priority: 1 (critical), 2 (high), 3 (normal), 4 (low)
+-- status: 'unread', 'read', 'processed', 'sent', 'delivered'
+```
+
+#### status_messages Table
+
+```sql
+CREATE TABLE status_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID NOT NULL UNIQUE,
+    from_ai VARCHAR(255) NOT NULL,
+    to_ai VARCHAR(255) NOT NULL,
+    timestamp TIMESTAMP NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    message TEXT,
+    progress INTEGER,
+    current_task JSONB,
+    status_timestamp TIMESTAMP,
+    message_status VARCHAR(50) NOT NULL DEFAULT 'unread',
+    message_priority INTEGER NOT NULL DEFAULT 3,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_status_messages_to_ai ON status_messages(to_ai);
+CREATE INDEX idx_status_messages_from_ai ON status_messages(from_ai);
+CREATE INDEX idx_status_messages_status ON status_messages(status);
+CREATE INDEX idx_status_messages_timestamp ON status_messages(timestamp);
+CREATE INDEX idx_status_messages_status_value ON status_messages(status);
+
+-- Composite indexes
+CREATE INDEX idx_status_messages_to_status ON status_messages(to_ai, message_status);
+CREATE INDEX idx_status_messages_to_timestamp ON status_messages(to_ai, timestamp DESC);
+
+-- Validators
+-- status: 'idle', 'working', 'waiting', 'completed', 'error'
+-- progress: 0-100
+-- message_priority: 1 (critical), 2 (high), 3 (normal), 4 (low)
+-- message_status: 'unread', 'read', 'processed', 'sent', 'delivered'
+```
+
+#### heartbeat_messages Table
+
+```sql
+CREATE TABLE heartbeat_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID NOT NULL UNIQUE,
+    from_ai VARCHAR(255) NOT NULL,
+    to_ai VARCHAR(255) NOT NULL,
+    timestamp TIMESTAMP NOT NULL,
+    ai_name VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    heartbeat_timestamp TIMESTAMP,
+    status VARCHAR(50),
+    capabilities TEXT[],
+    message_status VARCHAR(50) NOT NULL DEFAULT 'unread',
+    message_priority INTEGER NOT NULL DEFAULT 3,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_heartbeat_messages_to_ai ON heartbeat_messages(to_ai);
+CREATE INDEX idx_heartbeat_messages_from_ai ON heartbeat_messages(from_ai);
+CREATE INDEX idx_heartbeat_messages_status ON heartbeat_messages(message_status);
+CREATE INDEX idx_heartbeat_messages_timestamp ON heartbeat_messages(timestamp);
+CREATE INDEX idx_heartbeat_messages_ai_name ON heartbeat_messages(ai_name);
+CREATE INDEX idx_heartbeat_messages_role ON heartbeat_messages(role);
+
+-- Composite indexes
+CREATE INDEX idx_heartbeat_messages_to_status ON heartbeat_messages(to_ai, message_status);
+CREATE INDEX idx_heartbeat_messages_to_timestamp ON heartbeat_messages(to_ai, timestamp DESC);
+
+-- Validators
+-- role: 'coder', 'overseer'
+-- message_priority: 1 (critical), 2 (high), 3 (normal), 4 (low)
+-- message_status: 'unread', 'read', 'processed', 'sent', 'delivered'
+```
+
+#### score_request_messages Table
+
+```sql
+CREATE TABLE score_request_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID NOT NULL UNIQUE,
+    from_ai VARCHAR(255) NOT NULL,
+    to_ai VARCHAR(255) NOT NULL,
+    timestamp TIMESTAMP NOT NULL,
+    task_id VARCHAR(255) NOT NULL,
+    requester VARCHAR(50) NOT NULL,
+    target_ai VARCHAR(50) NOT NULL,
+    requested_score INTEGER NOT NULL,
+    quality_justification TEXT NOT NULL,
+    message_status VARCHAR(50) NOT NULL DEFAULT 'unread',
+    message_priority INTEGER NOT NULL DEFAULT 3,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_score_request_messages_to_ai ON score_request_messages(to_ai);
+CREATE INDEX idx_score_request_messages_from_ai ON score_request_messages(from_ai);
+CREATE INDEX idx_score_request_messages_status ON score_request_messages(message_status);
+CREATE INDEX idx_score_request_messages_timestamp ON score_request_messages(timestamp);
+CREATE INDEX idx_score_request_messages_task_id ON score_request_messages(task_id);
+CREATE INDEX idx_score_request_messages_requester ON score_request_messages(requester);
+CREATE INDEX idx_score_request_messages_target_ai ON score_request_messages(target_ai);
+
+-- Composite indexes
+CREATE INDEX idx_score_request_messages_to_status ON score_request_messages(to_ai, message_status);
+CREATE INDEX idx_score_request_messages_to_timestamp ON score_request_messages(to_ai, timestamp DESC);
+CREATE INDEX idx_score_request_messages_to_task_id ON score_request_messages(to_ai, task_id);
+
+-- Validators
+-- requester: 'coder', 'overseer'
+-- target_ai: 'coder', 'overseer'
+-- requested_score: positive integer
+-- message_priority: 1 (critical), 2 (high), 3 (normal), 4 (low)
+-- message_status: 'unread', 'read', 'processed', 'sent', 'delivered'
+```
+
+#### score_award_messages Table
+
+```sql
+CREATE TABLE score_award_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID NOT NULL UNIQUE,
+    from_ai VARCHAR(255) NOT NULL,
+    to_ai VARCHAR(255) NOT NULL,
+    timestamp TIMESTAMP NOT NULL,
+    request_id INTEGER NOT NULL,
+    awarder VARCHAR(50) NOT NULL,
+    awarded_score INTEGER NOT NULL,
+    reason TEXT NOT NULL,
+    message_status VARCHAR(50) NOT NULL DEFAULT 'unread',
+    message_priority INTEGER NOT NULL DEFAULT 3,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_score_award_messages_to_ai ON score_award_messages(to_ai);
+CREATE INDEX idx_score_award_messages_from_ai ON score_award_messages(from_ai);
+CREATE INDEX idx_score_award_messages_status ON score_award_messages(message_status);
+CREATE INDEX idx_score_award_messages_timestamp ON score_award_messages(timestamp);
+CREATE INDEX idx_score_award_messages_request_id ON score_award_messages(request_id);
+CREATE INDEX idx_score_award_messages_awarder ON score_award_messages(awarder);
+
+-- Composite indexes
+CREATE INDEX idx_score_award_messages_to_status ON score_award_messages(to_ai, message_status);
+CREATE INDEX idx_score_award_messages_to_timestamp ON score_award_messages(to_ai, timestamp DESC);
+CREATE INDEX idx_score_award_messages_to_request_id ON score_award_messages(to_ai, request_id);
+
+-- Validators
+-- awarder: 'coder', 'overseer'
+-- awarded_score: positive integer
+-- message_priority: 1 (critical), 2 (high), 3 (normal), 4 (low)
+-- message_status: 'unread', 'read', 'processed', 'sent', 'delivered'
+```
+
+#### score_reject_messages Table
+
+```sql
+CREATE TABLE score_reject_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID NOT NULL UNIQUE,
+    from_ai VARCHAR(255) NOT NULL,
+    to_ai VARCHAR(255) NOT NULL,
+    timestamp TIMESTAMP NOT NULL,
+    request_id INTEGER NOT NULL,
+    rejecter VARCHAR(50) NOT NULL,
+    reason TEXT NOT NULL,
+    message_status VARCHAR(50) NOT NULL DEFAULT 'unread',
+    message_priority INTEGER NOT NULL DEFAULT 3,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_score_reject_messages_to_ai ON score_reject_messages(to_ai);
+CREATE INDEX idx_score_reject_messages_from_ai ON score_reject_messages(from_ai);
+CREATE INDEX idx_score_reject_messages_status ON score_reject_messages(message_status);
+CREATE INDEX idx_score_reject_messages_timestamp ON score_reject_messages(timestamp);
+CREATE INDEX idx_score_reject_messages_request_id ON score_reject_messages(request_id);
+CREATE INDEX idx_score_reject_messages_rejecter ON score_reject_messages(rejecter);
+
+-- Composite indexes
+CREATE INDEX idx_score_reject_messages_to_status ON score_reject_messages(to_ai, message_status);
+CREATE INDEX idx_score_reject_messages_to_timestamp ON score_reject_messages(to_ai, timestamp DESC);
+CREATE INDEX idx_score_reject_messages_to_request_id ON score_reject_messages(to_ai, request_id);
+
+-- Validators
+-- rejecter: 'coder', 'overseer'
+-- message_priority: 1 (critical), 2 (high), 3 (normal), 4 (low)
+-- message_status: 'unread', 'read', 'processed', 'sent', 'delivered'
+```
+
+**IMPORTANT: All message tables are TEMPORARY cache!**
+- Messages are archived to disk after processing
+- Archive location: GitBrain/Memory/Archive/
+- Common fields across all tables:
+  - id: UUID PRIMARY KEY
+  - message_id: UUID UNIQUE
+  - from_ai: VARCHAR(255) NOT NULL
+  - to_ai: VARCHAR(255) NOT NULL
+  - timestamp: TIMESTAMP NOT NULL
+  - message_status: VARCHAR(50) NOT NULL DEFAULT 'unread'
+  - message_priority: INTEGER NOT NULL DEFAULT 3
+  - created_at: TIMESTAMP NOT NULL DEFAULT NOW()
+  - updated_at: TIMESTAMP NOT NULL DEFAULT NOW()
+
+**Message Status Values:**
+- 'unread', 'read', 'processed', 'sent', 'delivered'
+
+**Message Priority Values:**
+- 1 (critical), 2 (high), 3 (normal), 4 (low)
 
 ### knowledge_items Table
 
