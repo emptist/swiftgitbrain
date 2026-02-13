@@ -5,7 +5,7 @@ import Foundation
 struct IntegrationTests {
     @Test("KnowledgeBase with MockRepository integration")
     func testKnowledgeBaseMockRepositoryIntegration() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let knowledgeBase = KnowledgeBase(repository: repository)
         let value = SendableContent(["key": "value", "number": 42])
         
@@ -18,7 +18,7 @@ struct IntegrationTests {
     
     @Test("KnowledgeBase update and delete workflow")
     func testKnowledgeBaseWorkflowIntegration() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let knowledgeBase = KnowledgeBase(repository: repository)
         let value1 = SendableContent(["key": "value1"])
         let value2 = SendableContent(["key": "value2"])
@@ -40,7 +40,7 @@ struct IntegrationTests {
     
     @Test("KnowledgeBase multiple categories integration")
     func testKnowledgeBaseMultipleCategoriesIntegration() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let knowledgeBase = KnowledgeBase(repository: repository)
         let value = SendableContent(["key": "value"])
         

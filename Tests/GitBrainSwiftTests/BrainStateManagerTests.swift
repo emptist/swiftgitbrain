@@ -9,18 +9,18 @@ func testBrainStateManagerCreateAndLoad() async throws {
     
     let brainState = try await manager.createBrainState(
         aiName: "test_ai",
-        role: .coder,
+        role: RoleType.coder,
         initialState: SendableContent(["test_key": "test_value"])
     )
     
     #expect(brainState.aiName == "test_ai")
-    #expect(brainState.role == .coder)
+    #expect(brainState.role == RoleType.coder)
     
     let loaded = try await manager.loadBrainState(aiName: "test_ai")
     
     #expect(loaded != nil)
     #expect(loaded?.aiName == "test_ai")
-    #expect(loaded?.role == .coder)
+    #expect(loaded?.role == RoleType.coder)
 }
 
 @Test
@@ -28,7 +28,7 @@ func testBrainStateManagerUpdate() async throws {
     let repository = MockBrainStateRepository()
     let manager = BrainStateManager(repository: repository)
     
-    _ = try await manager.createBrainState(aiName: "test_ai", role: .coder)
+    _ = try await manager.createBrainState(aiName: "test_ai", role: RoleType.coder)
     
     let updated = try await manager.updateBrainState(aiName: "test_ai", key: "new_key", value: SendableContent(["new_key": "new_value"]))
     
@@ -46,11 +46,13 @@ func testBrainStateManagerGetWithDefault() async throws {
     let repository = MockBrainStateRepository()
     let manager = BrainStateManager(repository: repository)
     
-    _ = try await manager.createBrainState(aiName: "test_ai", role: .coder)
+    _ = try await manager.createBrainState(aiName: "test_ai", role: RoleType.coder)
     
     let value = try await manager.getBrainStateValue(aiName: "test_ai", key: "nonexistent", defaultValue: SendableContent(["default": "default"]))
     
-    #expect(value?.toAnyDict()["default"] as? String == "default")
+    if let dictValue = value?.toAnyDict() {
+        #expect(dictValue["default"] as? String == "default")
+    }
 }
 
 @Test
@@ -58,7 +60,7 @@ func testBrainStateManagerDelete() async throws {
     let repository = MockBrainStateRepository()
     let manager = BrainStateManager(repository: repository)
     
-    _ = try await manager.createBrainState(aiName: "test_ai", role: .coder)
+    _ = try await manager.createBrainState(aiName: "test_ai", role: RoleType.coder)
     
     let deleted = try await manager.deleteBrainState(aiName: "test_ai")
     
@@ -74,9 +76,9 @@ func testBrainStateManagerList() async throws {
     let repository = MockBrainStateRepository()
     let manager = BrainStateManager(repository: repository)
     
-    _ = try await manager.createBrainState(aiName: "ai1", role: .coder)
-    _ = try await manager.createBrainState(aiName: "ai2", role: .overseer)
-    _ = try await manager.createBrainState(aiName: "ai3", role: .coder)
+    _ = try await manager.createBrainState(aiName: "ai1", role: RoleType.coder)
+    _ = try await manager.createBrainState(aiName: "ai2", role: RoleType.overseer)
+    _ = try await manager.createBrainState(aiName: "ai3", role: RoleType.coder)
     
     let list = try await manager.listBrainStates()
     

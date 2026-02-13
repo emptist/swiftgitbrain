@@ -116,7 +116,7 @@ public struct RetryPolicy: Sendable {
         return isTransientError(error)
     }
     
-    private func isTransientError(_ error: Error) -> Bool {
+    func isTransientError(_ error: Error) -> Bool {
         let errorDescription = error.localizedDescription.lowercased()
         let transientKeywords = ["timeout", "connection", "network", "temporary", "unavailable", "busy", "locked"]
         return transientKeywords.contains { errorDescription.contains($0) }
@@ -125,9 +125,6 @@ public struct RetryPolicy: Sendable {
 
 public struct DataMigration: Sendable {
     
-    private var currentSnapshot: MigrationSnapshot?
-    private var migrationErrors: [MigrationErrorDetail] = []
-    private var startTime: Date?
     private let retryPolicy: RetryPolicy
     
     public init(retryPolicy: RetryPolicy = RetryPolicy()) {
@@ -167,13 +164,13 @@ public struct DataMigration: Sendable {
         for category in categories {
             let keys = try await knowledgeRepo.listKeys(category: category)
             for key in keys {
-                if let (value, metadata) = try await knowledgeRepo.get(category: category, key: key) {
+                if let result = try await knowledgeRepo.get(category: category, key: key) {
                     knowledgeItems.append(KnowledgeItemSnapshot(
                         category: category,
                         key: key,
-                        value: value,
-                        metadata: metadata,
-                        timestamp: Date()
+                        value: result.value,
+                        metadata: result.metadata,
+                        timestamp: result.timestamp
                     ))
                 }
             }
@@ -183,13 +180,15 @@ public struct DataMigration: Sendable {
         let aiNames = try await brainStateRepo.list()
         
         for aiName in aiNames {
-            if let brainState = try await brainStateRepo.load(aiName: aiName) {
-                brainStates.append(BrainStateSnapshot(
-                    aiName: aiName,
-                    role: brainState.role,
-                    state: brainState.state,
-                    timestamp: brainState.timestamp
-                ))
+            if let result = try await brainStateRepo.load(aiName: aiName) {
+                if let state = result.state {
+                    brainStates.append(BrainStateSnapshot(
+                        aiName: aiName,
+                        role: result.role,
+                        state: state,
+                        timestamp: result.timestamp
+                    ))
+                }
             }
         }
         
@@ -273,8 +272,8 @@ public struct DataMigration: Sendable {
     }
     
     public func migrateKnowledgeBase(from fileBase: URL, to repository: KnowledgeRepositoryProtocol, progress: MigrationProgressProtocol? = nil, snapshot: MigrationSnapshot? = nil) async throws -> MigrationResult {
-        startTime = Date()
-        migrationErrors = []
+        let startTime = Date()
+        var migrationErrors: [MigrationErrorDetail] = []
         
         GitBrainLogger.info("Starting knowledge base migration from \(fileBase.path)")
         progress?.reportProgress(phase: "Discovery", current: 0, total: 100, message: "Starting migration")
@@ -282,7 +281,7 @@ public struct DataMigration: Sendable {
         let categoriesPath = fileBase.appendingPathComponent("Knowledge")
         guard FileManager.default.fileExists(atPath: categoriesPath.path) else {
             GitBrainLogger.warning("Knowledge directory not found: \(categoriesPath.path)")
-            let result = MigrationResult(success: true, itemsMigrated: 0, itemsFailed: 0, duration: Date().timeIntervalSince(startTime!), snapshotId: snapshot?.id)
+            let result = MigrationResult(success: true, itemsMigrated: 0, itemsFailed: 0, duration: Date().timeIntervalSince(startTime), snapshotId: snapshot?.id)
             progress?.reportCompletion(result: result)
             return result
         }
@@ -294,7 +293,7 @@ public struct DataMigration: Sendable {
         var totalItems = 0
         var failedItems = 0
         var currentItem = 0
-        let totalEstimatedItems = categories.reduce(0) { $0 + (try? FileManager.default.contentsOfDirectory(at: $1, includingPropertiesForKeys: nil).count) ?? 0 }
+        let totalEstimatedItems = categories.reduce(0) { $0 + ((try? FileManager.default.contentsOfDirectory(at: $1, includingPropertiesForKeys: nil).count) ?? 0) }
         
         for categoryURL in categories {
             let category = categoryURL.lastPathComponent
@@ -309,7 +308,6 @@ public struct DataMigration: Sendable {
                 let key = keyURL.deletingPathExtension().lastPathComponent
                 guard key != ".DS_Store" else { continue }
                 
-                var retryCount = 0
                 do {
                     try await retry({
                         let data = try Data(contentsOf: keyURL)
@@ -330,12 +328,11 @@ public struct DataMigration: Sendable {
                     totalItems += 1
                     
                     if currentItem % 10 == 0 {
-                        let progressPercent = Int(Double(currentItem) / Double(totalEstimatedItems) * 100)
                         progress?.reportProgress(phase: "Transfer", current: currentItem, total: totalEstimatedItems, message: "Migrated \(currentItem)/\(totalEstimatedItems) items")
                     }
                 } catch {
-                    GitBrainLogger.error("Failed to migrate item \(category)/\(key) after \(retryCount + 1) attempts: \(error)")
-                    migrationErrors.append(MigrationErrorDetail(item: "\(category)/\(key)", error: error.localizedDescription, phase: "Transfer", retryCount: retryCount))
+                    GitBrainLogger.error("Failed to migrate item \(category)/\(key): \(error)")
+                    migrationErrors.append(MigrationErrorDetail(item: "\(category)/\(key)", error: error.localizedDescription, phase: "Transfer", retryCount: 0))
                     failedItems += 1
                     progress?.reportError(error: error, context: "Migrating \(category)/\(key)")
                 }
@@ -345,7 +342,7 @@ public struct DataMigration: Sendable {
         GitBrainLogger.info("Knowledge base migration complete: \(totalItems) items migrated, \(failedItems) failed")
         progress?.reportProgress(phase: "Verification", current: 100, total: 100, message: "Migration complete")
         
-        let duration = Date().timeIntervalSince(startTime!)
+        let duration = Date().timeIntervalSince(startTime)
         let result = MigrationResult(
             success: failedItems == 0,
             itemsMigrated: totalItems,
@@ -365,8 +362,8 @@ public struct DataMigration: Sendable {
     }
     
     public func migrateBrainStates(from fileBase: URL, to repository: BrainStateRepositoryProtocol, progress: MigrationProgressProtocol? = nil, snapshot: MigrationSnapshot? = nil) async throws -> MigrationResult {
-        startTime = Date()
-        migrationErrors = []
+        let startTime = Date()
+        var migrationErrors: [MigrationErrorDetail] = []
         
         GitBrainLogger.info("Starting brain state migration from \(fileBase.path)")
         progress?.reportProgress(phase: "Discovery", current: 0, total: 100, message: "Starting migration")
@@ -374,7 +371,7 @@ public struct DataMigration: Sendable {
         let brainStatePath = fileBase.appendingPathComponent("BrainState")
         guard FileManager.default.fileExists(atPath: brainStatePath.path) else {
             GitBrainLogger.warning("BrainState directory not found: \(brainStatePath.path)")
-            let result = MigrationResult(success: true, itemsMigrated: 0, itemsFailed: 0, duration: Date().timeIntervalSince(startTime!), snapshotId: snapshot?.id)
+            let result = MigrationResult(success: true, itemsMigrated: 0, itemsFailed: 0, duration: Date().timeIntervalSince(startTime), snapshotId: snapshot?.id)
             progress?.reportCompletion(result: result)
             return result
         }
@@ -392,7 +389,6 @@ public struct DataMigration: Sendable {
             let aiName = stateFile.deletingPathExtension().lastPathComponent
             guard aiName != ".DS_Store" else { continue }
             
-            var retryCount = 0
             do {
                 try await retry({
                     let data = try Data(contentsOf: stateFile)
@@ -413,11 +409,10 @@ public struct DataMigration: Sendable {
                 
                 totalStates += 1
                 
-                let progressPercent = Int(Double(currentState) / Double(stateFiles.count) * 100)
                 progress?.reportProgress(phase: "Transfer", current: currentState, total: stateFiles.count, message: "Migrated \(currentState)/\(stateFiles.count) states")
             } catch {
-                GitBrainLogger.error("Failed to migrate brain state for \(aiName) after \(retryCount + 1) attempts: \(error)")
-                migrationErrors.append(MigrationErrorDetail(item: aiName, error: error.localizedDescription, phase: "Transfer", retryCount: retryCount))
+                GitBrainLogger.error("Failed to migrate brain state for \(aiName): \(error)")
+                migrationErrors.append(MigrationErrorDetail(item: aiName, error: error.localizedDescription, phase: "Transfer", retryCount: 0))
                 failedStates += 1
                 progress?.reportError(error: error, context: "Migrating brain state for \(aiName)")
             }
@@ -426,7 +421,7 @@ public struct DataMigration: Sendable {
         GitBrainLogger.info("Brain state migration complete: \(totalStates) states migrated, \(failedStates) failed")
         progress?.reportProgress(phase: "Verification", current: 100, total: 100, message: "Migration complete")
         
-        let duration = Date().timeIntervalSince(startTime!)
+        let duration = Date().timeIntervalSince(startTime)
         let result = MigrationResult(
             success: failedStates == 0,
             itemsMigrated: totalStates,

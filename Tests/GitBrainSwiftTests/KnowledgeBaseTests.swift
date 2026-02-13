@@ -5,7 +5,7 @@ import Foundation
 struct KnowledgeBaseTests {
     @Test("KnowledgeBase add and get knowledge")
     func testAddAndGetKnowledge() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let knowledgeBase = KnowledgeBase(repository: repository)
         let value = SendableContent(["key": "value"])
         let metadata = SendableContent(["source": "test"])
@@ -18,7 +18,7 @@ struct KnowledgeBaseTests {
     
     @Test("KnowledgeBase update knowledge")
     func testUpdateKnowledge() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let knowledgeBase = KnowledgeBase(repository: repository)
         let value1 = SendableContent(["key": "value1"])
         let value2 = SendableContent(["key": "value2"])
@@ -34,7 +34,7 @@ struct KnowledgeBaseTests {
     
     @Test("KnowledgeBase update non-existent knowledge")
     func testUpdateNonExistentKnowledge() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let knowledgeBase = KnowledgeBase(repository: repository)
         let value = SendableContent(["key": "value"])
         
@@ -44,7 +44,7 @@ struct KnowledgeBaseTests {
     
     @Test("KnowledgeBase delete knowledge")
     func testDeleteKnowledge() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let knowledgeBase = KnowledgeBase(repository: repository)
         let value = SendableContent(["key": "value"])
         
@@ -59,7 +59,7 @@ struct KnowledgeBaseTests {
     
     @Test("KnowledgeBase delete non-existent knowledge")
     func testDeleteNonExistentKnowledge() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let knowledgeBase = KnowledgeBase(repository: repository)
         
         let deleted = try await knowledgeBase.deleteKnowledge(category: "test", key: "nonexistent")
@@ -68,7 +68,7 @@ struct KnowledgeBaseTests {
     
     @Test("KnowledgeBase list categories")
     func testListCategories() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let knowledgeBase = KnowledgeBase(repository: repository)
         let value = SendableContent(["key": "value"])
         
@@ -84,7 +84,7 @@ struct KnowledgeBaseTests {
     
     @Test("KnowledgeBase list keys")
     func testListKeys() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let knowledgeBase = KnowledgeBase(repository: repository)
         let value = SendableContent(["key": "value"])
         
@@ -101,7 +101,7 @@ struct KnowledgeBaseTests {
     
     @Test("KnowledgeBase search knowledge")
     func testSearchKnowledge() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let knowledgeBase = KnowledgeBase(repository: repository)
         
         try await knowledgeBase.addKnowledge(category: "test", key: "item1", value: SendableContent(["content": "This is a test"]))

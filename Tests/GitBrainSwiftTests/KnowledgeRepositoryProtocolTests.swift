@@ -2,7 +2,7 @@ import Testing
 @testable import GitBrainSwift
 import Foundation
 
-actor MockKnowledgeRepository: KnowledgeRepositoryProtocol {
+actor KnowledgeRepositoryProtocolMockKnowledgeRepository: KnowledgeRepositoryProtocol {
     private var storage: [String: [String: (value: SendableContent, metadata: SendableContent, timestamp: Date)]] = [:]
     
     func add(category: String, key: String, value: SendableContent, metadata: SendableContent, timestamp: Date) async throws {
@@ -57,7 +57,7 @@ actor MockKnowledgeRepository: KnowledgeRepositoryProtocol {
 struct KnowledgeRepositoryProtocolTests {
     @Test("KnowledgeRepositoryProtocol add and get")
     func testAddAndGet() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let value = SendableContent(["key": "value"])
         let metadata = SendableContent(["source": "test"])
         let timestamp = Date()
@@ -74,7 +74,7 @@ struct KnowledgeRepositoryProtocolTests {
     
     @Test("KnowledgeRepositoryProtocol update existing")
     func testUpdateExisting() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let value1 = SendableContent(["key": "value1"])
         let value2 = SendableContent(["key": "value2"])
         let metadata = SendableContent(["source": "test"])
@@ -95,7 +95,7 @@ struct KnowledgeRepositoryProtocolTests {
     
     @Test("KnowledgeRepositoryProtocol update non-existent")
     func testUpdateNonExistent() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let value = SendableContent(["key": "value"])
         let metadata = SendableContent(["source": "test"])
         let timestamp = Date()
@@ -106,7 +106,7 @@ struct KnowledgeRepositoryProtocolTests {
     
     @Test("KnowledgeRepositoryProtocol delete existing")
     func testDeleteExisting() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let value = SendableContent(["key": "value"])
         let metadata = SendableContent(["source": "test"])
         let timestamp = Date()
@@ -122,7 +122,7 @@ struct KnowledgeRepositoryProtocolTests {
     
     @Test("KnowledgeRepositoryProtocol delete non-existent")
     func testDeleteNonExistent() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         
         let deleted = try await repository.delete(category: "test", key: "item1")
         #expect(deleted == false)
@@ -130,7 +130,7 @@ struct KnowledgeRepositoryProtocolTests {
     
     @Test("KnowledgeRepositoryProtocol list categories")
     func testListCategories() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let value = SendableContent(["key": "value"])
         let metadata = SendableContent(["source": "test"])
         let timestamp = Date()
@@ -145,7 +145,7 @@ struct KnowledgeRepositoryProtocolTests {
     
     @Test("KnowledgeRepositoryProtocol list keys")
     func testListKeys() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let value = SendableContent(["key": "value"])
         let metadata = SendableContent(["source": "test"])
         let timestamp = Date()
@@ -160,7 +160,7 @@ struct KnowledgeRepositoryProtocolTests {
     
     @Test("KnowledgeRepositoryProtocol search")
     func testSearch() async throws {
-        let repository = MockKnowledgeRepository()
+        let repository = KnowledgeRepositoryProtocolMockKnowledgeRepository()
         let value1 = SendableContent(["name": "apple", "type": "fruit"])
         let value2 = SendableContent(["name": "banana", "type": "fruit"])
         let value3 = SendableContent(["name": "carrot", "type": "vegetable"])

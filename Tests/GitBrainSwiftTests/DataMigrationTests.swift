@@ -1,7 +1,8 @@
 import Testing
 @testable import GitBrainSwift
+import Foundation
 
-@Suite("DataMigration Tests", .tags(.migration))
+@Suite("DataMigration Tests")
 struct DataMigrationTests {
     
     @Test("Test retry policy calculation")
@@ -147,12 +148,12 @@ struct DataMigrationTests {
     }
 }
 
-@Suite("DataMigration Integration Tests", .tags(.migration, .integration))
+@Suite("DataMigration Integration Tests")
 struct DataMigrationIntegrationTests {
     
     @Test("Test migration with mock repository")
     func testMigrationWithMockRepository() async throws {
-        let mockRepo = MockKnowledgeRepository()
+        let mockRepo = DataMigrationMockKnowledgeRepository()
         let migration = DataMigration()
         
         let testURL = URL(fileURLWithPath: "/tmp/test-knowledge")
@@ -170,7 +171,7 @@ struct DataMigrationIntegrationTests {
     
     @Test("Test rollback with mock repository")
     func testRollbackWithMockRepository() async throws {
-        let mockRepo = MockKnowledgeRepository()
+        let mockRepo = DataMigrationMockKnowledgeRepository()
         let migration = DataMigration()
         
         let snapshot = MigrationSnapshot(
@@ -188,19 +189,19 @@ struct DataMigrationIntegrationTests {
             brainStates: []
         )
         
-        try await migration.rollback(to: snapshot, knowledgeRepo: mockRepo, brainStateRepo: MockBrainStateRepository())
+        try await migration.rollback(to: snapshot, knowledgeRepo: mockRepo, brainStateRepo: DataMigrationMockBrainStateRepository())
         
         #expect(mockRepo.items.count == 1)
     }
     
     @Test("Test validation with mock repository")
     func testValidationWithMockRepository() async throws {
-        let mockRepo = MockKnowledgeRepository()
+        let mockRepo = DataMigrationMockKnowledgeRepository()
         let migration = DataMigration()
         
         let report = try await migration.validateMigration(
             knowledgeRepo: mockRepo,
-            brainStateRepo: MockBrainStateRepository()
+            brainStateRepo: DataMigrationMockBrainStateRepository()
         )
         
         #expect(report.knowledgeCategories == 0)
@@ -209,12 +210,12 @@ struct DataMigrationIntegrationTests {
     }
 }
 
-@Suite("DataMigration Performance Tests", .tags(.migration, .performance))
+@Suite("DataMigration Performance Tests")
 struct DataMigrationPerformanceTests {
     
     @Test("Test migration performance with large dataset")
     func testMigrationPerformanceWithLargeDataset() async throws {
-        let mockRepo = MockKnowledgeRepository()
+        let mockRepo = DataMigrationMockKnowledgeRepository()
         let migration = DataMigration()
         
         let testURL = URL(fileURLWithPath: "/tmp/test-knowledge-large")
@@ -234,7 +235,7 @@ struct DataMigrationPerformanceTests {
     
     @Test("Test retry performance")
     func testRetryPerformance() async throws {
-        let mockRepo = MockKnowledgeRepository()
+        let mockRepo = DataMigrationMockKnowledgeRepository()
         let migration = DataMigration(retryPolicy: RetryPolicy(maxRetries: 3, baseDelay: 0.1))
         
         let testURL = URL(fileURLWithPath: "/tmp/test-knowledge-retry")
@@ -253,15 +254,29 @@ struct DataMigrationPerformanceTests {
     }
 }
 
-class MockKnowledgeRepository: KnowledgeRepositoryProtocol {
+class DataMigrationMockKnowledgeRepository: @unchecked Sendable, KnowledgeRepositoryProtocol {
     var items: [(category: String, key: String, value: SendableContent, metadata: SendableContent, timestamp: Date)] = []
     
     func add(category: String, key: String, value: SendableContent, metadata: SendableContent, timestamp: Date) async throws {
         items.append((category, key, value, metadata, timestamp))
     }
     
-    func get(category: String, key: String) async throws -> (SendableContent, SendableContent)? {
-        return items.first { $0.category == category && $0.key == key }.map { ($0.value, $0.metadata) }
+    func get(category: String, key: String) async throws -> (value: SendableContent, metadata: SendableContent, timestamp: Date)? {
+        return items.first { $0.category == category && $0.key == key }.map { ($0.value, $0.metadata, $0.timestamp) }
+    }
+    
+    func update(category: String, key: String, value: SendableContent, metadata: SendableContent, timestamp: Date) async throws -> Bool {
+        guard let index = items.firstIndex(where: { $0.category == category && $0.key == key }) else {
+            return false
+        }
+        items[index] = (category, key, value, metadata, timestamp)
+        return true
+    }
+    
+    func delete(category: String, key: String) async throws -> Bool {
+        let initialCount = items.count
+        items.removeAll { $0.category == category && $0.key == key }
+        return items.count < initialCount
     }
     
     func listCategories() async throws -> [String] {
@@ -272,41 +287,72 @@ class MockKnowledgeRepository: KnowledgeRepositoryProtocol {
         return items.filter { $0.category == category }.map { $0.key }
     }
     
-    func remove(category: String, key: String) async throws {
-        items.removeAll { $0.category == category && $0.key == key }
-    }
-    
-    func search(query: String) async throws -> [(value: SendableContent, metadata: SendableContent)] {
-        return items.filter { _, key, value, _, _ in
-            key.localizedCaseInsensitiveContains(query) || value.toAnyDict().description.localizedCaseInsensitiveContains(query)
-        }.map { ($0.value, $0.metadata) }
-    }
-    
-    func count(category: String?) async throws -> Int {
-        if let category = category {
-            return items.filter { $0.category == category }.count
-        }
-        return items.count
+    func search(category: String, query: String) async throws -> [(value: SendableContent, metadata: SendableContent)] {
+        return items.filter { $0.category == category && ($0.key.localizedCaseInsensitiveContains(query) || $0.value.toAnyDict().description.localizedCaseInsensitiveContains(query)) }
+            .map { ($0.value, $0.metadata) }
     }
 }
 
-class MockBrainStateRepository: BrainStateRepositoryProtocol {
+class DataMigrationMockBrainStateRepository: @unchecked Sendable, BrainStateRepositoryProtocol {
     var states: [(aiName: String, role: RoleType, state: SendableContent, timestamp: Date)] = []
+    
+    func create(aiName: String, role: RoleType, state: SendableContent?, timestamp: Date) async throws {
+        if let state = state {
+            states.append((aiName, role, state, timestamp))
+        }
+    }
     
     func save(aiName: String, role: RoleType, state: SendableContent, timestamp: Date) async throws {
         states.removeAll { $0.aiName == aiName }
         states.append((aiName, role, state, timestamp))
     }
     
-    func load(aiName: String) async throws -> BrainState? {
-        return states.first { $0.aiName == aiName }.map { BrainState(aiName: $0.aiName, role: $0.role, state: $0.state, timestamp: $0.timestamp) }
+    func load(aiName: String) async throws -> (role: RoleType, state: SendableContent?, timestamp: Date)? {
+        return states.first { $0.aiName == aiName }.map { ($0.role, $0.state, $0.timestamp) }
     }
     
     func list() async throws -> [String] {
         return states.map { $0.aiName }
     }
     
-    func remove(aiName: String) async throws {
+    func update(aiName: String, key: String, value: SendableContent) async throws -> Bool {
+        guard let index = states.firstIndex(where: { $0.aiName == aiName }) else {
+            return false
+        }
+        var stateData = states[index].state
+        stateData[key] = .dictionary(value.data)
+        states[index] = (states[index].aiName, states[index].role, stateData, states[index].timestamp)
+        return true
+    }
+    
+    func get(aiName: String, key: String, defaultValue: SendableContent?) async throws -> SendableContent? {
+        guard let state = states.first(where: { $0.aiName == aiName })?.state else {
+            return defaultValue
+        }
+        if let codableValue = state[key] {
+            if case let .dictionary(dict) = codableValue {
+                return SendableContent(data: dict)
+            }
+            return SendableContent(data: [key: codableValue])
+        }
+        return defaultValue
+    }
+    
+    func delete(aiName: String) async throws -> Bool {
+        let initialCount = states.count
         states.removeAll { $0.aiName == aiName }
+        return states.count < initialCount
+    }
+    
+    func backup(aiName: String, backupSuffix: String?) async throws -> String? {
+        guard states.first(where: { $0.aiName == aiName }) != nil else {
+            return nil
+        }
+        let suffix = backupSuffix ?? "_backup"
+        return "\(aiName)\(suffix).json"
+    }
+    
+    func restore(aiName: String, backupFile: String) async throws -> Bool {
+        return true
     }
 }

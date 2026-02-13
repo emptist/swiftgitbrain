@@ -1,5 +1,6 @@
 import Foundation
 import ArgumentParser
+import GitBrainSwift
 
 struct MigrationCLI: ParsableCommand {
     static let configuration = CommandConfiguration(
@@ -48,9 +49,10 @@ struct MigrateCommand: ParsableCommand {
                     return
                 }
                 
-                let dbManager = try DatabaseManager.shared
-                let knowledgeRepo = FluentKnowledgeRepository(database: dbManager.database)
-                let brainStateRepo = FluentBrainStateRepository(database: dbManager.database)
+                let dbManager = DatabaseManager()
+                let databases = try await dbManager.initialize()
+                let knowledgeRepo = try await dbManager.createKnowledgeRepository()
+                let brainStateRepo = try await dbManager.createBrainStateRepository()
                 
                 var currentSnapshot: MigrationSnapshot?
                 if snapshot {
@@ -118,9 +120,10 @@ struct RollbackCommand: ParsableCommand {
         
         Task {
             do {
-                let dbManager = try DatabaseManager.shared
-                let knowledgeRepo = FluentKnowledgeRepository(database: dbManager.database)
-                let brainStateRepo = FluentBrainStateRepository(database: dbManager.database)
+                let dbManager = DatabaseManager()
+                let databases = try await dbManager.initialize()
+                let knowledgeRepo = try await dbManager.createKnowledgeRepository()
+                let brainStateRepo = try await dbManager.createBrainStateRepository()
                 
                 if let snapshotId = snapshotId {
                     print("🔄 Rolling back to snapshot: \(snapshotId)")
@@ -176,9 +179,10 @@ struct StatusCommand: ParsableCommand {
     func run() throws {
         Task {
             do {
-                let dbManager = try DatabaseManager.shared
-                let knowledgeRepo = FluentKnowledgeRepository(database: dbManager.database)
-                let brainStateRepo = FluentBrainStateRepository(database: dbManager.database)
+                let dbManager = DatabaseManager()
+                let databases = try await dbManager.initialize()
+                let knowledgeRepo = try await dbManager.createKnowledgeRepository()
+                let brainStateRepo = try await dbManager.createBrainStateRepository()
                 
                 print("📊 Migration Status")
                 print("=" * 50)
@@ -221,9 +225,10 @@ struct ValidateCommand: ParsableCommand {
                     sourceURL = URL(fileURLWithPath: ".")
                 }
                 
-                let dbManager = try DatabaseManager.shared
-                let knowledgeRepo = FluentKnowledgeRepository(database: dbManager.database)
-                let brainStateRepo = FluentBrainStateRepository(database: dbManager.database)
+                let dbManager = DatabaseManager()
+                let databases = try await dbManager.initialize()
+                let knowledgeRepo = try await dbManager.createKnowledgeRepository()
+                let brainStateRepo = try await dbManager.createBrainStateRepository()
                 
                 print("🔍 Validating migration integrity...")
                 print("=" * 50)
@@ -297,9 +302,10 @@ struct SnapshotCommand: ParsableCommand {
     func run() throws {
         Task {
             do {
-                let dbManager = try DatabaseManager.shared
-                let knowledgeRepo = FluentKnowledgeRepository(database: dbManager.database)
-                let brainStateRepo = FluentBrainStateRepository(database: dbManager.database)
+                let dbManager = DatabaseManager()
+                let databases = try await dbManager.initialize()
+                let knowledgeRepo = try await dbManager.createKnowledgeRepository()
+                let brainStateRepo = try await dbManager.createBrainStateRepository()
                 
                 let migration = DataMigration()
                 
