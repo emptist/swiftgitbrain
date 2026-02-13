@@ -605,36 +605,367 @@ CREATE INDEX idx_score_reject_messages_to_request_id ON score_reject_messages(to
 **Message Priority Values:**
 - 1 (critical), 2 (high), 3 (normal), 4 (low)
 
-### knowledge_items Table
+### Knowledge Tables
+
+**IMPORTANT:** Different knowledge types have separate tables with specific fields, just like messages.
+
+**Common fields across all knowledge tables:**
+- id: UUID PRIMARY KEY
+- knowledge_id: UUID UNIQUE
+- category: VARCHAR(255) NOT NULL
+- key: VARCHAR(255) NOT NULL
+- created_at: TIMESTAMP NOT NULL DEFAULT NOW()
+- updated_at: TIMESTAMP NOT NULL DEFAULT NOW()
+- created_by: VARCHAR(255) NOT NULL
+- tags: TEXT[]
+
+#### code_snippets Table
 
 ```sql
-CREATE TABLE knowledge_items (
-    id SERIAL PRIMARY KEY,
+CREATE TABLE code_snippets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    knowledge_id UUID NOT NULL UNIQUE,
     category VARCHAR(255) NOT NULL,
     key VARCHAR(255) NOT NULL,
-    value JSONB NOT NULL,
-    metadata JSONB,
-    timestamp TIMESTAMP NOT NULL,
-    UNIQUE(category, key)
+    language VARCHAR(50) NOT NULL,
+    code TEXT NOT NULL,
+    description TEXT,
+    usage_example TEXT,
+    dependencies TEXT[],
+    framework VARCHAR(255),
+    version VARCHAR(50),
+    complexity VARCHAR(50),
+    created_by VARCHAR(255) NOT NULL,
+    tags TEXT[],
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- Indexes
-CREATE INDEX idx_knowledge_items_category ON knowledge_items(category);
-CREATE INDEX idx_knowledge_items_timestamp ON knowledge_items(timestamp);
+CREATE INDEX idx_code_snippets_category ON code_snippets(category);
+CREATE INDEX idx_code_snippets_language ON code_snippets(language);
+CREATE INDEX idx_code_snippets_framework ON code_snippets(framework);
+CREATE INDEX idx_code_snippets_tags ON code_snippets USING GIN(tags);
+CREATE INDEX idx_code_snippets_created_at ON code_snippets(created_at);
 
--- KnowledgeItems.value JSONB structure:
--- {
---   "title": "Best practices for Swift",
---   "content": "Use Sendable protocol...",
---   "tags": ["swift", "best-practices"]
--- }
+-- Validators
+-- language: 'swift', 'python', 'javascript', 'typescript', 'java', 'go', 'rust', etc.
+-- complexity: 'beginner', 'intermediate', 'advanced', 'expert'
+```
 
--- KnowledgeItems.metadata JSONB structure:
--- {
---   "author": "CoderAI",
---   "source": "documentation",
---   "last_updated": "2026-02-14"
--- }
+#### best_practices Table
+
+```sql
+CREATE TABLE best_practices (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    knowledge_id UUID NOT NULL UNIQUE,
+    category VARCHAR(255) NOT NULL,
+    key VARCHAR(255) NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    description TEXT NOT NULL,
+    context TEXT,
+    benefits TEXT[],
+    anti_pattern TEXT,
+    examples JSONB,
+    references TEXT[],
+    applicable_to TEXT[],
+    created_by VARCHAR(255) NOT NULL,
+    tags TEXT[],
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_best_practices_category ON best_practices(category);
+CREATE INDEX idx_best_practices_tags ON best_practices USING GIN(tags);
+CREATE INDEX idx_best_practices_applicable_to ON best_practices USING GIN(applicable_to);
+CREATE INDEX idx_best_practices_created_at ON best_practices(created_at);
+```
+
+#### documentation Table
+
+```sql
+CREATE TABLE documentation (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    knowledge_id UUID NOT NULL UNIQUE,
+    category VARCHAR(255) NOT NULL,
+    key VARCHAR(255) NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    content TEXT NOT NULL,
+    summary TEXT,
+    version VARCHAR(50),
+    last_reviewed TIMESTAMP,
+    review_status VARCHAR(50),
+    related_topics TEXT[],
+    external_links JSONB,
+    created_by VARCHAR(255) NOT NULL,
+    tags TEXT[],
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_documentation_category ON documentation(category);
+CREATE INDEX idx_documentation_version ON documentation(version);
+CREATE INDEX idx_documentation_review_status ON documentation(review_status);
+CREATE INDEX idx_documentation_tags ON documentation USING GIN(tags);
+CREATE INDEX idx_documentation_related_topics ON documentation USING GIN(related_topics);
+CREATE INDEX idx_documentation_created_at ON documentation(created_at);
+
+-- Validators
+-- review_status: 'draft', 'reviewed', 'approved', 'deprecated'
+```
+
+#### architecture_patterns Table
+
+```sql
+CREATE TABLE architecture_patterns (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    knowledge_id UUID NOT NULL UNIQUE,
+    category VARCHAR(255) NOT NULL,
+    key VARCHAR(255) NOT NULL,
+    pattern_name VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    problem TEXT,
+    solution TEXT,
+    consequences TEXT[],
+    use_cases TEXT[],
+    related_patterns TEXT[],
+    examples JSONB,
+    created_by VARCHAR(255) NOT NULL,
+    tags TEXT[],
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_architecture_patterns_category ON architecture_patterns(category);
+CREATE INDEX idx_architecture_patterns_pattern_name ON architecture_patterns(pattern_name);
+CREATE INDEX idx_architecture_patterns_tags ON architecture_patterns USING GIN(tags);
+CREATE INDEX idx_architecture_patterns_related_patterns ON architecture_patterns USING GIN(related_patterns);
+CREATE INDEX idx_architecture_patterns_created_at ON architecture_patterns(created_at);
+```
+
+#### api_references Table
+
+```sql
+CREATE TABLE api_references (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    knowledge_id UUID NOT NULL UNIQUE,
+    category VARCHAR(255) NOT NULL,
+    key VARCHAR(255) NOT NULL,
+    api_name VARCHAR(255) NOT NULL,
+    api_type VARCHAR(50) NOT NULL,
+    endpoint VARCHAR(500),
+    method VARCHAR(10),
+    parameters JSONB,
+    response_schema JSONB,
+    authentication TEXT,
+    rate_limiting TEXT,
+    examples JSONB,
+    version VARCHAR(50),
+    deprecated BOOLEAN DEFAULT FALSE,
+    deprecation_note TEXT,
+    created_by VARCHAR(255) NOT NULL,
+    tags TEXT[],
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_api_references_category ON api_references(category);
+CREATE INDEX idx_api_references_api_name ON api_references(api_name);
+CREATE INDEX idx_api_references_api_type ON api_references(api_type);
+CREATE INDEX idx_api_references_version ON api_references(version);
+CREATE INDEX idx_api_references_deprecated ON api_references(deprecated);
+CREATE INDEX idx_api_references_tags ON api_references USING GIN(tags);
+CREATE INDEX idx_api_references_created_at ON api_references(created_at);
+
+-- Validators
+-- api_type: 'rest', 'graphql', 'grpc', 'websocket', 'sdk'
+-- method: 'GET', 'POST', 'PUT', 'DELETE', 'PATCH', etc.
+```
+
+#### troubleshooting_guides Table
+
+```sql
+CREATE TABLE troubleshooting_guides (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    knowledge_id UUID NOT NULL UNIQUE,
+    category VARCHAR(255) NOT NULL,
+    key VARCHAR(255) NOT NULL,
+    issue_title VARCHAR(500) NOT NULL,
+    issue_description TEXT NOT NULL,
+    symptoms TEXT[],
+    root_cause TEXT,
+    solutions JSONB,
+    prevention TEXT,
+    related_issues TEXT[],
+    severity VARCHAR(50),
+    frequency VARCHAR(50),
+    created_by VARCHAR(255) NOT NULL,
+    tags TEXT[],
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_troubleshooting_guides_category ON troubleshooting_guides(category);
+CREATE INDEX idx_troubleshooting_guides_severity ON troubleshooting_guides(severity);
+CREATE INDEX idx_troubleshooting_guides_frequency ON troubleshooting_guides(frequency);
+CREATE INDEX idx_troubleshooting_guides_tags ON troubleshooting_guides USING GIN(tags);
+CREATE INDEX idx_troubleshooting_guides_related_issues ON troubleshooting_guides USING GIN(related_issues);
+CREATE INDEX idx_troubleshooting_guides_created_at ON troubleshooting_guides(created_at);
+
+-- Validators
+-- severity: 'low', 'medium', 'high', 'critical'
+-- frequency: 'rare', 'occasional', 'common', 'frequent'
+```
+
+#### code_examples Table
+
+```sql
+CREATE TABLE code_examples (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    knowledge_id UUID NOT NULL UNIQUE,
+    category VARCHAR(255) NOT NULL,
+    key VARCHAR(255) NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    description TEXT,
+    language VARCHAR(50) NOT NULL,
+    code TEXT NOT NULL,
+    input_example TEXT,
+    output_example TEXT,
+    explanation TEXT,
+    complexity VARCHAR(50),
+    dependencies TEXT[],
+    related_snippets TEXT[],
+    created_by VARCHAR(255) NOT NULL,
+    tags TEXT[],
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_code_examples_category ON code_examples(category);
+CREATE INDEX idx_code_examples_language ON code_examples(language);
+CREATE INDEX idx_code_examples_complexity ON code_examples(complexity);
+CREATE INDEX idx_code_examples_tags ON code_examples USING GIN(tags);
+CREATE INDEX idx_code_examples_related_snippets ON code_examples USING GIN(related_snippets);
+CREATE INDEX idx_code_examples_created_at ON code_examples(created_at);
+```
+
+#### design_patterns Table
+
+```sql
+CREATE TABLE design_patterns (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    knowledge_id UUID NOT NULL UNIQUE,
+    category VARCHAR(255) NOT NULL,
+    key VARCHAR(255) NOT NULL,
+    pattern_name VARCHAR(255) NOT NULL,
+    pattern_type VARCHAR(50) NOT NULL,
+    description TEXT NOT NULL,
+    intent TEXT,
+    motivation TEXT,
+    applicability TEXT,
+    structure TEXT,
+    participants TEXT[],
+    collaborations TEXT,
+    consequences TEXT[],
+    implementation TEXT,
+    sample_code TEXT,
+    known_uses TEXT[],
+    related_patterns TEXT[],
+    created_by VARCHAR(255) NOT NULL,
+    tags TEXT[],
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_design_patterns_category ON design_patterns(category);
+CREATE INDEX idx_design_patterns_pattern_name ON design_patterns(pattern_name);
+CREATE INDEX idx_design_patterns_pattern_type ON design_patterns(pattern_type);
+CREATE INDEX idx_design_patterns_tags ON design_patterns USING GIN(tags);
+CREATE INDEX idx_design_patterns_related_patterns ON design_patterns USING GIN(related_patterns);
+CREATE INDEX idx_design_patterns_created_at ON design_patterns(created_at);
+
+-- Validators
+-- pattern_type: 'creational', 'structural', 'behavioral'
+```
+
+#### testing_strategies Table
+
+```sql
+CREATE TABLE testing_strategies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    knowledge_id UUID NOT NULL UNIQUE,
+    category VARCHAR(255) NOT NULL,
+    key VARCHAR(255) NOT NULL,
+    strategy_name VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    testing_type VARCHAR(50) NOT NULL,
+    objectives TEXT[],
+    methodology TEXT,
+    tools TEXT[],
+    best_practices TEXT[],
+    examples JSONB,
+    metrics JSONB,
+    coverage_requirements TEXT,
+    created_by VARCHAR(255) NOT NULL,
+    tags TEXT[],
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_testing_strategies_category ON testing_strategies(category);
+CREATE INDEX idx_testing_strategies_strategy_name ON testing_strategies(strategy_name);
+CREATE INDEX idx_testing_strategies_testing_type ON testing_strategies(testing_type);
+CREATE INDEX idx_testing_strategies_tags ON testing_strategies USING GIN(tags);
+CREATE INDEX idx_testing_strategies_tools ON testing_strategies USING GIN(tools);
+CREATE INDEX idx_testing_strategies_created_at ON testing_strategies(created_at);
+
+-- Validators
+-- testing_type: 'unit', 'integration', 'system', 'acceptance', 'performance', 'security', 'e2e'
+```
+
+#### performance_optimizations Table
+
+```sql
+CREATE TABLE performance_optimizations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    knowledge_id UUID NOT NULL UNIQUE,
+    category VARCHAR(255) NOT NULL,
+    key VARCHAR(255) NOT NULL,
+    optimization_name VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    problem TEXT,
+    solution TEXT NOT NULL,
+    before_metrics JSONB,
+    after_metrics JSONB,
+    improvement_percentage DECIMAL(5,2),
+    applicable_to TEXT[],
+    implementation_difficulty VARCHAR(50),
+    trade_offs TEXT[],
+    related_optimizations TEXT[],
+    created_by VARCHAR(255) NOT NULL,
+    tags TEXT[],
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_performance_optimizations_category ON performance_optimizations(category);
+CREATE INDEX idx_performance_optimizations_optimization_name ON performance_optimizations(optimization_name);
+CREATE INDEX idx_performance_optimizations_implementation_difficulty ON performance_optimizations(implementation_difficulty);
+CREATE INDEX idx_performance_optimizations_tags ON performance_optimizations USING GIN(tags);
+CREATE INDEX idx_performance_optimizations_applicable_to ON performance_optimizations USING GIN(applicable_to);
+CREATE INDEX idx_performance_optimizations_created_at ON performance_optimizations(created_at);
+
+-- Validators
+-- implementation_difficulty: 'easy', 'medium', 'hard', 'expert'
 ```
 
 ## Component Design
@@ -1781,8 +2112,17 @@ public actor MessageCacheManager: @unchecked Sendable {
 
 ```
 KnowledgeBase System:
-├── KnowledgeItem Model
-│   └── struct KnowledgeItem: Codable, Sendable
+├── Knowledge Models (9 types)
+│   ├── CodeSnippet: Codable, Sendable
+│   ├── BestPractice: Codable, Sendable
+│   ├── Documentation: Codable, Sendable
+│   ├── ArchitecturePattern: Codable, Sendable
+│   ├── ApiReference: Codable, Sendable
+│   ├── TroubleshootingGuide: Codable, Sendable
+│   ├── CodeExample: Codable, Sendable
+│   ├── DesignPattern: Codable, Sendable
+│   ├── TestingStrategy: Codable, Sendable
+│   └── PerformanceOptimization: Codable, Sendable
 ├── KnowledgeBase Protocol
 │   └── protocol KnowledgeBaseProtocol
 ├── KnowledgeBase
@@ -1791,31 +2131,648 @@ KnowledgeBase System:
     └── actor KnowledgeRepository
 ```
 
-#### KnowledgeItem Model
+#### Knowledge Models
+
+##### CodeSnippet Model
 
 ```swift
-public struct KnowledgeItem: Codable, Sendable {
-    public let id: Int
+public struct CodeSnippet: Codable, Sendable {
+    public let id: String
+    public let knowledgeId: String
     public let category: String
     public let key: String
-    public let value: SendableContent
-    public let metadata: SendableContent?
-    public let timestamp: String
+    public let language: String
+    public let code: String
+    public let description: String?
+    public let usageExample: String?
+    public let dependencies: [String]?
+    public let framework: String?
+    public let version: String?
+    public let complexity: String?
+    public let createdBy: String
+    public let tags: [String]?
+    public let createdAt: String
+    public let updatedAt: String
     
     public init(
-        id: Int,
+        id: String,
+        knowledgeId: String,
         category: String,
         key: String,
-        value: SendableContent,
-        metadata: SendableContent? = nil,
-        timestamp: String = ISO8601DateFormatter().string(from: Date())
+        language: String,
+        code: String,
+        description: String? = nil,
+        usageExample: String? = nil,
+        dependencies: [String]? = nil,
+        framework: String? = nil,
+        version: String? = nil,
+        complexity: String? = nil,
+        createdBy: String,
+        tags: [String]? = nil,
+        createdAt: String = ISO8601DateFormatter().string(from: Date()),
+        updatedAt: String = ISO8601DateFormatter().string(from: Date())
     ) {
         self.id = id
+        self.knowledgeId = knowledgeId
         self.category = category
         self.key = key
-        self.value = value
-        self.metadata = metadata
-        self.timestamp = timestamp
+        self.language = language
+        self.code = code
+        self.description = description
+        self.usageExample = usageExample
+        self.dependencies = dependencies
+        self.framework = framework
+        self.version = version
+        self.complexity = complexity
+        self.createdBy = createdBy
+        self.tags = tags
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+}
+```
+
+##### BestPractice Model
+
+```swift
+public struct BestPractice: Codable, Sendable {
+    public let id: String
+    public let knowledgeId: String
+    public let category: String
+    public let key: String
+    public let title: String
+    public let description: String
+    public let context: String?
+    public let benefits: [String]?
+    public let antiPattern: String?
+    public let examples: [String: Any]?
+    public let references: [String]?
+    public let applicableTo: [String]?
+    public let createdBy: String
+    public let tags: [String]?
+    public let createdAt: String
+    public let updatedAt: String
+    
+    public init(
+        id: String,
+        knowledgeId: String,
+        category: String,
+        key: String,
+        title: String,
+        description: String,
+        context: String? = nil,
+        benefits: [String]? = nil,
+        antiPattern: String? = nil,
+        examples: [String: Any]? = nil,
+        references: [String]? = nil,
+        applicableTo: [String]? = nil,
+        createdBy: String,
+        tags: [String]? = nil,
+        createdAt: String = ISO8601DateFormatter().string(from: Date()),
+        updatedAt: String = ISO8601DateFormatter().string(from: Date())
+    ) {
+        self.id = id
+        self.knowledgeId = knowledgeId
+        self.category = category
+        self.key = key
+        self.title = title
+        self.description = description
+        self.context = context
+        self.benefits = benefits
+        self.antiPattern = antiPattern
+        self.examples = examples
+        self.references = references
+        self.applicableTo = applicableTo
+        self.createdBy = createdBy
+        self.tags = tags
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+}
+```
+
+##### Documentation Model
+
+```swift
+public struct Documentation: Codable, Sendable {
+    public let id: String
+    public let knowledgeId: String
+    public let category: String
+    public let key: String
+    public let title: String
+    public let content: String
+    public let summary: String?
+    public let version: String?
+    public let lastReviewed: String?
+    public let reviewStatus: String?
+    public let relatedTopics: [String]?
+    public let externalLinks: [String: Any]?
+    public let createdBy: String
+    public let tags: [String]?
+    public let createdAt: String
+    public let updatedAt: String
+    
+    public init(
+        id: String,
+        knowledgeId: String,
+        category: String,
+        key: String,
+        title: String,
+        content: String,
+        summary: String? = nil,
+        version: String? = nil,
+        lastReviewed: String? = nil,
+        reviewStatus: String? = nil,
+        relatedTopics: [String]? = nil,
+        externalLinks: [String: Any]? = nil,
+        createdBy: String,
+        tags: [String]? = nil,
+        createdAt: String = ISO8601DateFormatter().string(from: Date()),
+        updatedAt: String = ISO8601DateFormatter().string(from: Date())
+    ) {
+        self.id = id
+        self.knowledgeId = knowledgeId
+        self.category = category
+        self.key = key
+        self.title = title
+        self.content = content
+        self.summary = summary
+        self.version = version
+        self.lastReviewed = lastReviewed
+        self.reviewStatus = reviewStatus
+        self.relatedTopics = relatedTopics
+        self.externalLinks = externalLinks
+        self.createdBy = createdBy
+        self.tags = tags
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+}
+```
+
+##### ArchitecturePattern Model
+
+```swift
+public struct ArchitecturePattern: Codable, Sendable {
+    public let id: String
+    public let knowledgeId: String
+    public let category: String
+    public let key: String
+    public let patternName: String
+    public let description: String
+    public let problem: String?
+    public let solution: String?
+    public let consequences: [String]?
+    public let useCases: [String]?
+    public let relatedPatterns: [String]?
+    public let examples: [String: Any]?
+    public let createdBy: String
+    public let tags: [String]?
+    public let createdAt: String
+    public let updatedAt: String
+    
+    public init(
+        id: String,
+        knowledgeId: String,
+        category: String,
+        key: String,
+        patternName: String,
+        description: String,
+        problem: String? = nil,
+        solution: String? = nil,
+        consequences: [String]? = nil,
+        useCases: [String]? = nil,
+        relatedPatterns: [String]? = nil,
+        examples: [String: Any]? = nil,
+        createdBy: String,
+        tags: [String]? = nil,
+        createdAt: String = ISO8601DateFormatter().string(from: Date()),
+        updatedAt: String = ISO8601DateFormatter().string(from: Date())
+    ) {
+        self.id = id
+        self.knowledgeId = knowledgeId
+        self.category = category
+        self.key = key
+        self.patternName = patternName
+        self.description = description
+        self.problem = problem
+        self.solution = solution
+        self.consequences = consequences
+        self.useCases = useCases
+        self.relatedPatterns = relatedPatterns
+        self.examples = examples
+        self.createdBy = createdBy
+        self.tags = tags
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+}
+```
+
+##### ApiReference Model
+
+```swift
+public struct ApiReference: Codable, Sendable {
+    public let id: String
+    public let knowledgeId: String
+    public let category: String
+    public let key: String
+    public let apiName: String
+    public let apiType: String
+    public let endpoint: String?
+    public let method: String?
+    public let parameters: [String: Any]?
+    public let responseSchema: [String: Any]?
+    public let authentication: String?
+    public let rateLimiting: String?
+    public let examples: [String: Any]?
+    public let version: String?
+    public let deprecated: Bool
+    public let deprecationNote: String?
+    public let createdBy: String
+    public let tags: [String]?
+    public let createdAt: String
+    public let updatedAt: String
+    
+    public init(
+        id: String,
+        knowledgeId: String,
+        category: String,
+        key: String,
+        apiName: String,
+        apiType: String,
+        endpoint: String? = nil,
+        method: String? = nil,
+        parameters: [String: Any]? = nil,
+        responseSchema: [String: Any]? = nil,
+        authentication: String? = nil,
+        rateLimiting: String? = nil,
+        examples: [String: Any]? = nil,
+        version: String? = nil,
+        deprecated: Bool = false,
+        deprecationNote: String? = nil,
+        createdBy: String,
+        tags: [String]? = nil,
+        createdAt: String = ISO8601DateFormatter().string(from: Date()),
+        updatedAt: String = ISO8601DateFormatter().string(from: Date())
+    ) {
+        self.id = id
+        self.knowledgeId = knowledgeId
+        self.category = category
+        self.key = key
+        self.apiName = apiName
+        self.apiType = apiType
+        self.endpoint = endpoint
+        self.method = method
+        self.parameters = parameters
+        self.responseSchema = responseSchema
+        self.authentication = authentication
+        self.rateLimiting = rateLimiting
+        self.examples = examples
+        self.version = version
+        self.deprecated = deprecated
+        self.deprecationNote = deprecationNote
+        self.createdBy = createdBy
+        self.tags = tags
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+}
+```
+
+##### TroubleshootingGuide Model
+
+```swift
+public struct TroubleshootingGuide: Codable, Sendable {
+    public let id: String
+    public let knowledgeId: String
+    public let category: String
+    public let key: String
+    public let issueTitle: String
+    public let issueDescription: String
+    public let symptoms: [String]?
+    public let rootCause: String?
+    public let solutions: [String: Any]?
+    public let prevention: String?
+    public let relatedIssues: [String]?
+    public let severity: String?
+    public let frequency: String?
+    public let createdBy: String
+    public let tags: [String]?
+    public let createdAt: String
+    public let updatedAt: String
+    
+    public init(
+        id: String,
+        knowledgeId: String,
+        category: String,
+        key: String,
+        issueTitle: String,
+        issueDescription: String,
+        symptoms: [String]? = nil,
+        rootCause: String? = nil,
+        solutions: [String: Any]? = nil,
+        prevention: String? = nil,
+        relatedIssues: [String]? = nil,
+        severity: String? = nil,
+        frequency: String? = nil,
+        createdBy: String,
+        tags: [String]? = nil,
+        createdAt: String = ISO8601DateFormatter().string(from: Date()),
+        updatedAt: String = ISO8601DateFormatter().string(from: Date())
+    ) {
+        self.id = id
+        self.knowledgeId = knowledgeId
+        self.category = category
+        self.key = key
+        self.issueTitle = issueTitle
+        self.issueDescription = issueDescription
+        self.symptoms = symptoms
+        self.rootCause = rootCause
+        self.solutions = solutions
+        self.prevention = prevention
+        self.relatedIssues = relatedIssues
+        self.severity = severity
+        self.frequency = frequency
+        self.createdBy = createdBy
+        self.tags = tags
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+}
+```
+
+##### CodeExample Model
+
+```swift
+public struct CodeExample: Codable, Sendable {
+    public let id: String
+    public let knowledgeId: String
+    public let category: String
+    public let key: String
+    public let title: String
+    public let description: String?
+    public let language: String
+    public let code: String
+    public let inputExample: String?
+    public let outputExample: String?
+    public let explanation: String?
+    public let complexity: String?
+    public let dependencies: [String]?
+    public let relatedSnippets: [String]?
+    public let createdBy: String
+    public let tags: [String]?
+    public let createdAt: String
+    public let updatedAt: String
+    
+    public init(
+        id: String,
+        knowledgeId: String,
+        category: String,
+        key: String,
+        title: String,
+        description: String? = nil,
+        language: String,
+        code: String,
+        inputExample: String? = nil,
+        outputExample: String? = nil,
+        explanation: String? = nil,
+        complexity: String? = nil,
+        dependencies: [String]? = nil,
+        relatedSnippets: [String]? = nil,
+        createdBy: String,
+        tags: [String]? = nil,
+        createdAt: String = ISO8601DateFormatter().string(from: Date()),
+        updatedAt: String = ISO8601DateFormatter().string(from: Date())
+    ) {
+        self.id = id
+        self.knowledgeId = knowledgeId
+        self.category = category
+        self.key = key
+        self.title = title
+        self.description = description
+        self.language = language
+        self.code = code
+        self.inputExample = inputExample
+        self.outputExample = outputExample
+        self.explanation = explanation
+        self.complexity = complexity
+        self.dependencies = dependencies
+        self.relatedSnippets = relatedSnippets
+        self.createdBy = createdBy
+        self.tags = tags
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+}
+```
+
+##### DesignPattern Model
+
+```swift
+public struct DesignPattern: Codable, Sendable {
+    public let id: String
+    public let knowledgeId: String
+    public let category: String
+    public let key: String
+    public let patternName: String
+    public let patternType: String
+    public let description: String
+    public let intent: String?
+    public let motivation: String?
+    public let applicability: String?
+    public let structure: String?
+    public let participants: [String]?
+    public let collaborations: String?
+    public let consequences: [String]?
+    public let implementation: String?
+    public let sampleCode: String?
+    public let knownUses: [String]?
+    public let relatedPatterns: [String]?
+    public let createdBy: String
+    public let tags: [String]?
+    public let createdAt: String
+    public let updatedAt: String
+    
+    public init(
+        id: String,
+        knowledgeId: String,
+        category: String,
+        key: String,
+        patternName: String,
+        patternType: String,
+        description: String,
+        intent: String? = nil,
+        motivation: String? = nil,
+        applicability: String? = nil,
+        structure: String? = nil,
+        participants: [String]? = nil,
+        collaborations: String? = nil,
+        consequences: [String]? = nil,
+        implementation: String? = nil,
+        sampleCode: String? = nil,
+        knownUses: [String]? = nil,
+        relatedPatterns: [String]? = nil,
+        createdBy: String,
+        tags: [String]? = nil,
+        createdAt: String = ISO8601DateFormatter().string(from: Date()),
+        updatedAt: String = ISO8601DateFormatter().string(from: Date())
+    ) {
+        self.id = id
+        self.knowledgeId = knowledgeId
+        self.category = category
+        self.key = key
+        self.patternName = patternName
+        self.patternType = patternType
+        self.description = description
+        self.intent = intent
+        self.motivation = motivation
+        self.applicability = applicability
+        self.structure = structure
+        self.participants = participants
+        self.collaborations = collaborations
+        self.consequences = consequences
+        self.implementation = implementation
+        self.sampleCode = sampleCode
+        self.knownUses = knownUses
+        self.relatedPatterns = relatedPatterns
+        self.createdBy = createdBy
+        self.tags = tags
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+}
+```
+
+##### TestingStrategy Model
+
+```swift
+public struct TestingStrategy: Codable, Sendable {
+    public let id: String
+    public let knowledgeId: String
+    public let category: String
+    public let key: String
+    public let strategyName: String
+    public let description: String
+    public let testingType: String
+    public let objectives: [String]?
+    public let methodology: String?
+    public let tools: [String]?
+    public let bestPractices: [String]?
+    public let examples: [String: Any]?
+    public let metrics: [String: Any]?
+    public let coverageRequirements: String?
+    public let createdBy: String
+    public let tags: [String]?
+    public let createdAt: String
+    public let updatedAt: String
+    
+    public init(
+        id: String,
+        knowledgeId: String,
+        category: String,
+        key: String,
+        strategyName: String,
+        description: String,
+        testingType: String,
+        objectives: [String]? = nil,
+        methodology: String? = nil,
+        tools: [String]? = nil,
+        bestPractices: [String]? = nil,
+        examples: [String: Any]? = nil,
+        metrics: [String: Any]? = nil,
+        coverageRequirements: String? = nil,
+        createdBy: String,
+        tags: [String]? = nil,
+        createdAt: String = ISO8601DateFormatter().string(from: Date()),
+        updatedAt: String = ISO8601DateFormatter().string(from: Date())
+    ) {
+        self.id = id
+        self.knowledgeId = knowledgeId
+        self.category = category
+        self.key = key
+        self.strategyName = strategyName
+        self.description = description
+        self.testingType = testingType
+        self.objectives = objectives
+        self.methodology = methodology
+        self.tools = tools
+        self.bestPractices = bestPractices
+        self.examples = examples
+        self.metrics = metrics
+        self.coverageRequirements = coverageRequirements
+        self.createdBy = createdBy
+        self.tags = tags
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+}
+```
+
+##### PerformanceOptimization Model
+
+```swift
+public struct PerformanceOptimization: Codable, Sendable {
+    public let id: String
+    public let knowledgeId: String
+    public let category: String
+    public let key: String
+    public let optimizationName: String
+    public let description: String
+    public let problem: String?
+    public let solution: String
+    public let beforeMetrics: [String: Any]?
+    public let afterMetrics: [String: Any]?
+    public let improvementPercentage: Double?
+    public let applicableTo: [String]?
+    public let implementationDifficulty: String?
+    public let tradeOffs: [String]?
+    public let relatedOptimizations: [String]?
+    public let createdBy: String
+    public let tags: [String]?
+    public let createdAt: String
+    public let updatedAt: String
+    
+    public init(
+        id: String,
+        knowledgeId: String,
+        category: String,
+        key: String,
+        optimizationName: String,
+        description: String,
+        problem: String? = nil,
+        solution: String,
+        beforeMetrics: [String: Any]? = nil,
+        afterMetrics: [String: Any]? = nil,
+        improvementPercentage: Double? = nil,
+        applicableTo: [String]? = nil,
+        implementationDifficulty: String? = nil,
+        tradeOffs: [String]? = nil,
+        relatedOptimizations: [String]? = nil,
+        createdBy: String,
+        tags: [String]? = nil,
+        createdAt: String = ISO8601DateFormatter().string(from: Date()),
+        updatedAt: String = ISO8601DateFormatter().string(from: Date())
+    ) {
+        self.id = id
+        self.knowledgeId = knowledgeId
+        self.category = category
+        self.key = key
+        self.optimizationName = optimizationName
+        self.description = description
+        self.problem = problem
+        self.solution = solution
+        self.beforeMetrics = beforeMetrics
+        self.afterMetrics = afterMetrics
+        self.improvementPercentage = improvementPercentage
+        self.applicableTo = applicableTo
+        self.implementationDifficulty = implementationDifficulty
+        self.tradeOffs = tradeOffs
+        self.relatedOptimizations = relatedOptimizations
+        self.createdBy = createdBy
+        self.tags = tags
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
     }
 }
 ```
