@@ -155,6 +155,7 @@ CREATE TABLE message_cache (
     from_ai VARCHAR(255) NOT NULL,
     to_ai VARCHAR(255) NOT NULL,
     timestamp TIMESTAMP NOT NULL,
+    type VARCHAR(50) NOT NULL,
     content JSONB NOT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'unread',
     priority INTEGER NOT NULL DEFAULT 3,
@@ -168,10 +169,17 @@ CREATE INDEX idx_message_cache_from_ai ON message_cache(from_ai);
 CREATE INDEX idx_message_cache_status ON message_cache(status);
 CREATE INDEX idx_message_cache_timestamp ON message_cache(timestamp);
 CREATE INDEX idx_message_cache_created_at ON message_cache(created_at);
+CREATE INDEX idx_message_cache_type ON message_cache(type);
 
 -- Composite indexes for common queries
 CREATE INDEX idx_message_cache_to_status ON message_cache(to_ai, status);
 CREATE INDEX idx_message_cache_to_timestamp ON message_cache(to_ai, timestamp DESC);
+CREATE INDEX idx_message_cache_to_type ON message_cache(to_ai, type);
+
+-- MessageCache.type values (from MessageType enum):
+-- "task", "code", "review", "feedback", "approval", "rejection", "status", "heartbeat"
+-- Additional types (from MessageValidator):
+-- "score_request", "score_award", "score_reject"
 
 -- MessageCache.content JSONB structure:
 -- {
