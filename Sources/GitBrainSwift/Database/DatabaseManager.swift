@@ -135,6 +135,12 @@ public actor DatabaseManager {
         return BrainStateManager(repository: repository)
     }
     
+    public func createMessageCacheManager(forAI aiName: String) async throws -> MessageCacheManager {
+        let db = try await getSharedDatabase()
+        let repository = FluentMessageCacheRepository(database: db)
+        return MessageCacheManager(repository: repository, fromAI: aiName)
+    }
+    
     public func close() async throws {
         database = nil
         isInitialized = false

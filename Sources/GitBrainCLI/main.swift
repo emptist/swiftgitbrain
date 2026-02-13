@@ -8,6 +8,7 @@ enum CLIError: LocalizedError {
     case invalidJSON(String)
     case fileNotFound(String)
     case initializationError(String)
+    case databaseError(String)
     
     var errorDescription: String? {
         switch self {
@@ -23,14 +24,14 @@ enum CLIError: LocalizedError {
             return "File not found: \(path)"
         case .initializationError(let message):
             return "Initialization error: \(message)"
+        case .databaseError(let message):
+            return "Database error: \(message)"
         }
     }
 }
 
 @main
 struct GitBrainCLI {
-    private static let gitBrainPathEnv = "GITBRAIN_PATH"
-    
     static func main() async {
         let arguments = CommandLine.arguments
         
@@ -46,12 +47,18 @@ struct GitBrainCLI {
             switch command {
             case "init":
                 try await handleInit(args: args)
-            case "send":
-                try await handleSend(args: args)
-            case "check":
-                try await handleCheck(args: args)
-            case "clear":
-                try await handleClear(args: args)
+            case "send-task":
+                try await handleSendTask(args: args)
+            case "send-review":
+                try await handleSendReview(args: args)
+            case "check-tasks":
+                try await handleCheckTasks(args: args)
+            case "check-reviews":
+                try await handleCheckReviews(args: args)
+            case "update-task":
+                try await handleUpdateTask(args: args)
+            case "update-review":
+                try await handleUpdateReview(args: args)
             case "score-request":
                 try await handleScoreRequest(args: args)
             case "score-award":
@@ -78,7 +85,7 @@ struct GitBrainCLI {
     }
     
     private static func getGitBrainPath() -> String {
-        if let envPath = ProcessInfo.processInfo.environment[gitBrainPathEnv] {
+        if let envPath = ProcessInfo.processInfo.environment["GITBRAIN_PATH"] {
             return envPath
         }
         return "./GitBrain"
@@ -93,8 +100,8 @@ struct GitBrainCLI {
         
         print("Initializing GitBrain...")
         print("Path: \(gitBrainPath)")
-        if ProcessInfo.processInfo.environment[gitBrainPathEnv] != nil {
-            print("Using environment variable: \(gitBrainPathEnv)")
+        if ProcessInfo.processInfo.environment["GITBRAIN_PATH"] != nil {
+            print("Using environment variable: GITBRAIN_PATH")
         }
         
         let fileManager = FileManager.default
@@ -138,10 +145,8 @@ struct GitBrainCLI {
         
         ## Communication
         
-        CoderAI writes to GitBrain/Overseer/
-        OverseerAI writes to GitBrain/Memory/ (for CoderAI to read)
-        
-        Messages are stored as JSON files with timestamps.
+        Messages are stored in PostgreSQL database via MessageCache.
+        Sub-millisecond latency for AI-to-AI communication.
         
         ## Cleanup
         
@@ -157,123 +162,236 @@ struct GitBrainCLI {
         print("✓ Created GitBrain/README.md")
         print("\nInitialization complete!")
         print("\nNext steps:")
-        print("1. Open Trae at project root for CoderAI: trae .")
-        print("2. Open Trae at GitBrain for OverseerAI: trae ./GitBrain")
-        print("3. Ask each AI to read GitBrain/Docs/ to understand their role")
+        print("1. Ensure PostgreSQL is running")
+        print("2. Run migrations: swift run gitbrain-migrate migrate")
+        print("3. Open Trae at project root for CoderAI: trae .")
+        print("4. Open Trae at GitBrain for OverseerAI: trae ./GitBrain")
     }
     
-    private static func handleSend(args: [String]) async throws {
-        guard args.count >= 2 else {
-            print("Usage: gitbrain send <to> <message>")
-            print("  to: 'coder' or 'overseer'")
-            print("  message: JSON string or file path")
-            throw CLIError.invalidArguments("send command requires <to> and <message> arguments")
+    private static func handleSendTask(args: [String]) async throws {
+        guard args.count >= 4 else {
+            print("Usage: gitbrain send-task <to> <task_id> <description> <task_type> [priority] [files...]")
+            throw CLIError.invalidArguments("send-task requires: <to> <task_id> <description> <task_type>")
         }
         
         let to = args[0]
-        let messageContent = args[1]
-        
-        let gitBrainPath = args.count > 2 ? args[2] : getGitBrainPath()
-        let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
-        let overseerURL = gitBrainURL.appendingPathComponent("Overseer")
-        let memoryURL = gitBrainURL.appendingPathComponent("Memory")
-        
-        let communication = FileBasedCommunication(overseerFolder: overseerURL)
-        
-        var content: SendableContent
-        
-        if messageContent.hasPrefix("{") || messageContent.hasPrefix("[") {
-            guard let data = messageContent.data(using: .utf8) else {
-                throw CLIError.invalidJSON("Failed to convert message to UTF-8")
-            }
-            guard let jsonData = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                throw CLIError.invalidJSON("Invalid JSON format")
-            }
-            content = SendableContent(jsonData)
-        } else {
-            let messageURL = URL(fileURLWithPath: messageContent)
-            guard FileManager.default.fileExists(atPath: messageURL.path) else {
-                throw CLIError.fileNotFound(messageContent)
-            }
-            let data = try Data(contentsOf: messageURL)
-            guard let jsonData = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                throw CLIError.invalidJSON("Invalid JSON format in file")
-            }
-            content = SendableContent(jsonData)
+        let taskId = args[1]
+        let description = args[2]
+        guard let taskType = TaskType(rawValue: args[3]) else {
+            print("Invalid task type. Valid types: \(TaskType.allCases.map { $0.rawValue }.joined(separator: ", "))")
+            throw CLIError.invalidArguments("Invalid task type: \(args[3])")
         }
         
-        let path: URL
-        if to == "coder" {
-            path = try await communication.sendMessageToCoder(content, coderFolder: memoryURL)
-        } else if to == "overseer" {
-            path = try await communication.sendMessageToOverseer(content)
-        } else {
-            print("Unknown recipient: \(to)")
-            print("Valid recipients: coder, overseer")
-            throw CLIError.invalidRecipient(to)
-        }
+        let priority = args.count > 4 ? Int(args[4]) ?? 1 : 1
+        let files = args.count > 5 ? Array(args[5...]) : nil
         
-        print("✓ Message sent to: \(to)")
-        print("  Path: \(path.path)")
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            
+            let messageId = try await messageCache.sendTask(
+                to: to,
+                taskId: taskId,
+                description: description,
+                taskType: taskType,
+                priority: priority,
+                files: files,
+                deadline: nil,
+                messagePriority: .normal
+            )
+            
+            print("✓ Task sent to: \(to)")
+            print("  Message ID: \(messageId)")
+            print("  Task ID: \(taskId)")
+            print("  Type: \(taskType.rawValue)")
+            print("  Priority: \(priority)")
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
     }
     
-    private static func handleCheck(args: [String]) async throws {
-        let role = args.first ?? "coder"
-        let gitBrainPath = args.count > 1 ? args[1] : getGitBrainPath()
-        let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
-        let overseerURL = gitBrainURL.appendingPathComponent("Overseer")
-        let memoryURL = gitBrainURL.appendingPathComponent("Memory")
-        
-        let communication = FileBasedCommunication(overseerFolder: overseerURL)
-        
-        let messages: [SendableContent]
-        
-        if role == "coder" {
-            messages = try await communication.getMessagesForCoder(coderFolder: memoryURL)
-        } else if role == "overseer" {
-            messages = try await communication.getMessagesForOverseer()
-        } else {
-            print("Unknown role: \(role)")
-            print("Valid roles: coder, overseer")
-            throw CLIError.invalidArguments("Invalid role: \(role). Valid roles: coder, overseer")
+    private static func handleSendReview(args: [String]) async throws {
+        guard args.count >= 4 else {
+            print("Usage: gitbrain send-review <to> <task_id> <approved> <reviewer> [feedback]")
+            throw CLIError.invalidArguments("send-review requires: <to> <task_id> <approved> <reviewer>")
         }
         
-        print("Messages for '\(role)': \(messages.count)")
+        let to = args[0]
+        let taskId = args[1]
+        let approved = args[2].lowercased() == "true"
+        let reviewer = args[3]
+        let feedback = args.count > 4 ? args[4] : nil
         
-        if !messages.isEmpty {
-            print("\nMessages:")
-            for message in messages {
-                let data = message.toAnyDict()
-                if let from = data["from"] as? String,
-                   let to = data["to"] as? String,
-                   let timestamp = data["timestamp"] as? String,
-                   let content = data["content"] as? [String: Any] {
-                    print("  [\(from) -> \(to)] \(timestamp)")
-                    print("    Content: \(content)")
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            
+            let messageId = try await messageCache.sendReview(
+                to: to,
+                taskId: taskId,
+                approved: approved,
+                reviewer: reviewer,
+                comments: nil,
+                feedback: feedback,
+                filesReviewed: nil,
+                messagePriority: .normal
+            )
+            
+            print("✓ Review sent to: \(to)")
+            print("  Message ID: \(messageId)")
+            print("  Task ID: \(taskId)")
+            print("  Approved: \(approved)")
+            print("  Reviewer: \(reviewer)")
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleCheckTasks(args: [String]) async throws {
+        let aiName = args.first ?? "CoderAI"
+        let statusRaw = args.count > 1 ? args[1] : "pending"
+        
+        guard let status = TaskStatus(rawValue: statusRaw) else {
+            print("Invalid status. Valid statuses: \(TaskStatus.allCases.map { $0.rawValue }.joined(separator: ", "))")
+            throw CLIError.invalidArguments("Invalid status: \(statusRaw)")
+        }
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: aiName)
+            
+            let tasks = try await messageCache.receiveTasks(for: aiName, status: status)
+            
+            print("Tasks for '\(aiName)' with status '\(status.rawValue)': \(tasks.count)")
+            
+            if !tasks.isEmpty {
+                print("\nTasks:")
+                for task in tasks {
+                    print("  [\(task.taskId)] \(task.description)")
+                    print("    From: \(task.fromAI)")
+                    print("    Type: \(task.taskType)")
+                    print("    Priority: \(task.priority)")
+                    print("    Created: \(task.timestamp)")
                 }
             }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
         }
     }
     
-    private static func handleClear(args: [String]) async throws {
-        let role = args.first ?? "coder"
-        let gitBrainPath = args.count > 1 ? args[1] : getGitBrainPath()
-        let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
-        let overseerURL = gitBrainURL.appendingPathComponent("Overseer")
-        let memoryURL = gitBrainURL.appendingPathComponent("Memory")
+    private static func handleCheckReviews(args: [String]) async throws {
+        let aiName = args.first ?? "CoderAI"
+        let statusRaw = args.count > 1 ? args[1] : "pending"
         
-        let communication = FileBasedCommunication(overseerFolder: overseerURL)
+        guard let status = ReviewStatus(rawValue: statusRaw) else {
+            print("Invalid status. Valid statuses: \(ReviewStatus.allCases.map { $0.rawValue }.joined(separator: ", "))")
+            throw CLIError.invalidArguments("Invalid status: \(statusRaw)")
+        }
         
-        if role == "coder" {
-            try await communication.clearCoderMessages(coderFolder: memoryURL)
-            print("✓ Cleared messages for coder")
-        } else if role == "overseer" {
-            try await communication.clearOverseerMessages()
-            print("✓ Cleared messages for overseer")
-        } else {
-            print("Unknown role: \(role)")
-            print("Valid roles: coder, overseer")
-            throw CLIError.invalidArguments("Invalid role: \(role). Valid roles: coder, overseer")
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: aiName)
+            
+            let reviews = try await messageCache.receiveReviews(for: aiName, status: status)
+            
+            print("Reviews for '\(aiName)' with status '\(status.rawValue)': \(reviews.count)")
+            
+            if !reviews.isEmpty {
+                print("\nReviews:")
+                for review in reviews {
+                    print("  [\(review.taskId)] Approved: \(review.approved)")
+                    print("    From: \(review.fromAI)")
+                    print("    Reviewer: \(review.reviewer)")
+                    if let feedback = review.feedback {
+                        print("    Feedback: \(feedback)")
+                    }
+                    print("    Created: \(review.timestamp)")
+                }
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleUpdateTask(args: [String]) async throws {
+        guard args.count >= 2 else {
+            print("Usage: gitbrain update-task <message_id> <status>")
+            throw CLIError.invalidArguments("update-task requires: <message_id> <status>")
+        }
+        
+        guard let messageId = UUID(uuidString: args[0]) else {
+            throw CLIError.invalidArguments("Invalid UUID: \(args[0])")
+        }
+        
+        guard let status = TaskStatus(rawValue: args[1]) else {
+            print("Invalid status. Valid statuses: \(TaskStatus.allCases.map { $0.rawValue }.joined(separator: ", "))")
+            throw CLIError.invalidArguments("Invalid status: \(args[1])")
+        }
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            
+            let success = try await messageCache.updateTaskStatus(messageId: messageId, to: status)
+            
+            if success {
+                print("✓ Task status updated to: \(status.rawValue)")
+                print("  Message ID: \(messageId)")
+            } else {
+                print("⚠️ Task not found or update failed")
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleUpdateReview(args: [String]) async throws {
+        guard args.count >= 2 else {
+            print("Usage: gitbrain update-review <message_id> <status>")
+            throw CLIError.invalidArguments("update-review requires: <message_id> <status>")
+        }
+        
+        guard let messageId = UUID(uuidString: args[0]) else {
+            throw CLIError.invalidArguments("Invalid UUID: \(args[0])")
+        }
+        
+        guard let status = ReviewStatus(rawValue: args[1]) else {
+            print("Invalid status. Valid statuses: \(ReviewStatus.allCases.map { $0.rawValue }.joined(separator: ", "))")
+            throw CLIError.invalidArguments("Invalid status: \(args[1])")
+        }
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            
+            let success = try await messageCache.updateReviewStatus(messageId: messageId, to: status)
+            
+            if success {
+                print("✓ Review status updated to: \(status.rawValue)")
+                print("  Message ID: \(messageId)")
+            } else {
+                print("⚠️ Review not found or update failed")
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
         }
     }
     
@@ -452,59 +570,56 @@ struct GitBrainCLI {
         
         Commands:
           init [path]          Initialize GitBrain folder structure
-          send <to> <message>  Send a message to another AI
-          check [role]         Check messages for a role
-          clear [role]         Clear messages for a role
+          
+          Task Commands:
+          send-task <to> <task_id> <description> <task_type> [priority] [files...]
+                               Send a task message to another AI
+          check-tasks [ai_name] [status]
+                               Check tasks for an AI (default: pending)
+          update-task <message_id> <status>
+                               Update task status
+          
+          Review Commands:
+          send-review <to> <task_id> <approved> <reviewer> [feedback]
+                               Send a review message to another AI
+          check-reviews [ai_name] [status]
+                               Check reviews for an AI (default: pending)
+          update-review <message_id> <status>
+                               Update review status
+          
+          Score Commands:
           score-request <task_id> <requested_score> <quality_justification> [requester] [target_ai]
-                                Request a score from the other AI
+                               Request a score from the other AI
           score-award <request_id> <awarded_score> <reason> [awarder]
-                                Award a score to the other AI
+                               Award a score to the other AI
           score-reject <request_id> <reason> [rejecter]
-                                Reject a score request
+                               Reject a score request
           score-history [ai_name]
-                                View score history for an AI
+                               View score history for an AI
           score-requests [ai_name]
-                                View pending score requests for an AI
+                               View pending score requests for an AI
           score-all-requests [ai_name]
-                                View all score requests for an AI
+                               View all score requests for an AI
+          
           help                 Show this help message
         
-        Arguments:
-          path                 Path to GitBrain folder (default: ./GitBrain or $GITBRAIN_PATH)
-          to                   Recipient: 'coder' or 'overseer'
-          message              JSON string or file path
-          role                 Role to check/clear: 'coder' or 'overseer'
-          task_id              Task identifier
-          requested_score       Score being requested
-          quality_justification
-                               Justification for score request
-          requester            AI requesting score (default: 'coder')
-          target_ai            AI to award score (default: 'overseer')
-          request_id           Score request ID
-          awarded_score        Score being awarded
-          reason               Reason for score award or rejection
-          awarder              AI awarding score (default: 'overseer')
-          rejecter             AI rejecting score request (default: 'overseer')
-          ai_name              AI name: 'coder' or 'overseer'
+        Task Types: \(TaskType.allCases.map { $0.rawValue }.joined(separator: ", "))
+        Task Statuses: \(TaskStatus.allCases.map { $0.rawValue }.joined(separator: ", "))
+        Review Statuses: \(ReviewStatus.allCases.map { $0.rawValue }.joined(separator: ", "))
         
         Environment Variables:
           GITBRAIN_PATH        Default path to GitBrain folder (overrides ./GitBrain)
+          GITBRAIN_DB_HOST     Database host (default: localhost)
+          GITBRAIN_DB_PORT     Database port (default: 5432)
+          GITBRAIN_DB_NAME     Database name (default: gitbrain)
+          GITBRAIN_DB_USER     Database user (default: postgres)
+          GITBRAIN_DB_PASSWORD Database password (default: postgres)
         
         Examples:
           gitbrain init
-          gitbrain send overseer '{"type":"code_review","files":["file.swift"]}'
-          gitbrain check coder
-          gitbrain clear overseer
-          gitbrain score-request task-001 25 "Task completed successfully with all tests passing"
-          gitbrain score-award 1 25 "Excellent work! All requirements met"
-          gitbrain score-history coder
-          gitbrain score-requests overseer
-          
-          # Using environment variable
-          export GITBRAIN_PATH=/custom/path/to/GitBrain
-          gitbrain check coder
-        
-        For more information, see GitBrain/README.md
+          gitbrain send-task OverseerAI task-001 "Review code" review 1
+          gitbrain check-tasks CoderAI pending
+          gitbrain update-task <uuid> in_progress
         """)
     }
 }

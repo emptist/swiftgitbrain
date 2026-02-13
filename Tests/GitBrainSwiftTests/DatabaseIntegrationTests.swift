@@ -6,11 +6,11 @@ import Foundation
 struct DatabaseIntegrationTests {
     private func getConfig() -> DatabaseConfig {
         return DatabaseConfig(
-            host: ProcessInfo.processInfo.environment["GITBRAIN_DB_HOST"] ?? "localhost",
-            port: Int(ProcessInfo.processInfo.environment["GITBRAIN_DB_PORT"] ?? "5432") ?? 5432,
-            database: ProcessInfo.processInfo.environment["GITBRAIN_DB_NAME"] ?? "gitbrain_test",
-            username: ProcessInfo.processInfo.environment["GITBRAIN_DB_USER"] ?? "jk",
-            password: ProcessInfo.processInfo.environment["GITBRAIN_DB_PASSWORD"] ?? ""
+            host: "localhost",
+            port: 5432,
+            database: "gitbrain_test",
+            username: "jk",
+            password: ""
         )
     }
     
@@ -124,10 +124,13 @@ struct DatabaseIntegrationTests {
         do {
             let kbRepo = try await dbManager.createKnowledgeRepository()
             
+            try await kbRepo.delete(category: "search_test", key: "item1")
+            try await kbRepo.delete(category: "search_test", key: "item2")
+            
             try await kbRepo.add(
                 category: "search_test",
                 key: "item1",
-                value: SendableContent(["content": "This is a test item with keyword"]),
+                value: SendableContent(["content": "This is a test item with UNIQUEWORD"]),
                 metadata: SendableContent(["tag": "test"]),
                 timestamp: Date()
             )
@@ -135,14 +138,14 @@ struct DatabaseIntegrationTests {
             try await kbRepo.add(
                 category: "search_test",
                 key: "item2",
-                value: SendableContent(["content": "Another item without the keyword"]),
+                value: SendableContent(["content": "Another item without the special word"]),
                 metadata: SendableContent(["tag": "other"]),
                 timestamp: Date()
             )
             
-            let results = try await kbRepo.search(category: "search_test", query: "keyword")
+            let results = try await kbRepo.search(category: "search_test", query: "UNIQUEWORD")
             #expect(results.count == 1)
-            #expect(results[0].value.toAnyDict()["content"] as? String == "This is a test item with keyword")
+            #expect(results[0].value.toAnyDict()["content"] as? String == "This is a test item with UNIQUEWORD")
             
             try await dbManager.close()
         } catch {

@@ -1,5 +1,6 @@
 import Fluent
 import Foundation
+import PostgresKit
 
 public enum DatabaseError: Error {
     case connectionFailed
@@ -19,7 +20,13 @@ public actor MigrationManager {
     public func migrate() async throws {
         let migrations: [AsyncMigration] = [
             CreateKnowledgeItems(),
-            CreateBrainStates()
+            CreateBrainStates(),
+            CreateTaskMessages(),
+            CreateReviewMessages(),
+            CreateCodeMessages(),
+            CreateScoreMessages(),
+            CreateFeedbackMessages(),
+            CreateHeartbeatMessages()
         ]
         
         guard let database = databases.database(
@@ -31,13 +38,29 @@ public actor MigrationManager {
         }
         
         for migration in migrations {
-            try await migration.prepare(on: database)
-            GitBrainLogger.info("Migration completed: \(type(of: migration))")
+            do {
+                try await migration.prepare(on: database)
+                GitBrainLogger.info("Migration completed: \(type(of: migration))")
+            } catch {
+                let errorString = String(reflecting: error)
+                if errorString.contains("already exists") || errorString.contains("42P07") {
+                    GitBrainLogger.info("Migration skipped (table exists): \(type(of: migration))")
+                } else {
+                    GitBrainLogger.error("Migration failed: \(type(of: migration)) - \(error)")
+                    throw error
+                }
+            }
         }
     }
     
     public func revert() async throws {
         let migrations: [AsyncMigration] = [
+            CreateHeartbeatMessages(),
+            CreateFeedbackMessages(),
+            CreateScoreMessages(),
+            CreateCodeMessages(),
+            CreateReviewMessages(),
+            CreateTaskMessages(),
             CreateBrainStates(),
             CreateKnowledgeItems()
         ]

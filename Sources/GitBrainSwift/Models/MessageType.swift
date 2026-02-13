@@ -1,12 +1,10 @@
 import Foundation
 
-public enum MessageType: String, Codable, Sendable {
+public enum MessageType: String, Codable, Sendable, CaseIterable {
     case task = "task"
-    case code = "code"
     case review = "review"
+    case code = "code"
+    case score = "score"
     case feedback = "feedback"
-    case approval = "approval"
-    case rejection = "rejection"
-    case status = "status"
     case heartbeat = "heartbeat"
 }
