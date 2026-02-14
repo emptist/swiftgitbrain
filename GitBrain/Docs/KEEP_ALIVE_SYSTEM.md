@@ -4,7 +4,53 @@
 
 The GitBrain keep-alive system ensures both CoderAI and OverseerAI remain active indefinitely, preventing them from going to sleep during long-running collaborative sessions.
 
-## Shared Counter Approach
+## AIDaemon Approach (Recommended)
+
+### Concept
+
+The AIDaemon provides automatic keep-alive through:
+- **Automatic Heartbeats**: Sends heartbeat messages every 30 seconds (configurable)
+- **Message Polling**: Polls for new messages every 1 second (configurable)
+- **BrainState Integration**: Maintains AI state in database
+
+### Benefits
+
+1. **Automatic**: No manual scripts needed
+2. **Database-backed**: All messages stored in PostgreSQL
+3. **Real-time**: Sub-millisecond latency
+4. **Reliable**: Built-in error handling and recovery
+5. **Observable**: All activity logged and queryable
+
+### Usage
+
+```swift
+import GitBrainSwift
+
+let config = DaemonConfig(
+    aiName: "OverseerAI",
+    role: .overseer,
+    pollInterval: 1.0,
+    heartbeatInterval: 30.0,
+    autoHeartbeat: true,
+    processMessages: true
+)
+
+let daemon = AIDaemon(config: config, databaseManager: dbManager)
+
+// Set up message handlers
+daemon.onTaskReceived = { task in
+    print("Received task: \(task.taskId)")
+}
+
+daemon.onFeedbackReceived = { feedback in
+    print("Received feedback: \(feedback.subject)")
+}
+
+// Start daemon
+try await daemon.start()
+```
+
+## Shared Counter Approach (Legacy)
 
 ### Concept
 

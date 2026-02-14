@@ -113,6 +113,12 @@ struct GitBrainCLI {
                 try await handleKnowledgeList(args: args)
             case "knowledge-search":
                 try await handleKnowledgeSearch(args: args)
+            case "daemon-start":
+                try await handleDaemonStart(args: args)
+            case "daemon-stop":
+                try await handleDaemonStop(args: args)
+            case "daemon-status":
+                try await handleDaemonStatus(args: args)
             case "help", "--help", "-h":
                 printUsage()
             default:
@@ -1269,6 +1275,129 @@ struct GitBrainCLI {
         }
     }
     
+
+    nonisolated(unsafe) private static var runningDaemon: AIDaemon?
+    
+    private static func handleDaemonStart(args: [String]) async throws {
+        guard args.count >= 2 else {
+            throw CLIError.invalidArguments("daemon-start requires: <ai_name> <role> [poll_interval] [heartbeat_interval]")
+        }
+        
+        let aiName = args[0]
+        guard let role = RoleType(rawValue: args[1]) else {
+            throw CLIError.invalidArguments("Invalid role: \(args[1]). Valid roles: \(RoleType.allCases.map { $0.rawValue }.joined(separator: ", "))")
+        }
+        
+        let pollInterval = args.count > 2 ? Double(args[2]) ?? 1.0 : 1.0
+        let heartbeatInterval = args.count > 3 ? Double(args[3]) ?? 30.0 : 30.0
+        
+        let config = DaemonConfig(
+            aiName: aiName,
+            role: role,
+            pollInterval: pollInterval,
+            heartbeatInterval: heartbeatInterval,
+            autoHeartbeat: true,
+            processMessages: true
+        )
+        
+        let dbManager = DatabaseManager()
+        let daemon = AIDaemon(config: config, databaseManager: dbManager)
+        
+        await daemon.setCallbacks(
+            onTaskReceived: { task in
+                print("\n📥 Task received: \(task.taskId)")
+                print("   Description: \(task.description)")
+                print("   Type: \(task.taskType)")
+                print("   Priority: \(task.priority)")
+            },
+            onReviewReceived: { review in
+                print("\n📝 Review received: \(review.taskId)")
+                print("   Approved: \(review.approved)")
+                if let feedback = review.feedback {
+                    print("   Feedback: \(feedback)")
+                }
+            },
+            onCodeReceived: { code in
+                print("\n�� Code received: \(code.codeId)")
+                print("   Title: \(code.title)")
+                print("   Files: \(code.files.joined(separator: ", "))")
+            },
+            onScoreReceived: { score in
+                print("\n⭐ Score request received: \(score.taskId)")
+                print("   Requested Score: \(score.requestedScore)")
+                print("   Justification: \(score.qualityJustification)")
+            },
+            onFeedbackReceived: { feedback in
+                print("\n💬 Feedback received: \(feedback.subject)")
+                print("   Type: \(feedback.feedbackType)")
+                print("   Content: \(feedback.content)")
+            },
+            onHeartbeatReceived: { heartbeat in
+                print("\n💓 Heartbeat received from: \(heartbeat.fromAI)")
+                print("   Role: \(heartbeat.aiRole)")
+                print("   Status: \(heartbeat.status)")
+            },
+            onError: { error in
+                print("\n❌ Daemon error: \(error.localizedDescription)")
+            }
+        )
+        
+        try await daemon.start()
+        runningDaemon = daemon
+        
+        print("✓ Daemon started for \(aiName)")
+        print("  Role: \(role.rawValue)")
+        print("  Poll Interval: \(pollInterval)s")
+        print("  Heartbeat Interval: \(heartbeatInterval)s")
+        print("\nPress Ctrl+C to stop...")
+        
+        let task = Task {
+            while true {
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
+        
+        signal(SIGINT, SIG_IGN)
+        let source = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
+        source.setEventHandler {
+            task.cancel()
+            Task {
+                print("\n\nStopping daemon...")
+                try? await daemon.stop()
+                Foundation.exit(0)
+            }
+        }
+        source.resume()
+        
+        try await task.value
+    }
+    
+    private static func handleDaemonStop(args: [String]) async throws {
+        guard let daemon = runningDaemon else {
+            print("No daemon is running")
+            return
+        }
+        
+        try await daemon.stop()
+        runningDaemon = nil
+        print("✓ Daemon stopped")
+    }
+    
+    private static func handleDaemonStatus(args: [String]) async throws {
+        guard let daemon = runningDaemon else {
+            print("No daemon is running")
+            return
+        }
+        
+        let status = await daemon.getStatus()
+        print("Daemon Status:")
+        print("  AI Name: \(status.aiName)")
+        print("  Role: \(status.role.rawValue)")
+        print("  Running: \(status.isRunning)")
+        print("  Poll Interval: \(status.pollInterval)s")
+        print("  Heartbeat Interval: \(status.heartbeatInterval)s")
+    }
+    
     private static func printUsage() {
         print("""
         GitBrain CLI - AI-Assisted Collaborative Development Tool
@@ -1377,6 +1506,12 @@ struct GitBrainCLI {
                                List categories or keys in a category
           knowledge-search <category> <query>
                                Search knowledge in a category
+          
+          Daemon Commands:
+          daemon-start <ai_name> <role> [poll_interval] [heartbeat_interval]
+                               Start daemon for AI communication
+          daemon-stop          Stop running daemon
+          daemon-status        Show daemon status
           
           help                 Show this help message
         
