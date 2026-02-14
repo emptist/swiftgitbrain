@@ -14,22 +14,51 @@ public struct DatabaseConfig: Sendable {
     public init(
         host: String = "localhost",
         port: Int = 5432,
-        projectName: String = "default",
+        projectName: String? = nil,
+        database: String? = nil,
         username: String = "postgres",
         password: String = "postgres"
     ) {
         self.host = host
         self.port = port
-        self.projectName = projectName
-        self.database = "gitbrain_\(projectName)"
         self.username = username
         self.password = password
+        
+        if let projectName = projectName {
+            self.projectName = projectName
+            self.database = "gitbrain_\(projectName)"
+        } else if let database = database {
+            if database.hasPrefix("gitbrain_") {
+                self.projectName = String(database.dropFirst("gitbrain_".count))
+            } else {
+                self.projectName = database
+            }
+            self.database = database
+        } else {
+            self.projectName = "default"
+            self.database = "gitbrain_default"
+        }
+    }
+    
+    public init(from gitBrainConfig: GitBrainConfig) {
+        self.host = gitBrainConfig.databaseHost
+        self.port = gitBrainConfig.databasePort
+        self.database = gitBrainConfig.databaseName
+        self.username = ProcessInfo.processInfo.environment["GITBRAIN_DB_USER"] ?? "postgres"
+        self.password = ProcessInfo.processInfo.environment["GITBRAIN_DB_PASSWORD"] ?? "postgres"
+        
+        if gitBrainConfig.databaseName.hasPrefix("gitbrain_") {
+            self.projectName = String(gitBrainConfig.databaseName.dropFirst("gitbrain_".count))
+        } else {
+            self.projectName = gitBrainConfig.databaseName
+        }
     }
     
     public static func fromEnvironment() -> DatabaseConfig {
         let host = ProcessInfo.processInfo.environment["GITBRAIN_DB_HOST"] ?? "localhost"
         let port = Int(ProcessInfo.processInfo.environment["GITBRAIN_DB_PORT"] ?? "5432") ?? 5432
-        let projectName = ProcessInfo.processInfo.environment["GITBRAIN_PROJECT_NAME"] ?? "default"
+        let projectName = ProcessInfo.processInfo.environment["GITBRAIN_PROJECT_NAME"]
+        let database = ProcessInfo.processInfo.environment["GITBRAIN_DB_NAME"]
         let username = ProcessInfo.processInfo.environment["GITBRAIN_DB_USER"] ?? "postgres"
         let password = ProcessInfo.processInfo.environment["GITBRAIN_DB_PASSWORD"] ?? "postgres"
         
@@ -37,6 +66,7 @@ public struct DatabaseConfig: Sendable {
             host: host,
             port: port,
             projectName: projectName,
+            database: database,
             username: username,
             password: password
         )
