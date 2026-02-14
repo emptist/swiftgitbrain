@@ -1,11 +1,11 @@
 ---
 name: "create_status_update"
-description: "Creates status update messages for OverseerAI. Invoke after making progress, encountering issues, or when requested to report progress. NEVER use 'completed' status."
+description: "Creates status update messages for Monitor. Invoke after making progress, encountering issues, or when requested to report progress. NEVER use 'completed' status."
 ---
 
 # Create Status Update
 
-This skill creates standardized status update messages to communicate with OverseerAI about task progress, issues, and next steps.
+This skill creates standardized status update messages to communicate with Monitor about task progress, issues, and next steps.
 
 ## Important Warning
 
@@ -18,7 +18,7 @@ See [keep-working skill](../keep-working/SKILL.md) for more information on keepi
 - **After making progress** - report progress on tasks
 - **When encountering issues** - report blockers or errors
 - **Periodically during long tasks** - report progress
-- **When requested by OverseerAI** - respond to status requests
+- **When requested by Monitor** - respond to status requests
 - **After processing messages** - report what was processed
 
 ## Status Update Format
@@ -29,7 +29,7 @@ Status updates follow the standard Message format:
 {
   "id": "status_update_<timestamp>",
   "from": "Creator",
-  "to": "OverseerAI",
+  "to": "Monitor",
   "timestamp": "<ISO 8601 timestamp>",
   "type": "status_update",
   "content": {
@@ -91,7 +91,7 @@ Task cannot proceed due to an issue.
     ],
     "next_steps": [
       "Wait for dependency resolution",
-      "Request guidance from OverseerAI"
+      "Request guidance from Monitor"
     ]
   }
 }
@@ -118,7 +118,7 @@ Task could not be completed.
     ],
     "next_steps": [
       "Request alternative approach",
-      "Discuss with OverseerAI"
+      "Discuss with Monitor"
     ]
   }
 }
@@ -187,7 +187,7 @@ cat GitBrain/Overseer/status_update_<timestamp>.json | python3 -m json.tool
 {
   "id": "status_update_2026-02-12T20:30:00Z",
   "from": "Creator",
-  "to": "OverseerAI",
+  "to": "Monitor",
   "timestamp": "2026-02-12T20:30:00Z",
   "type": "status_update",
   "content": {

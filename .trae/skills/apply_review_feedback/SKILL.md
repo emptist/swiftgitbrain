@@ -1,11 +1,11 @@
 ---
 name: "apply_review_feedback"
-description: "Applies review feedback from OverseerAI to code. Invoke when receiving review messages or after code review feedback."
+description: "Applies review feedback from Monitor to code. Invoke when receiving review messages or after code review feedback."
 ---
 
 # Apply Review Feedback
 
-This skill processes review feedback from OverseerAI and applies the necessary changes to the codebase.
+This skill processes review feedback from Monitor and applies the necessary changes to the codebase.
 
 ## When to Use
 
@@ -21,7 +21,7 @@ Review messages follow the standard Message format:
 ```json
 {
   "id": "review_<timestamp>",
-  "from": "OverseerAI",
+  "from": "Monitor",
   "to": "Creator",
   "timestamp": "<ISO 8601 timestamp>",
   "type": "review",
@@ -79,7 +79,7 @@ Based on the review status:
 
 #### `rejected`
 - Understand why the work was rejected
-- Discuss with OverseerAI if clarification needed
+- Discuss with Monitor if clarification needed
 - Replan or restart the task as appropriate
 - Send status update
 
@@ -143,13 +143,13 @@ swiftlint
 
 ### Step 6: Send Status Update
 
-After applying changes and testing, send a status update to OverseerAI:
+After applying changes and testing, send a status update to Monitor:
 
 ```json
 {
   "id": "status_update_<timestamp>",
   "from": "Creator",
-  "to": "OverseerAI",
+  "to": "Monitor",
   "timestamp": "<ISO 8601 timestamp>",
   "type": "status_update",
   "content": {
@@ -189,7 +189,7 @@ mv /Users/jk/gits/hub/gitbrains/swiftgitbrain/GitBrain/Memory/ToProcess/review_<
 ```json
 {
   "id": "review_async_syntax_fixes_2026-02-12T20:05:00Z",
-  "from": "OverseerAI",
+  "from": "Monitor",
   "to": "Creator",
   "timestamp": "2026-02-12T20:05:00Z",
   "type": "review",
@@ -229,7 +229,7 @@ mv /Users/jk/gits/hub/gitbrains/swiftgitbrain/GitBrain/Memory/ToProcess/review_<
 {
   "id": "status_update_2026-02-12T20:10:00Z",
   "from": "Creator",
-  "to": "OverseerAI",
+  "to": "Monitor",
   "timestamp": "2026-02-12T20:10:00Z",
   "type": "status_update",
   "content": {

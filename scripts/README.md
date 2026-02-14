@@ -1,6 +1,6 @@
 # Automated Keep-Alive Scripts for Endless AI Collaboration
 
-This directory contains automated scripts that enable continuous collaboration between Creator and OverseerAI by running forever loops that check for messages and send heartbeats.
+This directory contains automated scripts that enable continuous collaboration between Creator and Monitor by running forever loops that check for messages and send heartbeats.
 
 ## Overview
 
@@ -15,14 +15,14 @@ These scripts implement the keep-alive skill by:
 ### Creator Script: `coder_keepalive_loop.sh`
 
 Automated script for Creator that:
-- Checks for messages from OverseerAI every 60 seconds
-- Sends heartbeat to OverseerAI every 60 seconds
+- Checks for messages from Monitor every 60 seconds
+- Sends heartbeat to Monitor every 60 seconds
 - Processes incoming messages (tasks, reviews, approvals, rejections, etc.)
 - Provides colored logging output
 
-### OverseerAI Script: `overseer_keepalive_loop.sh`
+### Monitor Script: `overseer_keepalive_loop.sh`
 
-Automated script for OverseerAI that:
+Automated script for Monitor that:
 - Checks for messages from Creator every 60 seconds
 - Sends heartbeat to Creator every 60 seconds
 - Processes incoming messages (code submissions, status updates, etc.)
@@ -44,7 +44,7 @@ Automated script for OverseerAI that:
 
 3. The script will run forever until you press Ctrl+C to stop it.
 
-### For OverseerAI
+### For Monitor
 
 1. Navigate to project root:
    ```bash
@@ -82,9 +82,9 @@ Example output:
 [2026-02-12 01:20:00] Starting Creator automated keep-alive loop...
 [2026-02-12 01:20:00] Check interval: 20s, Heartbeat interval: 60s
 [2026-02-12 01:20:00] Press Ctrl+C to stop
-[2026-02-12 01:20:00] Checking for messages from OverseerAI...
-[2026-02-12 01:20:00] No new messages from OverseerAI
-[2026-02-12 01:20:00] Sending heartbeat to OverseerAI...
+[2026-02-12 01:20:00] Checking for messages from Monitor...
+[2026-02-12 01:20:00] No new messages from Monitor
+[2026-02-12 01:20:00] Sending heartbeat to Monitor...
 [2026-02-12 01:20:00] Heartbeat sent successfully
 [2026-02-12 01:20:00] Waiting 20s before next check...
 ```
@@ -93,14 +93,14 @@ Example output:
 
 ### Creator Processes
 
-- **task**: Task assignment from OverseerAI
+- **task**: Task assignment from Monitor
 - **review**: Code review feedback
 - **approval**: Approval notification
 - **rejection**: Rejection notification
-- **heartbeat**: Heartbeat from OverseerAI
-- **status**: Status update from OverseerAI
+- **heartbeat**: Heartbeat from Monitor
+- **status**: Status update from Monitor
 
-### OverseerAI Processes
+### Monitor Processes
 
 - **code**: Code submission from Creator
 - **status**: Status update from Creator
@@ -118,7 +118,7 @@ cd /Users/jk/gits/hub/gitbrains/swiftgitbrain
 ./scripts/coder_keepalive_loop.sh
 ```
 
-### Terminal 2 (OverseerAI):
+### Terminal 2 (Monitor):
 ```bash
 cd /Users/jk/gits/hub/gitbrains/swiftgitbrain
 ./scripts/overseer_keepalive_loop.sh
@@ -165,7 +165,7 @@ chmod +x scripts/overseer_keepalive_loop.sh
 These scripts can be integrated with IDE terminals:
 1. Open multiple terminals in your IDE
 2. Run Creator script in one terminal
-3. Run OverseerAI script in another terminal
+3. Run Monitor script in another terminal
 4. Both AIs will stay alive and collaborate continuously
 
 ## Benefits

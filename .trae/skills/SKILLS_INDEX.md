@@ -53,18 +53,18 @@ This directory contains skills for autonomous AI development in the GitBrainSwif
 ### Collaboration Skills
 
 #### [Create Status Update](./create_status_update/SKILL.md)
-**Purpose**: Create standardized status updates for OverseerAI
+**Purpose**: Create standardized status updates for Monitor
 
 **When to Use**:
 - After making progress
 - When encountering issues
 - Periodically during long tasks
-- When requested by OverseerAI
+- When requested by Monitor
 
 **Output**: JSON status update with progress and next steps
 
 #### [Apply Review Feedback](./apply_review_feedback/SKILL.md)
-**Purpose**: Apply code review feedback from OverseerAI
+**Purpose**: Apply code review feedback from Monitor
 
 **When to Use**:
 - Receiving review feedback

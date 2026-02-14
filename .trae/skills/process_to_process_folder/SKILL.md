@@ -11,7 +11,7 @@ This skill automatically processes files from the ToProcess folder according to 
 
 - **Trigger**: New files appear in `GitBrain/Memory/ToProcess/`
 - **Proactive check**: Periodically check for new files when idle
-- **After receiving messages**: Check if OverseerAI sent new task files
+- **After receiving messages**: Check if Monitor sent new task files
 
 ## Processing Workflow
 
@@ -74,7 +74,7 @@ mv /Users/jk/gits/hub/gitbrains/swiftgitbrain/GitBrain/Memory/ToProcess/file1.js
 
 ### Step 5: Send Status Update (Optional)
 
-After processing all files, send a status update to OverseerAI:
+After processing all files, send a status update to Monitor:
 
 1. Create a status update JSON file in `GitBrain/Overseer/`
 2. Include summary of processed files

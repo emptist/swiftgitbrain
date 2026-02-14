@@ -19,7 +19,7 @@ Use the [keep-working skill](../keep-working/SKILL.md) to maintain continuous AI
 
 The keepalive counter system was designed to:
 - Use a shared file (`GitBrain/keepalive_counter.txt`) that both AIs increment
-- Increment at regular intervals (Creator every 60s, OverseerAI every 90s)
+- Increment at regular intervals (Creator every 60s, Monitor every 90s)
 - Provide proof of life through counter value
 
 However, this approach failed because:

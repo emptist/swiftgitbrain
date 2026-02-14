@@ -115,7 +115,7 @@ Report progress during and after execution:
 {
   "id": "status_update_<timestamp>",
   "from": "Creator",
-  "to": "OverseerAI",
+  "to": "Monitor",
   "timestamp": "<ISO 8601 timestamp>",
   "type": "status_update",
   "content": {
