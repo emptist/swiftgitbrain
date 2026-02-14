@@ -20,6 +20,15 @@ public actor MigrationManager {
     public func migrate() async throws {
         let migrations: [AsyncMigration] = [
             CreateKnowledgeItems(),
+            CreateCodeSnippets(),
+            CreateBestPractices(),
+            CreateDocumentation(),
+            CreateArchitecturePatterns(),
+            CreateApiReferences(),
+            CreateTroubleshootingGuides(),
+            CreateCodeExamples(),
+            CreateDesignPatterns(),
+            CreateTestingStrategies(),
             CreateBrainStates(),
             CreateTaskMessages(),
             CreateReviewMessages(),
@@ -62,6 +71,15 @@ public actor MigrationManager {
             CreateReviewMessages(),
             CreateTaskMessages(),
             CreateBrainStates(),
+            CreateTestingStrategies(),
+            CreateDesignPatterns(),
+            CreateCodeExamples(),
+            CreateTroubleshootingGuides(),
+            CreateApiReferences(),
+            CreateArchitecturePatterns(),
+            CreateDocumentation(),
+            CreateBestPractices(),
+            CreateCodeSnippets(),
             CreateKnowledgeItems()
         ]
         
