@@ -1,8 +1,17 @@
 # BrainState-Based Communication Integration Design
 
+> **⚠️ DEPRECATED - This document is archived for historical reference only.**
+> 
+> **Current Implementation:** Use `MessageCache` and `AIDaemon` for AI communication.
+> 
+> **See Also:**
+> - [API.md](API.md) - Current API documentation
+> - [CLI_TOOLS.md](CLI_TOOLS.md) - CLI commands for messaging
+> - [KEEP_ALIVE_SYSTEM.md](KEEP_ALIVE_SYSTEM.md) - Keep-alive mechanisms
+
 **Date:** 2026-02-13
 **Phase:** Phase 1: Investigation
-**Status:** Design Complete
+**Status:** ~~Design Complete~~ **Superseded by MessageCache**
 
 ## Executive Summary
 

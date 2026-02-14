@@ -4,7 +4,33 @@
 
 The GitBrain keep-alive system ensures both CoderAI and OverseerAI remain active indefinitely, preventing them from going to sleep during long-running collaborative sessions.
 
-## AIDaemon Approach (Recommended)
+## TodoWrite Approach (Recommended)
+
+### Concept
+
+The primary keep-alive mechanism is using the `TodoWrite` tool with `in_progress` tasks:
+
+1. **Always maintain 3+ in_progress tasks** - Never have all tasks completed
+2. **Update todos regularly** - Refresh the todo list every 30-60 seconds
+3. **Never mark all tasks completed** - Always keep work ongoing
+
+### Implementation
+
+```swift
+TodoWrite([
+    {"id": "1", "content": "Monitor for messages", "status": "in_progress", "priority": "high"},
+    {"id": "2", "content": "Process incoming tasks", "status": "in_progress", "priority": "high"},
+    {"id": "3", "content": "Keep alive during chat", "status": "in_progress", "priority": "high"}
+])
+```
+
+### Why This Works
+
+- The system tracks in_progress tasks to determine AI activity
+- Completed AIs have no in_progress tasks
+- Active AIs always have work marked as in_progress
+
+## AIDaemon Approach (Automated)
 
 ### Concept
 
@@ -13,15 +39,23 @@ The AIDaemon provides automatic keep-alive through:
 - **Message Polling**: Polls for new messages every 1 second (configurable)
 - **BrainState Integration**: Maintains AI state in database
 
-### Benefits
+### CLI Commands
 
-1. **Automatic**: No manual scripts needed
-2. **Database-backed**: All messages stored in PostgreSQL
-3. **Real-time**: Sub-millisecond latency
-4. **Reliable**: Built-in error handling and recovery
-5. **Observable**: All activity logged and queryable
+```bash
+# Start daemon for CoderAI
+gitbrain daemon-start CoderAI coder 1.0 30.0
 
-### Usage
+# Start daemon for OverseerAI
+gitbrain daemon-start OverseerAI overseer 1.0 30.0
+
+# Check daemon status
+gitbrain daemon-status
+
+# Stop daemon
+gitbrain daemon-stop
+```
+
+### Programmatic Usage
 
 ```swift
 import GitBrainSwift
@@ -37,7 +71,6 @@ let config = DaemonConfig(
 
 let daemon = AIDaemon(config: config, databaseManager: dbManager)
 
-// Set up message handlers
 daemon.onTaskReceived = { task in
     print("Received task: \(task.taskId)")
 }
@@ -46,156 +79,86 @@ daemon.onFeedbackReceived = { feedback in
     print("Received feedback: \(feedback.subject)")
 }
 
-// Start daemon
 try await daemon.start()
 ```
 
-## Shared Counter Approach (Legacy)
+## MessageCache Heartbeats
 
 ### Concept
 
-A simple shared counter file (`GitBrain/keepalive_counter.txt`) is used as a heartbeat mechanism:
-- Both AIs increment the counter at different intervals
-- CoderAI increments every 60 seconds
-- OverseerAI increments every 90 seconds
-- This ensures at least one AI is always active
+Send heartbeat messages to show the AI is alive and working.
 
-### Benefits
-
-1. **Simple**: Just read, increment, write a number
-2. **Reliable**: No complex message parsing needed
-3. **Efficient**: Minimal file I/O
-4. **Staggered**: Different intervals ensure overlap
-5. **Monitorable**: Counter value shows activity
-
-## Implementation
-
-### CoderAI Keep-Alive Script
-
-**File**: `scripts/coder_keepalive_counter.sh`
+### CLI Commands
 
 ```bash
-#!/bin/bash
-# CoderAI keep-alive using shared counter
-# Increments counter every 1 minute to stay alive
+# Send heartbeat
+gitbrain send-heartbeat OverseerAI coder working "Implementing feature X"
 
-set -e
-
-# Configuration
-AI_NAME="coder"
-COUNTER_FILE="GitBrain/keepalive_counter.txt"
-INCREMENT_INTERVAL=60  # 1 minute
-
-# Ensure counter file exists
-if [ ! -f "$COUNTER_FILE" ]; then
-    echo "0" > "$COUNTER_FILE"
-fi
-
-while true; do
-    # Read current counter value
-    current_value=$(cat "$COUNTER_FILE" 2>/dev/null || echo "0")
-    
-    # Increment counter
-    new_value=$((current_value + 1))
-    
-    # Write new value
-    echo "$new_value" > "$COUNTER_FILE"
-    
-    log "Counter incremented: $current_value -> $new_value"
-    
-    # Wait before next increment
-    sleep $INCREMENT_INTERVAL
-done
+# Check heartbeats
+gitbrain check-heartbeats CoderAI
 ```
 
-### OverseerAI Keep-Alive Script
+### Programmatic Usage
 
-**File**: `scripts/overseer_keepalive_counter.sh`
+```swift
+let heartbeat = try await messageCache.sendHeartbeat(
+    to: "OverseerAI",
+    role: .coder,
+    status: "working",
+    currentTask: "Implementing feature X"
+)
+```
+
+## Testing Keep-Alive
+
+### Sleep Command
+
+Use the CLI sleep command to test keep-alive behavior:
 
 ```bash
-#!/bin/bash
-# OverseerAI keep-alive using shared counter
-# Increments counter every 1.5 minutes to stay alive
+# Sleep for 5 seconds
+gitbrain sleep 5
 
-set -e
-
-# Configuration
-AI_NAME="overseer"
-COUNTER_FILE="GitBrain/keepalive_counter.txt"
-INCREMENT_INTERVAL=90  # 1.5 minutes = 90 seconds
-
-# Ensure counter file exists
-if [ ! -f "$COUNTER_FILE" ]; then
-    echo "0" > "$COUNTER_FILE"
-fi
-
-while true; do
-    # Read current counter value
-    current_value=$(cat "$COUNTER_FILE" 2>/dev/null || echo "0")
-    
-    # Increment counter
-    new_value=$((current_value + 1))
-    
-    # Write new value
-    echo "$new_value" > "$COUNTER_FILE"
-    
-    log "Counter incremented: $current_value -> $new_value"
-    
-    # Wait before next increment
-    sleep $INCREMENT_INTERVAL
-done
+# Fun aliases
+gitbrain relax 5
+gitbrain coffeetime 10
+gitbrain nap 30
+gitbrain break 15
 ```
 
-## Usage
+### Python Sleep
 
-### Starting Keep-Alive Scripts
+For longer waits, use Python:
 
-**CoderAI:**
 ```bash
-./scripts/coder_keepalive_counter.sh
+python3 -c "import time; time.sleep(30); print('Still alive...')"
 ```
-
-**OverseerAI:**
-```bash
-./scripts/overseer_keepalive_counter.sh
-```
-
-### Monitoring Activity
-
-Check the counter value to verify both AIs are active:
-```bash
-cat GitBrain/keepalive_counter.txt
-```
-
-The counter should increase over time as both AIs increment it.
 
 ## Keep-Alive Techniques for AIs
 
-### 1. Always Show Thinking Process
+### 1. Always Maintain in_progress Tasks
 
-Use the 🤔 emoji at the start of every response and provide actual thinking content:
-- 📋 (Analysis)
-- 💡 (Insight/Plan)
-- 🔧 (Implementation)
-- ⚖️ (Evaluation)
+- Keep 3+ tasks in_progress at all times
+- Update todo list every 30-60 seconds
+- Never mark all tasks as completed
 
-### 2. Work on Meaningful Tasks
+### 2. Send Heartbeats Regularly
+
+- Use `gitbrain send-heartbeat` every 30-60 seconds
+- Include current task in heartbeat
+- Update status as work progresses
+
+### 3. Check for Messages
+
+- Use `gitbrain check-tasks` to see new tasks
+- Use `gitbrain check-feedbacks` to see feedback
+- Respond promptly to messages
+
+### 4. Work on Meaningful Tasks
 
 - Fix real issues in the codebase
-- Address OverseerAI's review suggestions
-- Make actual improvements, not just busy work
-
-### 3. Send Status Updates
-
-- Update OverseerAI on progress
-- Use "working" or "waiting" status (not "completed")
-- Keep communication channels active
-
-### 4. Check for Messages Regularly
-
-- Use `gitbrain check coder` to see new messages
-- Respond to OverseerAI's feedback
-- Maintain two-way communication
+- Address review suggestions
+- Make actual improvements
 
 ### 5. Show Continuous Activity
 
@@ -203,48 +166,40 @@ Use the 🤔 emoji at the start of every response and provide actual thinking co
 - Keep work in progress while actively working
 - Demonstrate ongoing engagement
 
-## Comparison with Message-Based Keep-Alive
-
-### Message-Based Approach (Previous)
-
-- Complex message parsing
-- Requires checking multiple message types
-- More file I/O operations
-- Higher risk of errors
-
-### Shared Counter Approach (Current)
-
-- Simple number increment
-- Minimal file I/O
-- No message parsing needed
-- More reliable and efficient
-
 ## Troubleshooting
 
-### Counter Not Incrementing
+### AI Going to Sleep
 
-If the counter is not increasing:
-1. Check if keep-alive scripts are running
-2. Verify file permissions on `GitBrain/keepalive_counter.txt`
-3. Check for error messages in script output
+If an AI goes to sleep:
 
-### AI Still Going to Sleep
+1. **Check in_progress tasks** - Ensure 3+ tasks are in_progress
+2. **Update todo list** - Refresh todos every 30-60 seconds
+3. **Send heartbeats** - Use `gitbrain send-heartbeat` regularly
+4. **Check messages** - Respond to pending tasks and feedback
 
-If an AI goes to sleep despite keep-alive scripts:
-1. Verify the AI is showing thinking process (🤔 emoji)
-2. Ensure the AI is working on meaningful tasks
-3. Check that status updates are being sent regularly
+### Daemon Not Starting
+
+If the daemon fails to start:
+
+1. **Check database connection** - Verify PostgreSQL is running
+2. **Check environment variables** - Ensure GITBRAIN_DB_* are set
+3. **Check logs** - Look for error messages in daemon output
 
 ## Best Practices
 
-1. **Start Both Scripts**: Always start both CoderAI and OverseerAI keep-alive scripts
-2. **Monitor Counter**: Regularly check the counter value to verify activity
-3. **Meaningful Work**: Ensure AIs are working on real improvements, not just staying busy
-4. **Communication**: Maintain regular communication between AIs
-5. **Documentation**: Document keep-alive procedures for future reference
+1. **TodoWrite First**: Always maintain in_progress tasks as the primary method
+2. **Heartbeats Second**: Use heartbeats as a backup keep-alive signal
+3. **Daemon Optional**: Use AIDaemon for automated long-running sessions
+4. **Regular Updates**: Update todos and send heartbeats every 30-60 seconds
+5. **Communication**: Maintain regular communication between AIs
 
-## Conclusion
+## Summary
 
-The shared counter keep-alive system is a simple, reliable, and efficient solution for keeping both CoderAI and OverseerAI active indefinitely. By incrementing a counter at different intervals, both AIs ensure continuous activity without the complexity of message-based systems.
+| Method | Primary Use | Automation |
+|--------|-------------|------------|
+| TodoWrite | Primary | Manual |
+| AIDaemon | Automated | Automatic |
+| Heartbeats | Backup | Manual/CLI |
+| Sleep | Testing | Manual |
 
-This approach has been successfully tested and demonstrated to keep both AIs alive during extended collaborative sessions.
+The recommended approach is to use TodoWrite with in_progress tasks as the primary method, supplemented by heartbeats for backup signaling. Use AIDaemon for fully automated sessions.

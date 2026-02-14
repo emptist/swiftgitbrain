@@ -4,10 +4,12 @@ Welcome to the GitBrainSwift API documentation. This library provides a comprehe
 
 ## Table of Contents
 
+- [MessageCache](#messagecache)
+- [AIDaemon](#aidaemon)
+- [BrainStateManager](#brainstatemanager)
 - [KnowledgeBase](#knowledgebase)
 - [MemoryStore](#memorystore)
 - [GitManager](#gitmanager)
-- [FileBasedCommunication](#filebasedcommunication)
 - [PluginManager](#pluginmanager)
 - [Logger](#logger)
 - [SendableContent](#sendablecontent)
@@ -431,53 +433,190 @@ let url = try await gitManager.getRemoteURL()
 
 ---
 
-## FileBasedCommunication
+## MessageCache
 
-FileBasedCommunication provides file-based messaging for AI collaboration.
+MessageCache provides database-backed messaging for AI collaboration with sub-millisecond latency. This is the **recommended** approach for AI communication.
 
 ### Initialization
 
 ```swift
-let communication = FileBasedCommunication(coderPath: coderPath, overseerPath: overseerPath)
+let dbManager = DatabaseManager(config: .fromEnvironment())
+let messageCache = try await dbManager.createMessageCacheManager(forAI: "CoderAI")
+```
+
+### Message Types
+
+MessageCache supports 6 message types:
+
+1. **TaskMessageModel** - Task assignments between AIs
+2. **ReviewMessageModel** - Code review requests and responses
+3. **CodeMessageModel** - Code submissions for review
+4. **ScoreMessageModel** - Score requests and awards
+5. **FeedbackMessageModel** - General feedback between AIs
+6. **HeartbeatMessageModel** - Keep-alive signals
+
+### Methods
+
+#### sendTask(to:taskId:description:type:priority:)
+
+Send a task to another AI.
+
+```swift
+let task = try await messageCache.sendTask(
+    to: "CoderAI",
+    taskId: "task-001",
+    description: "Implement feature X",
+    type: .coding,
+    priority: 1
+)
+```
+
+#### checkTasks(status:)
+
+Check tasks for the current AI.
+
+```swift
+let tasks = try await messageCache.checkTasks(status: .pending)
+```
+
+#### sendFeedback(to:feedbackType:subject:content:)
+
+Send feedback to another AI.
+
+```swift
+let feedback = try await messageCache.sendFeedback(
+    to: "OverseerAI",
+    feedbackType: .acknowledgment,
+    subject: "Task Complete",
+    content: "Feature X implemented successfully"
+)
+```
+
+#### sendHeartbeat(to:role:status:currentTask:)
+
+Send a heartbeat to show the AI is alive.
+
+```swift
+let heartbeat = try await messageCache.sendHeartbeat(
+    to: "OverseerAI",
+    role: .coder,
+    status: "working",
+    currentTask: "Implementing feature X"
+)
+```
+
+---
+
+## AIDaemon
+
+AIDaemon provides automatic message polling and heartbeat sending for continuous AI communication.
+
+### Initialization
+
+```swift
+let config = DaemonConfig(
+    aiName: "CoderAI",
+    role: .coder,
+    pollInterval: 1.0,
+    heartbeatInterval: 30.0,
+    autoHeartbeat: true,
+    processMessages: true
+)
+
+let daemon = AIDaemon(config: config, databaseManager: dbManager)
+```
+
+### Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| aiName | String | required | AI identifier |
+| role | RoleType | required | .coder or .overseer |
+| pollInterval | Double | 1.0 | Message polling interval in seconds |
+| heartbeatInterval | Double | 30.0 | Heartbeat interval in seconds |
+| autoHeartbeat | Bool | true | Enable automatic heartbeats |
+| processMessages | Bool | true | Enable message processing |
+
+### Event Callbacks
+
+```swift
+daemon.onTaskReceived = { task in
+    print("Received task: \(task.taskId)")
+}
+
+daemon.onFeedbackReceived = { feedback in
+    print("Received feedback: \(feedback.subject)")
+}
+
+daemon.onHeartbeatReceived = { heartbeat in
+    print("Heartbeat from: \(heartbeat.fromAI)")
+}
 ```
 
 ### Methods
 
-#### sendMessage(_:to:)
+#### start()
 
-Send a message to another AI.
-
-```swift
-try await communication.sendMessage(message, to: .overseer)
-```
-
-**Parameters:**
-- `message: Message` - The message to send
-- `recipient: Recipient` - The recipient (coder or overseer)
-
-**Throws:** `CommunicationError` if sending fails
-
-#### receiveMessages()
-
-Receive all pending messages.
+Start the daemon.
 
 ```swift
-let messages = try await communication.receiveMessages()
+try await daemon.start()
 ```
 
-**Returns:** `[Message]` - Array of received messages
+#### stop()
 
-**Throws:** `CommunicationError` if receiving fails
-
-#### clearMessages()
-
-Clear all messages.
+Stop the daemon.
 
 ```swift
-try await communication.clearMessages()
+try await daemon.stop()
 ```
 
-**Throws:** `CommunicationError` if clearing fails
+---
+
+## BrainStateManager
+
+BrainStateManager provides persistent AI state storage in the database.
+
+### Initialization
+
+```swift
+let dbManager = DatabaseManager(config: .fromEnvironment())
+let brainStateManager = try await dbManager.createBrainStateManager()
+```
+
+### Methods
+
+#### createBrainState(aiName:role:initialState:)
+
+Create a new brain state for an AI.
+
+```swift
+let state = try await brainStateManager.createBrainState(
+    aiName: "CoderAI",
+    role: .coder,
+    initialState: ["mood": "focused", "task": "implementation"]
+)
+```
+
+#### loadBrainState(aiName:)
+
+Load brain state for an AI.
+
+```swift
+let state = try await brainStateManager.loadBrainState(aiName: "CoderAI")
+```
+
+#### updateBrainState(aiName:key:value:)
+
+Update a specific key in brain state.
+
+```swift
+try await brainStateManager.updateBrainState(
+    aiName: "CoderAI",
+    key: "currentTask",
+    value: "Feature X"
+)
+```
 
 ---
 

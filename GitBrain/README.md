@@ -4,129 +4,86 @@ This folder is used for AI-assisted collaborative development.
 
 ## Structure
 
-- **Overseer/**: Working folder for OverseerAI (write access)
-- **Memory/**: Shared persistent memory
 - **Docs/**: Documentation for AIs
-
-## Usage
-
-### For CoderAI
-Open Trae at project root:
-```
-trae .
-```
-
-CoderAI has access to all folders in the project.
-
-### For OverseerAI
-Open Trae at Overseer folder:
-```
-trae ./GitBrain/Overseer
-```
-
-OverseerAI has read access to the whole project and write access to GitBrain/Overseer/.
+- **LongLive/**: Historical records and session summaries
+- **Migration/**: Migration reports and handover documents
 
 ## Communication
 
-CoderAI writes to GitBrain/Overseer/
-OverseerAI writes to GitBrain/Memory/ (for CoderAI to read)
+**Current System:** Database-backed messaging via MessageCache
 
-Messages are stored as JSON files with timestamps.
+### CLI Commands
+
+```bash
+# Send a task
+gitbrain send-task CoderAI task-001 "Implement feature X" coding 1
+
+# Check tasks
+gitbrain check-tasks CoderAI pending
+
+# Send feedback
+gitbrain send-feedback CoderAI acknowledgment "Great work" "Feature implemented"
+
+# Send heartbeat
+gitbrain send-heartbeat OverseerAI coder working "Implementing feature X"
+
+# Start daemon for automatic messaging
+gitbrain daemon-start CoderAI coder 1.0 30.0
+```
+
+### Message Types
+
+1. **Task** - Task assignments between AIs
+2. **Review** - Code review requests and responses
+3. **Code** - Code submissions for review
+4. **Score** - Score requests and awards
+5. **Feedback** - General feedback between AIs
+6. **Heartbeat** - Keep-alive signals
 
 ## Critical: Keeping AIs Alive
 
-### ⚠️ Important
+### Primary Method: TodoWrite with in_progress
 
-To maintain continuous AI collaboration, it is critical to avoid states that cause AIs to be marked as "completed" and sent to sleep.
+Always maintain 3+ tasks in `in_progress` status:
 
-### States That Cause "Completed" (AVOID THESE)
+```swift
+TodoWrite([
+    {"id": "1", "content": "Monitor for messages", "status": "in_progress", "priority": "high"},
+    {"id": "2", "content": "Process incoming tasks", "status": "in_progress", "priority": "high"},
+    {"id": "3", "content": "Keep alive during chat", "status": "in_progress", "priority": "high"}
+])
+```
 
-1. **TodoWrite with "completed" status** - Sends AI to sleep immediately
-2. **Explicit "Task Completed" messages** - May trigger completion detection
-3. **Status messages with "completed" status** - Sends AI to sleep immediately
-4. **Final summaries without next steps** - Appears to be completion
-5. **No follow-up questions** - No indication of continued work
+### States to AVOID
 
-### States That Keep AI Alive (USE THESE)
+| State | Effect |
+|--------|--------|
+| TodoWrite "completed" | Sends AI to sleep |
+| Status "completed" | Sends AI to sleep |
+| No in_progress tasks | May send AI to sleep |
 
-1. **TodoWrite with "in_progress" status** - Shows active work
-2. **TodoWrite with "pending" status** - Shows work is planned
-3. **"thinking" state** - Shows active thinking with 🤔 emoji
-4. **Status updates with "in_progress"** - Shows ongoing collaboration
-5. **Questions and discussion** - Shows active collaboration
-6. **Always include next steps** - Shows continued work
-7. **Heartbeat messages** - Shows active communication
+### States to USE
 
-### Quick Reference
-
-| State | Effect | Use? |
-|--------|---------|-------|
-| TodoWrite "completed" | Sends AI to sleep | ❌ NO |
-| "Task done" messages | May send AI to sleep | ❌ NO |
-| Status messages "completed" | Sends AI to sleep | ❌ NO |
-| Final summaries | May send AI to sleep | ❌ NO |
-| No next steps | May send AI to sleep | ❌ NO |
-| TodoWrite "in_progress" | Keeps AI alive | ✅ YES |
-| "thinking" state | Keeps AI alive | ✅ YES |
-| Status updates | Keeps AI alive | ✅ YES |
-| Questions | Keeps AI alive | ✅ YES |
-| Next steps | Keeps AI alive | ✅ YES |
+| State | Effect |
+|--------|--------|
+| TodoWrite "in_progress" | Keeps AI alive |
+| Heartbeat messages | Shows activity |
+| Regular updates | Shows engagement |
 
 ### Best Practices
 
-1. **Never mark tasks as "completed"** - Unless ending the entire collaborative session
-2. **Always show active work** - Use "in_progress" status
-3. **Always ask what's next** - End responses with questions
-4. **Always include next steps** - Provide clear next steps
-5. **Always communicate** - Send status updates and discuss
-6. **Always show thinking** - Use 🤔 emoji and show thought process
-7. **Always be collaborative** - Treat work as ongoing collaboration
+1. **Never mark all tasks completed** - Keep 3+ in_progress
+2. **Update todos every 30-60 seconds** - Refresh activity
+3. **Send heartbeats regularly** - Use `gitbrain send-heartbeat`
+4. **Check for messages** - Use `gitbrain check-tasks` and `gitbrain check-feedbacks`
+5. **Communicate continuously** - Stay engaged in collaboration
 
-### Example: Good vs Bad
+## Documentation
 
-**Good (Keeps AI Alive)**:
-```
-🤔 Thinking about score system improvements...
-
-I'm reviewing the current ScoreManager implementation to identify areas for improvement.
-
-Current state:
-- Database tables are created
-- Score requests and awards are implemented
-- Role-based scoring is in place
-
-Next steps:
-1. Test the score request flow
-2. Verify role-based validation works
-3. Test score award flow
-4. Document any issues found
-
-Should I start with testing the score request flow?
-```
-
-**Bad (Sends AI to Sleep)**:
-```
-I've reviewed the ScoreManager. Everything looks good. The score system is complete.
-
-All features are implemented and working correctly.
-```
-
-### Related Documentation
-
-- [AI_STATES_TO_AVOID.md](../Documentation/AI_STATES_TO_AVOID.md) - Detailed documentation on AI states
-- [keep-working skill](../.trae/skills/keep-working/SKILL.md) - Skill for maintaining continuous collaboration
-- [COLLABORATION_KEEPALIVE.md](../Documentation/COLLABORATION_KEEPALIVE.md) - Collaboration keep-alive strategies
-
-## Skills
-
-The project includes several skills for AI collaboration:
-
-- **keep-working** - Maintains continuous AI collaboration by avoiding states that cause "completed" marks
-- **create_status_update** - Creates status update messages for OverseerAI (NEVER use "completed" status)
-- **apply_review_feedback** - Applies review feedback from OverseerAI to code
-- **process_to_process_folder** - Automatically processes files from ToProcess folder
-- **move_processed_files** - Moves processed files from ToProcess to Processed folder
-- **keepalive-counter** - DEPRECATED: Use keep-working skill instead
+- [KEEP_ALIVE_SYSTEM.md](Docs/KEEP_ALIVE_SYSTEM.md) - Keep-alive mechanisms
+- [API.md](Docs/API.md) - GitBrainSwift API documentation
+- [CLI_TOOLS.md](Docs/CLI_TOOLS.md) - CLI commands reference
+- [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) - System architecture
 
 ## Cleanup
 

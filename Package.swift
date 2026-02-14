@@ -52,7 +52,8 @@ let package = Package(
         .executableTarget(
             name: "GitBrainSwiftBenchmarks",
             dependencies: ["GitBrainSwift"],
-            path: "Benchmarks"
+            path: "Benchmarks",
+            exclude: ["BASELINES.md"]
         )
     ]
 )
