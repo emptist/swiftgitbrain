@@ -9,17 +9,19 @@ public struct DatabaseConfig: Sendable {
     public let database: String
     public let username: String
     public let password: String
+    public let projectName: String
     
     public init(
         host: String = "localhost",
         port: Int = 5432,
-        database: String = "gitbrain",
+        projectName: String = "default",
         username: String = "postgres",
         password: String = "postgres"
     ) {
         self.host = host
         self.port = port
-        self.database = database
+        self.projectName = projectName
+        self.database = "gitbrain_\(projectName)"
         self.username = username
         self.password = password
     }
@@ -27,16 +29,26 @@ public struct DatabaseConfig: Sendable {
     public static func fromEnvironment() -> DatabaseConfig {
         let host = ProcessInfo.processInfo.environment["GITBRAIN_DB_HOST"] ?? "localhost"
         let port = Int(ProcessInfo.processInfo.environment["GITBRAIN_DB_PORT"] ?? "5432") ?? 5432
-        let database = ProcessInfo.processInfo.environment["GITBRAIN_DB_NAME"] ?? "gitbrain"
+        let projectName = ProcessInfo.processInfo.environment["GITBRAIN_PROJECT_NAME"] ?? "default"
         let username = ProcessInfo.processInfo.environment["GITBRAIN_DB_USER"] ?? "postgres"
         let password = ProcessInfo.processInfo.environment["GITBRAIN_DB_PASSWORD"] ?? "postgres"
         
         return DatabaseConfig(
             host: host,
             port: port,
-            database: database,
+            projectName: projectName,
             username: username,
             password: password
+        )
+    }
+    
+    public static func forTesting(projectName: String = "swiftgitbraintests") -> DatabaseConfig {
+        return DatabaseConfig(
+            host: "localhost",
+            port: 5432,
+            projectName: projectName,
+            username: "postgres",
+            password: "postgres"
         )
     }
 }
