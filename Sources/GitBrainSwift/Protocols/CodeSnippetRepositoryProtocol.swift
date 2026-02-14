@@ -23,7 +23,20 @@ public protocol CodeSnippetRepositoryProtocol: Sendable {
     func getByLanguage(_ language: String) async throws -> [CodeSnippetModel]
     func getByFramework(_ framework: String) async throws -> [CodeSnippetModel]
     func search(query: String) async throws -> [CodeSnippetModel]
-    func update(knowledgeId: UUID, ...) async throws -> Bool
+    func update(
+        knowledgeId: UUID,
+        category: String?,
+        key: String?,
+        language: String?,
+        code: String?,
+        description: String?,
+        usageExample: String?,
+        dependencies: [String]?,
+        framework: String?,
+        version: String?,
+        complexity: String?,
+        tags: [String]?
+    ) async throws -> Bool
     func delete(knowledgeId: UUID) async throws -> Bool
     func listCategories() async throws -> [String]
     func listLanguages() async throws -> [String]

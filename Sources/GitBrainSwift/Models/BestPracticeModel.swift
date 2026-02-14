@@ -1,60 +1,60 @@
 import Fluent
 import Foundation
 
-final class BestPracticeModel: Model, @unchecked Sendable {
-    static let schema = "best_practices"
+public final class BestPracticeModel: Model, @unchecked Sendable {
+    public static let schema = "best_practices"
     
     @ID(key: .id)
-    var id: UUID?
+    public var id: UUID?
     
     @Field(key: "knowledge_id")
-    var knowledgeId: UUID
+    public var knowledgeId: UUID
     
     @Field(key: "category")
-    var category: String
+    public var category: String
     
     @Field(key: "key")
-    var key: String
+    public var key: String
     
     @Field(key: "title")
-    var title: String
+    public var title: String
     
     @Field(key: "description")
-    var description: String
+    public var description: String
     
     @OptionalField(key: "context")
-    var context: String?
+    public var context: String?
     
     @OptionalField(key: "benefits")
-    var benefits: [String]?
+    public var benefits: [String]?
     
     @OptionalField(key: "anti_pattern")
-    var antiPattern: String?
+    public var antiPattern: String?
     
     @OptionalField(key: "examples")
-    var examples: String?
+    public var examples: String?
     
     @OptionalField(key: "references")
-    var references: [String]?
+    public var references: [String]?
     
     @OptionalField(key: "applicable_to")
-    var applicableTo: [String]?
+    public var applicableTo: [String]?
     
     @Field(key: "created_by")
-    var createdBy: String
+    public var createdBy: String
     
     @OptionalField(key: "tags")
-    var tags: [String]?
+    public var tags: [String]?
     
     @Timestamp(key: "created_at", on: .create)
-    var createdAt: Date?
+    public var createdAt: Date?
     
     @Timestamp(key: "updated_at", on: .update)
-    var updatedAt: Date?
+    public var updatedAt: Date?
     
-    init() {}
+    public init() {}
     
-    init(
+    public init(
         id: UUID? = nil,
         knowledgeId: UUID,
         category: String,
