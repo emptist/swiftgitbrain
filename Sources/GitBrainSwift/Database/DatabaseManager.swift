@@ -167,6 +167,16 @@ public actor DatabaseManager {
         return FluentBrainStateRepository(database: db)
     }
     
+    public func createCodeSnippetRepository() async throws -> CodeSnippetRepositoryProtocol {
+        let db = try await getSharedDatabase()
+        return FluentCodeSnippetRepository(database: db)
+    }
+    
+    public func createBestPracticeRepository() async throws -> BestPracticeRepositoryProtocol {
+        let db = try await getSharedDatabase()
+        return FluentBestPracticeRepository(database: db)
+    }
+    
     public func createKnowledgeBase() async throws -> KnowledgeBase {
         let repository = try await createKnowledgeRepository()
         return KnowledgeBase(repository: repository)
