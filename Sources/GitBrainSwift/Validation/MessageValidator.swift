@@ -291,8 +291,8 @@ public actor MessageValidator {
             validators: [
                 "role": { value in
                     guard let role = value as? String,
-                          ["coder", "overseer"].contains(role) else {
-                        throw MessageValidationError.invalidValue("role", reason: "must be either 'coder' or 'overseer'")
+                          ["creator", "monitor"].contains(role) else {
+                        throw MessageValidationError.invalidValue("role", reason: "must be either 'creator' or 'monitor'")
                     }
                 }
             ]
@@ -312,14 +312,14 @@ public actor MessageValidator {
             validators: [
                 "requester": { value in
                     guard let requester = value as? String,
-                          ["coder", "overseer"].contains(requester) else {
-                        throw MessageValidationError.invalidValue("requester", reason: "must be either 'coder' or 'overseer'")
+                          ["creator", "monitor"].contains(requester) else {
+                        throw MessageValidationError.invalidValue("requester", reason: "must be either 'creator' or 'monitor'")
                     }
                 },
                 "target_ai": { value in
                     guard let targetAI = value as? String,
-                          ["coder", "overseer"].contains(targetAI) else {
-                        throw MessageValidationError.invalidValue("target_ai", reason: "must be either 'coder' or 'overseer'")
+                          ["creator", "monitor"].contains(targetAI) else {
+                        throw MessageValidationError.invalidValue("target_ai", reason: "must be either 'creator' or 'monitor'")
                     }
                 },
                 "requested_score": { value in
@@ -343,8 +343,8 @@ public actor MessageValidator {
             validators: [
                 "awarder": { value in
                     guard let awarder = value as? String,
-                          ["coder", "overseer"].contains(awarder) else {
-                        throw MessageValidationError.invalidValue("awarder", reason: "must be either 'coder' or 'overseer'")
+                          ["creator", "monitor"].contains(awarder) else {
+                        throw MessageValidationError.invalidValue("awarder", reason: "must be either 'creator' or 'monitor'")
                     }
                 },
                 "awarded_score": { value in
@@ -367,8 +367,8 @@ public actor MessageValidator {
             validators: [
                 "rejecter": { value in
                     guard let rejecter = value as? String,
-                          ["coder", "overseer"].contains(rejecter) else {
-                        throw MessageValidationError.invalidValue("rejecter", reason: "must be either 'coder' or 'overseer'")
+                          ["creator", "monitor"].contains(rejecter) else {
+                        throw MessageValidationError.invalidValue("rejecter", reason: "must be either 'creator' or 'monitor'")
                     }
                 }
             ]

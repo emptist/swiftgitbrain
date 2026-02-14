@@ -398,8 +398,8 @@ public struct DataMigration: Sendable {
                     let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
                     
                     let state = SendableContent(json["state"] as? [String: Any] ?? [:])
-                    let roleString = json["role"] as? String ?? "coder"
-                    let role: RoleType = roleString == "overseer" ? .overseer : .coder
+                    let roleString = json["role"] as? String ?? "creator"
+                    let role: RoleType = roleString == "monitor" ? .monitor : .creator
                     let timestamp = Date()
                     
                     try await repository.save(

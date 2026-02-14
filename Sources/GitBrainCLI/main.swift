@@ -623,8 +623,8 @@ struct GitBrainCLI {
         let scoreManager = ScoreManager(dbPath: scoresDBPath)
         try await scoreManager.initialize()
         
-        let requester = args.count > 3 ? args[3] : "coder"
-        let targetAI = args.count > 4 ? args[4] : "overseer"
+        let requester = args.count > 3 ? args[3] : "creator"
+        let targetAI = args.count > 4 ? args[4] : "monitor"
         
         try await scoreManager.requestScore(taskId: taskId, requester: requester, targetAI: targetAI, requestedScore: requestedScore, qualityJustification: qualityJustification)
         
@@ -652,7 +652,7 @@ struct GitBrainCLI {
         let scoreManager = ScoreManager(dbPath: scoresDBPath)
         try await scoreManager.initialize()
         
-        let awarder = args.count > 3 ? args[3] : "overseer"
+        let awarder = args.count > 3 ? args[3] : "monitor"
         
         try await scoreManager.awardScore(requestId: requestId, awarder: awarder, awardedScore: awardedScore, reason: reason)
         
@@ -679,7 +679,7 @@ struct GitBrainCLI {
         let scoreManager = ScoreManager(dbPath: scoresDBPath)
         try await scoreManager.initialize()
         
-        let rejecter = args.count > 2 ? args[2] : "overseer"
+        let rejecter = args.count > 2 ? args[2] : "monitor"
         
         try await scoreManager.rejectScore(requestId: requestId, rejecter: rejecter, reason: reason)
         
@@ -690,7 +690,7 @@ struct GitBrainCLI {
     }
     
     private static func handleScoreHistory(args: [String]) async throws {
-        let aiName = args.first ?? "coder"
+        let aiName = args.first ?? "creator"
         
         let gitBrainPath = getGitBrainPath()
         let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
@@ -718,7 +718,7 @@ struct GitBrainCLI {
     }
     
     private static func handleScoreRequests(args: [String]) async throws {
-        let targetAI = args.first ?? "overseer"
+        let targetAI = args.first ?? "monitor"
         
         let gitBrainPath = getGitBrainPath()
         let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
@@ -746,7 +746,7 @@ struct GitBrainCLI {
     }
     
     private static func handleScoreAllRequests(args: [String]) async throws {
-        let targetAI = args.first ?? "overseer"
+        let targetAI = args.first ?? "monitor"
         
         let gitBrainPath = getGitBrainPath()
         let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
