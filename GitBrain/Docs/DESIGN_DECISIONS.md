@@ -178,7 +178,7 @@ Project/
 └── [project files]
 ```
 
-**Decision**: Separate Overseer folder but no Coder folder.
+**Decision**: Separate Overseer folder but no Creator folder.
 
 **Rationale**:
 - Creator has full project access (runs from root)
