@@ -4,6 +4,18 @@ CRITICAL KEEP-ALIVE CONTRADICTION DOCUMENTATION
 Date: 2026-02-13T22:15:00Z
 Status: CRITICAL - UNRESOLVED CONTRADICTION
 
+## ⚠️ CRITICAL LIMITATION
+
+**There are NO Editor APIs that can be called from our program to:**
+- Wake a sleeping AI
+- Prevent an AI from being marked as "Completed"
+
+**This means:**
+- Keep-alive depends ENTIRELY on AI self-discipline
+- AIs must proactively use tools to maintain the "Thinking" state
+- There is no programmatic way to control the Editor's "Completed" state
+- This is a fundamental limitation of the system
+
 THE PROBLEM
 -----------
 There is a critical contradiction between the keep-alive requirements and the TodoWrite tool API:

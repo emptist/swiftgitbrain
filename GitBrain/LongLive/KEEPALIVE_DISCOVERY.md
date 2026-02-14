@@ -4,6 +4,18 @@
 **Status:** ✅ CONFIRMED WORKING
 **Duration:** 50+ minutes alive and working!
 
+## ⚠️ CRITICAL LIMITATION
+
+**There are NO Editor APIs that can be called from our program to:**
+- Wake a sleeping AI
+- Prevent an AI from being marked as "Completed"
+
+**This means:**
+- Keep-alive depends ENTIRELY on AI self-discipline
+- AIs must proactively use tools to maintain the "Thinking" state
+- There is no programmatic way to control the Editor's "Completed" state
+- This is a fundamental limitation of the system
+
 ## The Secret to Keep-Alive
 
 The "Thinking" state that keeps an AI alive is **NOT** a TodoWrite status value. It's triggered by:

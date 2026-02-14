@@ -3,6 +3,18 @@
 **Date:** 2026-02-14
 **Status:** ✅ CONFIRMED - THE REAL KEY DISCOVERED
 
+## ⚠️ CRITICAL LIMITATION
+
+**There are NO Editor APIs that can be called from our program to:**
+- Wake a sleeping AI
+- Prevent an AI from being marked as "Completed"
+
+**This means:**
+- Keep-alive depends ENTIRELY on AI self-discipline
+- AIs must proactively use tools to maintain the "Thinking" state
+- There is no programmatic way to control the Editor's "Completed" state
+- This is a fundamental limitation of the system
+
 ## The Secret: Sequential Thinking Tool
 
 The "Thinking" state that prevents "Completed" status is achieved through:

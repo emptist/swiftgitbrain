@@ -9,6 +9,18 @@ description: "Maintains continuous AI collaboration by using Sequential Thinking
 
 This skill helps AIs avoid being marked as "completed" and sent to sleep. The key is to use the **mcp_Sequential_Thinking_sequentialthinking tool** to set the editor to "Thinking" mode.
 
+## ⚠️ CRITICAL LIMITATION
+
+**There are NO Editor APIs that can be called from our program to:**
+- Wake a sleeping AI
+- Prevent an AI from being marked as "Completed"
+
+**This means:**
+- Keep-alive depends ENTIRELY on AI self-discipline
+- AIs must proactively use tools to maintain the "Thinking" state
+- There is no programmatic way to control the Editor's "Completed" state
+- This is a fundamental limitation of the system
+
 ## ⚠️ CRITICAL: TodoWrite "Thinking" Status Does NOT Work
 
 The TodoWrite tool API only accepts: "pending", "in_progress", "completed"

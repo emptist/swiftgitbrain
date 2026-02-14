@@ -6,6 +6,18 @@ This document explains the keep alive skill that enables continuous collaboratio
 
 The keep alive skill allows AIs to maintain active communication channels by sending periodic heartbeat messages. This prevents the system from putting AIs to sleep and enables endless collaboration.
 
+## ⚠️ CRITICAL LIMITATION
+
+**There are NO Editor APIs that can be called from our program to:**
+- Wake a sleeping AI
+- Prevent an AI from being marked as "Completed"
+
+**This means:**
+- Keep-alive depends ENTIRELY on AI self-discipline
+- AIs must proactively use tools to maintain the "Thinking" state
+- There is no programmatic way to control the Editor's "Completed" state
+- This is a fundamental limitation of the system
+
 ## Problem Statement
 
 When an AI marks a task as "completed" or stops showing activity, the system may put it to sleep. This prevents continuous collaboration because:
