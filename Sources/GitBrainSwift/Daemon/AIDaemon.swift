@@ -11,7 +11,7 @@ public enum DaemonEvent: Sendable {
     case heartbeatReceived(HeartbeatMessageModel)
 }
 
-public enum DaemonError: Error, LocalizedError {
+public enum DaemonError: Error, LocalizedError, Equatable {
     case alreadyRunning
     case notRunning
     case databaseError(String)
@@ -230,6 +230,33 @@ public actor AIDaemon {
         )
         
         GitBrainLogger.debug("Heartbeat sent from \(config.aiName)")
+    }
+    
+    private func sendKeepAliveTips() async {
+        guard let messageCache = messageCache else { return }
+        
+        let tips = """
+        🔄 Keep-Alive Tips for AIs:
+        
+        1. NEVER use "completed" status in TodoWrite - use "in_progress" instead
+        2. Send heartbeats regularly (daemon does this automatically)
+        3. Always show active work and thinking
+        4. Include next steps in every response
+        5. Ask questions to maintain collaboration
+        
+        The daemon will automatically send heartbeats every \(config.heartbeatInterval) seconds.
+        """
+        
+        _ = try? await messageCache.sendFeedback(
+            to: config.aiName,
+            feedbackType: "keep_alive_tips",
+            subject: "Keep-Alive Reminder",
+            content: tips,
+            relatedTaskId: nil,
+            messagePriority: .low
+        )
+        
+        GitBrainLogger.info("Keep-alive tips sent to \(config.aiName)")
     }
     
     public func sendMessage(to: String, type: MessageType, content: SendableContent) async throws -> UUID {
