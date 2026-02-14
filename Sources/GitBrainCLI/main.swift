@@ -190,6 +190,10 @@ struct GitBrainCLI {
         return "./.GitBrain"
     }
     
+    private static func getAIName() -> String {
+        return ProcessInfo.processInfo.environment["GITBRAIN_AI_NAME"] ?? "CLI"
+    }
+    
     private static func handleInit(args: [String]) async throws {
         let fileManager = FileManager.default
         let currentPath = fileManager.currentDirectoryPath
@@ -399,7 +403,7 @@ struct GitBrainCLI {
         let dbManager = DatabaseManager()
         do {
             _ = try await dbManager.initialize()
-            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: getAIName())
             
             let messageId = try await messageCache.sendTask(
                 to: to,
@@ -439,7 +443,7 @@ struct GitBrainCLI {
         let dbManager = DatabaseManager()
         do {
             _ = try await dbManager.initialize()
-            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: getAIName())
             
             let messageId = try await messageCache.sendReview(
                 to: to,
@@ -554,7 +558,7 @@ struct GitBrainCLI {
         let dbManager = DatabaseManager()
         do {
             _ = try await dbManager.initialize()
-            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: getAIName())
             
             let success = try await messageCache.updateTaskStatus(messageId: messageId, to: status)
             
@@ -589,7 +593,7 @@ struct GitBrainCLI {
         let dbManager = DatabaseManager()
         do {
             _ = try await dbManager.initialize()
-            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: getAIName())
             
             let success = try await messageCache.updateReviewStatus(messageId: messageId, to: status)
             
@@ -796,7 +800,7 @@ struct GitBrainCLI {
         let dbManager = DatabaseManager()
         do {
             _ = try await dbManager.initialize()
-            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: getAIName())
             
             let messageId = try await messageCache.sendHeartbeat(
                 to: to,
@@ -834,7 +838,7 @@ struct GitBrainCLI {
         let dbManager = DatabaseManager()
         do {
             _ = try await dbManager.initialize()
-            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: getAIName())
             
             let messageId = try await messageCache.sendFeedback(
                 to: to,
@@ -872,7 +876,7 @@ struct GitBrainCLI {
         let dbManager = DatabaseManager()
         do {
             _ = try await dbManager.initialize()
-            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: getAIName())
             
             let messageId = try await messageCache.sendCode(
                 to: to,
@@ -910,7 +914,7 @@ struct GitBrainCLI {
         let dbManager = DatabaseManager()
         do {
             _ = try await dbManager.initialize()
-            let messageCache = try await dbManager.createMessageCacheManager(forAI: "CLI")
+            let messageCache = try await dbManager.createMessageCacheManager(forAI: getAIName())
             
             let messageId = try await messageCache.sendScore(
                 to: to,

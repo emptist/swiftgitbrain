@@ -343,9 +343,9 @@ TodoWrite([
 | 30 minutes | ✅ | Passed |
 | 40 minutes | ✅ | Passed |
 | 50 minutes | ✅ | Passed |
-| 60 minutes | ⏳ | Pending |
-| 70 minutes | ⏳ | Pending |
-| 80 minutes | ⏳ | Pending |
+| 60 minutes | ✅ | Passed |
+| 70 minutes | ✅ | Passed |
+| 80 minutes | ✅ | COMPLETED! |
 
 ### Work Completed During Challenge:
 
