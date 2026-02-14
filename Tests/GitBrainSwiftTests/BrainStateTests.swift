@@ -6,14 +6,14 @@ import Foundation
 func testBrainStateCreation() {
     let brainState = BrainState(
         aiName: "test_ai",
-        role: .coder,
+        role: .creator,
         version: "1.0.0",
         lastUpdated: ISO8601DateFormatter().string(from: Date()),
         state: ["test_key": "test_value"]
     )
     
     #expect(brainState.aiName == "test_ai")
-    #expect(brainState.role == .coder)
+    #expect(brainState.role == .creator)
     #expect(brainState.version == "1.0.0")
     #expect(brainState.state.toAnyDict()["test_key"] as? String == "test_value")
 }
@@ -22,7 +22,7 @@ func testBrainStateCreation() {
 func testBrainStateUpdate() {
     var brainState = BrainState(
         aiName: "test_ai",
-        role: .coder,
+        role: .creator,
         state: [:]
     )
     
@@ -35,7 +35,7 @@ func testBrainStateUpdate() {
 func testBrainStateGetStateWithDefault() {
     let brainState = BrainState(
         aiName: "test_ai",
-        role: .coder,
+        role: .creator,
         state: [:]
     )
     
@@ -48,7 +48,7 @@ func testBrainStateGetStateWithDefault() {
 func testBrainStateCodable() throws {
     let original = BrainState(
         aiName: "test_ai",
-        role: .coder,
+        role: .creator,
         version: "1.0.0",
         state: ["key": "value"]
     )

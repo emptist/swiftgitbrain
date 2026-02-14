@@ -84,7 +84,7 @@ struct DatabaseIntegrationTests {
             
             try await bsmRepo.save(
                 aiName: "test_ai",
-                role: .coder,
+                role: .creator,
                 state: testState,
                 timestamp: testTimestamp
             )
@@ -96,7 +96,7 @@ struct DatabaseIntegrationTests {
             let updatedState = SendableContent(["status": "completed", "progress": 100])
             try await bsmRepo.save(
                 aiName: "test_ai",
-                role: .coder,
+                role: .creator,
                 state: updatedState,
                 timestamp: Date()
             )

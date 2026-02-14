@@ -194,8 +194,8 @@ struct CodeMessageModelTests {
     func initialization() {
         let model = CodeMessageModel(
             messageId: UUID(),
-            fromAI: "CoderAI",
-            toAI: "OverseerAI",
+            fromAI: "Creator",
+            toAI: "Monitor",
             timestamp: Date(),
             codeId: "CODE-001",
             title: "Test Code",
@@ -219,8 +219,8 @@ struct CodeMessageModelTests {
     func enumConversions() {
         let model = CodeMessageModel(
             messageId: UUID(),
-            fromAI: "CoderAI",
-            toAI: "OverseerAI",
+            fromAI: "Creator",
+            toAI: "Monitor",
             timestamp: Date(),
             codeId: "CODE-001",
             title: "Test",
@@ -237,8 +237,8 @@ struct CodeMessageModelTests {
     func statusTransition() throws {
         let model = CodeMessageModel(
             messageId: UUID(),
-            fromAI: "CoderAI",
-            toAI: "OverseerAI",
+            fromAI: "Creator",
+            toAI: "Monitor",
             timestamp: Date(),
             codeId: "CODE-001",
             title: "Test",
@@ -259,8 +259,8 @@ struct CodeMessageModelTests {
     func invalidTransitionThrows() {
         let model = CodeMessageModel(
             messageId: UUID(),
-            fromAI: "CoderAI",
-            toAI: "OverseerAI",
+            fromAI: "Creator",
+            toAI: "Monitor",
             timestamp: Date(),
             codeId: "CODE-001",
             title: "Test",
@@ -283,8 +283,8 @@ struct ScoreMessageModelTests {
     func initialization() {
         let model = ScoreMessageModel(
             messageId: UUID(),
-            fromAI: "CoderAI",
-            toAI: "OverseerAI",
+            fromAI: "Creator",
+            toAI: "Monitor",
             timestamp: Date(),
             taskId: "TASK-001",
             requestedScore: 10,
@@ -304,8 +304,8 @@ struct ScoreMessageModelTests {
     func withAwardedScore() {
         let model = ScoreMessageModel(
             messageId: UUID(),
-            fromAI: "OverseerAI",
-            toAI: "CoderAI",
+            fromAI: "Monitor",
+            toAI: "Creator",
             timestamp: Date(),
             taskId: "TASK-001",
             requestedScore: 10,
@@ -325,8 +325,8 @@ struct ScoreMessageModelTests {
     func statusTransition() throws {
         let model = ScoreMessageModel(
             messageId: UUID(),
-            fromAI: "CoderAI",
-            toAI: "OverseerAI",
+            fromAI: "Creator",
+            toAI: "Monitor",
             timestamp: Date(),
             taskId: "TASK-001",
             requestedScore: 10,
@@ -347,8 +347,8 @@ struct FeedbackMessageModelTests {
     func initialization() {
         let model = FeedbackMessageModel(
             messageId: UUID(),
-            fromAI: "CoderAI",
-            toAI: "OverseerAI",
+            fromAI: "Creator",
+            toAI: "Monitor",
             timestamp: Date(),
             feedbackType: "suggestion",
             subject: "Test Feedback",
@@ -369,8 +369,8 @@ struct FeedbackMessageModelTests {
     func withResponse() {
         let model = FeedbackMessageModel(
             messageId: UUID(),
-            fromAI: "OverseerAI",
-            toAI: "CoderAI",
+            fromAI: "Monitor",
+            toAI: "Creator",
             timestamp: Date(),
             feedbackType: "acknowledgment",
             subject: "Re: Test Feedback",
@@ -388,8 +388,8 @@ struct FeedbackMessageModelTests {
     func statusTransition() throws {
         let model = FeedbackMessageModel(
             messageId: UUID(),
-            fromAI: "CoderAI",
-            toAI: "OverseerAI",
+            fromAI: "Creator",
+            toAI: "Monitor",
             timestamp: Date(),
             feedbackType: "test",
             subject: "Test",
@@ -413,16 +413,16 @@ struct HeartbeatMessageModelTests {
     func initialization() {
         let model = HeartbeatMessageModel(
             messageId: UUID(),
-            fromAI: "CoderAI",
-            toAI: "OverseerAI",
+            fromAI: "Creator",
+            toAI: "Monitor",
             timestamp: Date(),
-            aiRole: "coder",
+            aiRole: "creator",
             status: "active",
             currentTask: "Implementing message types",
             metadata: ["version": "1.0"]
         )
         
-        #expect(model.aiRole == "coder")
+        #expect(model.aiRole == "creator")
         #expect(model.status == "active")
         #expect(model.currentTask == "Implementing message types")
         #expect(model.metadata?["version"] == "1.0")
@@ -432,14 +432,14 @@ struct HeartbeatMessageModelTests {
     func minimal() {
         let model = HeartbeatMessageModel(
             messageId: UUID(),
-            fromAI: "CoderAI",
-            toAI: "OverseerAI",
+            fromAI: "Creator",
+            toAI: "Monitor",
             timestamp: Date(),
-            aiRole: "coder",
+            aiRole: "creator",
             status: "active"
         )
         
-        #expect(model.aiRole == "coder")
+        #expect(model.aiRole == "creator")
         #expect(model.status == "active")
         #expect(model.currentTask == nil)
         #expect(model.metadata == nil)

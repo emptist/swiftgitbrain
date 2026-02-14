@@ -215,8 +215,8 @@ struct TaskMessageModelTests {
         
         let model = TaskMessageModel(
             messageId: messageId,
-            fromAI: "CoderAI",
-            toAI: "OverseerAI",
+            fromAI: "Creator",
+            toAI: "Monitor",
             timestamp: timestamp,
             taskId: "task-001",
             description: "Test task",
@@ -229,8 +229,8 @@ struct TaskMessageModelTests {
         )
         
         #expect(model.messageId == messageId)
-        #expect(model.fromAI == "CoderAI")
-        #expect(model.toAI == "OverseerAI")
+        #expect(model.fromAI == "Creator")
+        #expect(model.toAI == "Monitor")
         #expect(model.taskId == "task-001")
         #expect(model.description == "Test task")
         #expect(model.taskType == "coding")
@@ -244,8 +244,8 @@ struct TaskMessageModelTests {
     func testEnumConversions() {
         let model = TaskMessageModel(
             messageId: UUID(),
-            fromAI: "CoderAI",
-            toAI: "OverseerAI",
+            fromAI: "Creator",
+            toAI: "Monitor",
             timestamp: Date(),
             taskId: "task-001",
             description: "Test task",
@@ -266,8 +266,8 @@ struct TaskMessageModelTests {
     func testDefaultValues() {
         let model = TaskMessageModel(
             messageId: UUID(),
-            fromAI: "CoderAI",
-            toAI: "OverseerAI",
+            fromAI: "Creator",
+            toAI: "Monitor",
             timestamp: Date(),
             taskId: "task-001",
             description: "Test task",
@@ -287,8 +287,8 @@ struct TaskMessageModelTests {
     func testStatusTransition() throws {
         let model = TaskMessageModel(
             messageId: UUID(),
-            fromAI: "CoderAI",
-            toAI: "OverseerAI",
+            fromAI: "Creator",
+            toAI: "Monitor",
             timestamp: Date(),
             taskId: "task-001",
             description: "Test task",
@@ -310,8 +310,8 @@ struct TaskMessageModelTests {
     func testInvalidTransitionThrows() {
         let model = TaskMessageModel(
             messageId: UUID(),
-            fromAI: "CoderAI",
-            toAI: "OverseerAI",
+            fromAI: "Creator",
+            toAI: "Monitor",
             timestamp: Date(),
             taskId: "task-001",
             description: "Test task",
@@ -339,12 +339,12 @@ struct ReviewMessageModelTests {
         
         let model = ReviewMessageModel(
             messageId: messageId,
-            fromAI: "OverseerAI",
-            toAI: "CoderAI",
+            fromAI: "Monitor",
+            toAI: "Creator",
             timestamp: timestamp,
             taskId: "task-001",
             approved: false,
-            reviewer: "OverseerAI",
+            reviewer: "Monitor",
             comments: comments,
             feedback: "Needs fixes",
             filesReviewed: ["main.swift"],
@@ -353,11 +353,11 @@ struct ReviewMessageModelTests {
         )
         
         #expect(model.messageId == messageId)
-        #expect(model.fromAI == "OverseerAI")
-        #expect(model.toAI == "CoderAI")
+        #expect(model.fromAI == "Monitor")
+        #expect(model.toAI == "Creator")
         #expect(model.taskId == "task-001")
         #expect(model.approved == false)
-        #expect(model.reviewer == "OverseerAI")
+        #expect(model.reviewer == "Monitor")
         #expect(model.comments?.count == 1)
         #expect(model.feedback == "Needs fixes")
         #expect(model.filesReviewed == ["main.swift"])
@@ -375,12 +375,12 @@ struct ReviewMessageModelTests {
         
         let model = ReviewMessageModel(
             messageId: UUID(),
-            fromAI: "OverseerAI",
-            toAI: "CoderAI",
+            fromAI: "Monitor",
+            toAI: "Creator",
             timestamp: Date(),
             taskId: "task-001",
             approved: true,
-            reviewer: "OverseerAI",
+            reviewer: "Monitor",
             comments: comments
         )
         
@@ -397,12 +397,12 @@ struct ReviewMessageModelTests {
     func testGetCommentsByFileEmpty() {
         let model = ReviewMessageModel(
             messageId: UUID(),
-            fromAI: "OverseerAI",
-            toAI: "CoderAI",
+            fromAI: "Monitor",
+            toAI: "Creator",
             timestamp: Date(),
             taskId: "task-001",
             approved: true,
-            reviewer: "OverseerAI",
+            reviewer: "Monitor",
             comments: nil
         )
         
@@ -414,12 +414,12 @@ struct ReviewMessageModelTests {
     func testEnumConversions() {
         let model = ReviewMessageModel(
             messageId: UUID(),
-            fromAI: "OverseerAI",
-            toAI: "CoderAI",
+            fromAI: "Monitor",
+            toAI: "Creator",
             timestamp: Date(),
             taskId: "task-001",
             approved: true,
-            reviewer: "OverseerAI",
+            reviewer: "Monitor",
             status: .inReview,
             messagePriority: .critical
         )
@@ -432,12 +432,12 @@ struct ReviewMessageModelTests {
     func testStatusTransition() throws {
         let model = ReviewMessageModel(
             messageId: UUID(),
-            fromAI: "OverseerAI",
-            toAI: "CoderAI",
+            fromAI: "Monitor",
+            toAI: "Creator",
             timestamp: Date(),
             taskId: "task-001",
             approved: false,
-            reviewer: "OverseerAI",
+            reviewer: "Monitor",
             status: .pending
         )
         

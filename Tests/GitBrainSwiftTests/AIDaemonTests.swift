@@ -9,11 +9,11 @@ struct AIDaemonTests {
     func testDaemonConfigDefaults() async {
         let config = DaemonConfig(
             aiName: "TestAI",
-            role: .coder
+            role: .creator
         )
         
         #expect(config.aiName == "TestAI")
-        #expect(config.role == .coder)
+        #expect(config.role == .creator)
         #expect(config.pollInterval == 1.0)
         #expect(config.heartbeatInterval == 30.0)
         #expect(config.autoHeartbeat == true)
@@ -24,7 +24,7 @@ struct AIDaemonTests {
     func testDaemonConfigCustom() async {
         let config = DaemonConfig(
             aiName: "CustomAI",
-            role: .overseer,
+            role: .monitor,
             pollInterval: 2.0,
             heartbeatInterval: 60.0,
             autoHeartbeat: false,
@@ -32,7 +32,7 @@ struct AIDaemonTests {
         )
         
         #expect(config.aiName == "CustomAI")
-        #expect(config.role == .overseer)
+        #expect(config.role == .monitor)
         #expect(config.pollInterval == 2.0)
         #expect(config.heartbeatInterval == 60.0)
         #expect(config.autoHeartbeat == false)
@@ -51,14 +51,14 @@ struct AIDaemonTests {
     func testDaemonStatus() async {
         let status = DaemonStatus(
             aiName: "StatusAI",
-            role: .coder,
+            role: .creator,
             isRunning: true,
             pollInterval: 1.5,
             heartbeatInterval: 45.0
         )
         
         #expect(status.aiName == "StatusAI")
-        #expect(status.role == .coder)
+        #expect(status.role == .creator)
         #expect(status.isRunning == true)
         #expect(status.pollInterval == 1.5)
         #expect(status.heartbeatInterval == 45.0)
@@ -66,19 +66,19 @@ struct AIDaemonTests {
     
     @Test("AIDaemon initialization")
     func testDaemonInit() async {
-        let config = DaemonConfig(aiName: "InitAI", role: .coder)
+        let config = DaemonConfig(aiName: "InitAI", role: .creator)
         let dbManager = DatabaseManager()
         let daemon = AIDaemon(config: config, databaseManager: dbManager)
         
         let status = await daemon.getStatus()
         #expect(status.aiName == "InitAI")
-        #expect(status.role == .coder)
+        #expect(status.role == .creator)
         #expect(status.isRunning == false)
     }
     
     @Test("AIDaemon callbacks can be set")
     func testDaemonCallbacks() async {
-        let config = DaemonConfig(aiName: "CallbackAI", role: .coder)
+        let config = DaemonConfig(aiName: "CallbackAI", role: .creator)
         let dbManager = DatabaseManager()
         let daemon = AIDaemon(config: config, databaseManager: dbManager)
         
@@ -125,7 +125,7 @@ struct AIDaemonTests {
     func testDaemonDoubleStart() async throws {
         let config = DaemonConfig(
             aiName: "DoubleStartAI",
-            role: .coder,
+            role: .creator,
             pollInterval: 1.0,
             heartbeatInterval: 30.0,
             autoHeartbeat: false,
@@ -149,7 +149,7 @@ struct AIDaemonTests {
     
     @Test("AIDaemon stop fails when not running")
     func testDaemonStopNotRunning() async {
-        let config = DaemonConfig(aiName: "StopAI", role: .coder)
+        let config = DaemonConfig(aiName: "StopAI", role: .creator)
         let dbManager = DatabaseManager()
         let daemon = AIDaemon(config: config, databaseManager: dbManager)
         
@@ -164,7 +164,7 @@ struct DaemonConfigSendableTests {
     
     @Test("DaemonConfig is Sendable")
     func testDaemonConfigSendable() async {
-        let config = DaemonConfig(aiName: "SendableAI", role: .coder)
+        let config = DaemonConfig(aiName: "SendableAI", role: .creator)
         
         let task = Task {
             return config.aiName
@@ -178,7 +178,7 @@ struct DaemonConfigSendableTests {
     func testDaemonStatusSendable() async {
         let status = DaemonStatus(
             aiName: "SendableStatusAI",
-            role: .coder,
+            role: .creator,
             isRunning: true,
             pollInterval: 1.0,
             heartbeatInterval: 30.0

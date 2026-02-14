@@ -91,13 +91,13 @@ struct DataMigrationTests {
         let state = SendableContent(["test": "state"])
         let snapshot = BrainStateSnapshot(
             aiName: "test-ai",
-            role: .coder,
+            role: .creator,
             state: state,
             timestamp: Date()
         )
         
         #expect(snapshot.aiName == "test-ai")
-        #expect(snapshot.role == .coder)
+        #expect(snapshot.role == .creator)
     }
     
     @Test("Test migration result creation")

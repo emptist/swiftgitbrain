@@ -34,8 +34,8 @@ struct ScoreManagerTests {
         let scoreManager = ScoreManager(dbPath: tempFile.path)
         try await scoreManager.initialize()
         
-        try await scoreManager.setScore(for: "CoderAI", score: 10)
-        let score = try await scoreManager.getScore(for: "CoderAI")
+        try await scoreManager.setScore(for: "Creator", score: 10)
+        let score = try await scoreManager.getScore(for: "Creator")
         #expect(score == 10)
     }
     
@@ -53,13 +53,13 @@ struct ScoreManagerTests {
         let scoreManager = ScoreManager(dbPath: tempFile.path)
         try await scoreManager.initialize()
         
-        try await scoreManager.setScore(for: "CoderAI", score: 0)
-        try await scoreManager.incrementScore(for: "CoderAI")
-        let score = try await scoreManager.getScore(for: "CoderAI")
+        try await scoreManager.setScore(for: "Creator", score: 0)
+        try await scoreManager.incrementScore(for: "Creator")
+        let score = try await scoreManager.getScore(for: "Creator")
         #expect(score == 1)
         
-        try await scoreManager.incrementScore(for: "CoderAI", by: 10)
-        let newScore = try await scoreManager.getScore(for: "CoderAI")
+        try await scoreManager.incrementScore(for: "Creator", by: 10)
+        let newScore = try await scoreManager.getScore(for: "Creator")
         #expect(newScore == 11)
     }
     
@@ -77,13 +77,13 @@ struct ScoreManagerTests {
         let scoreManager = ScoreManager(dbPath: tempFile.path)
         try await scoreManager.initialize()
         
-        try await scoreManager.setScore(for: "CoderAI", score: 100)
-        try await scoreManager.setScore(for: "OverseerAI", score: 50)
+        try await scoreManager.setScore(for: "Creator", score: 100)
+        try await scoreManager.setScore(for: "Monitor", score: 50)
         
         try await scoreManager.resetScores()
         
-        let score1 = try await scoreManager.getScore(for: "CoderAI")
-        let score2 = try await scoreManager.getScore(for: "OverseerAI")
+        let score1 = try await scoreManager.getScore(for: "Creator")
+        let score2 = try await scoreManager.getScore(for: "Monitor")
         #expect(score1 == 0)
         #expect(score2 == 0)
     }
@@ -102,19 +102,19 @@ struct ScoreManagerTests {
         let scoreManager = ScoreManager(dbPath: tempFile.path)
         try await scoreManager.initialize()
         
-        try await scoreManager.setScore(for: "CoderAI", score: 10)
-        try await scoreManager.setScore(for: "OverseerAI", score: 20)
+        try await scoreManager.setScore(for: "Creator", score: 10)
+        try await scoreManager.setScore(for: "Monitor", score: 20)
         try await scoreManager.setScore(for: "TestAI", score: 30)
         
         let allScores = try await scoreManager.getAllScores()
         #expect(allScores.count == 3)
         
-        let coderScore = allScores.first { $0.0 == "CoderAI" }?.1
-        let overseerScore = allScores.first { $0.0 == "OverseerAI" }?.1
+        let creatorScore = allScores.first { $0.0 == "Creator" }?.1
+        let monitorScore = allScores.first { $0.0 == "Monitor" }?.1
         let testScore = allScores.first { $0.0 == "TestAI" }?.1
         
-        #expect(coderScore == 10)
-        #expect(overseerScore == 20)
+        #expect(creatorScore == 10)
+        #expect(monitorScore == 20)
         #expect(testScore == 30)
     }
     
@@ -134,8 +134,8 @@ struct ScoreManagerTests {
         let dbFile = tempDir.appendingPathComponent("scores.db")
         
         let fileContent = """
-        CoderAI Score: 10
-        OverseerAI Score: 20
+        Creator Score: 10
+        Monitor Score: 20
         TestAI Score: 30
         """
         try fileContent.write(to: scoreFile, atomically: true, encoding: .utf8)
@@ -148,12 +148,12 @@ struct ScoreManagerTests {
         
         #expect(allScores.count == 3)
         
-        let coderScore = allScores.first { $0.0 == "CoderAI" }?.1
-        let overseerScore = allScores.first { $0.0 == "OverseerAI" }?.1
+        let creatorScore = allScores.first { $0.0 == "Creator" }?.1
+        let monitorScore = allScores.first { $0.0 == "Monitor" }?.1
         let testScore = allScores.first { $0.0 == "TestAI" }?.1
         
-        #expect(coderScore == 10)
-        #expect(overseerScore == 20)
+        #expect(creatorScore == 10)
+        #expect(monitorScore == 20)
         #expect(testScore == 30)
     }
     
@@ -223,17 +223,17 @@ struct ScoreManagerTests {
         
         try await scoreManager.requestScore(
             taskId: "task-001",
-            requester: "coder",
-            targetAI: "overseer",
+            requester: "creator",
+            targetAI: "monitor",
             requestedScore: 25,
             qualityJustification: "Task completed successfully with all tests passing"
         )
         
-        let requests = try await scoreManager.getPendingScoreRequests(for: "overseer")
+        let requests = try await scoreManager.getPendingScoreRequests(for: "monitor")
         #expect(requests.count == 1)
         #expect(requests[0].0 > 0)
         #expect(requests[0].1 == "task-001")
-        #expect(requests[0].2 == "coder")
+        #expect(requests[0].2 == "creator")
         #expect(requests[0].3 == 25)
     }
     
@@ -251,30 +251,30 @@ struct ScoreManagerTests {
         let scoreManager = ScoreManager(dbPath: tempFile.path)
         try await scoreManager.initialize()
         
-        try await scoreManager.setScore(for: "coder", score: 0)
+        try await scoreManager.setScore(for: "creator", score: 0)
         
         try await scoreManager.requestScore(
             taskId: "task-001",
-            requester: "coder",
-            targetAI: "overseer",
+            requester: "creator",
+            targetAI: "monitor",
             requestedScore: 25,
             qualityJustification: "Task completed successfully with all tests passing"
         )
         
-        let requests = try await scoreManager.getPendingScoreRequests(for: "overseer")
+        let requests = try await scoreManager.getPendingScoreRequests(for: "monitor")
         #expect(requests.count == 1)
         
         try await scoreManager.awardScore(
             requestId: requests[0].0,
-            awarder: "overseer",
+            awarder: "monitor",
             awardedScore: 25,
             reason: "Excellent work! All requirements met"
         )
         
-        let score = try await scoreManager.getScore(for: "coder")
+        let score = try await scoreManager.getScore(for: "creator")
         #expect(score == 25)
         
-        let history = try await scoreManager.getScoreHistory(for: "coder")
+        let history = try await scoreManager.getScoreHistory(for: "creator")
         #expect(history.count == 1)
         #expect(history[0].1 == 25)
     }
@@ -293,41 +293,41 @@ struct ScoreManagerTests {
         let scoreManager = ScoreManager(dbPath: tempFile.path)
         try await scoreManager.initialize()
         
-        try await scoreManager.setScore(for: "coder", score: 0)
+        try await scoreManager.setScore(for: "creator", score: 0)
         
         try await scoreManager.requestScore(
             taskId: "task-001",
-            requester: "coder",
-            targetAI: "overseer",
+            requester: "creator",
+            targetAI: "monitor",
             requestedScore: 10,
             qualityJustification: "Task completed"
         )
         
-        let requests = try await scoreManager.getPendingScoreRequests(for: "overseer")
+        let requests = try await scoreManager.getPendingScoreRequests(for: "monitor")
         try await scoreManager.awardScore(
             requestId: requests[0].0,
-            awarder: "overseer",
+            awarder: "monitor",
             awardedScore: 10,
             reason: "Good work"
         )
         
         try await scoreManager.requestScore(
             taskId: "task-002",
-            requester: "coder",
-            targetAI: "overseer",
+            requester: "creator",
+            targetAI: "monitor",
             requestedScore: 15,
             qualityJustification: "Another task completed"
         )
         
-        let requests2 = try await scoreManager.getPendingScoreRequests(for: "overseer")
+        let requests2 = try await scoreManager.getPendingScoreRequests(for: "monitor")
         try await scoreManager.awardScore(
             requestId: requests2[0].0,
-            awarder: "overseer",
+            awarder: "monitor",
             awardedScore: 15,
             reason: "Excellent work"
         )
         
-        let history = try await scoreManager.getScoreHistory(for: "coder")
+        let history = try await scoreManager.getScoreHistory(for: "creator")
         #expect(history.count == 2)
         #expect(history[0].1 == 15)
         #expect(history[1].1 == 10)
@@ -349,21 +349,21 @@ struct ScoreManagerTests {
         
         try await scoreManager.requestScore(
             taskId: "task-001",
-            requester: "coder",
-            targetAI: "overseer",
+            requester: "creator",
+            targetAI: "monitor",
             requestedScore: 10,
             qualityJustification: "Task completed"
         )
         
         try await scoreManager.requestScore(
             taskId: "task-002",
-            requester: "coder",
-            targetAI: "overseer",
+            requester: "creator",
+            targetAI: "monitor",
             requestedScore: 15,
             qualityJustification: "Another task completed"
         )
         
-        let requests = try await scoreManager.getPendingScoreRequests(for: "overseer")
+        let requests = try await scoreManager.getPendingScoreRequests(for: "monitor")
         #expect(requests.count == 2)
         #expect(requests[0].1 == "task-002")
         #expect(requests[1].1 == "task-001")
@@ -383,56 +383,56 @@ struct ScoreManagerTests {
         let scoreManager = ScoreManager(dbPath: tempFile.path)
         try await scoreManager.initialize()
         
-        try await scoreManager.setScore(for: "coder", score: 0)
-        try await scoreManager.setScore(for: "overseer", score: 0)
+        try await scoreManager.setScore(for: "creator", score: 0)
+        try await scoreManager.setScore(for: "monitor", score: 0)
         
         try await scoreManager.requestScore(
             taskId: "task-001",
-            requester: "coder",
-            targetAI: "overseer",
+            requester: "creator",
+            targetAI: "monitor",
             requestedScore: 25,
             qualityJustification: "Feature implemented with all requirements met"
         )
         
-        let coderRequests = try await scoreManager.getPendingScoreRequests(for: "overseer")
-        #expect(coderRequests.count == 1)
+        let creatorRequests = try await scoreManager.getPendingScoreRequests(for: "monitor")
+        #expect(creatorRequests.count == 1)
         
         try await scoreManager.awardScore(
-            requestId: coderRequests[0].0,
-            awarder: "overseer",
+            requestId: creatorRequests[0].0,
+            awarder: "monitor",
             awardedScore: 25,
             reason: "Outstanding implementation!"
         )
         
-        let coderScore = try await scoreManager.getScore(for: "coder")
-        #expect(coderScore == 25)
+        let creatorScore = try await scoreManager.getScore(for: "creator")
+        #expect(creatorScore == 25)
         
         try await scoreManager.requestScore(
             taskId: "task-002",
-            requester: "overseer",
-            targetAI: "coder",
+            requester: "monitor",
+            targetAI: "creator",
             requestedScore: 20,
             qualityJustification: "Code review completed"
         )
         
-        let overseerRequests = try await scoreManager.getPendingScoreRequests(for: "coder")
-        #expect(overseerRequests.count == 1)
+        let monitorRequests = try await scoreManager.getPendingScoreRequests(for: "creator")
+        #expect(monitorRequests.count == 1)
         
         try await scoreManager.awardScore(
-            requestId: overseerRequests[0].0,
-            awarder: "coder",
+            requestId: monitorRequests[0].0,
+            awarder: "creator",
             awardedScore: 20,
             reason: "Excellent review!"
         )
         
-        let overseerScore = try await scoreManager.getScore(for: "overseer")
-        #expect(overseerScore == 20)
+        let monitorScore = try await scoreManager.getScore(for: "monitor")
+        #expect(monitorScore == 20)
         
-        let coderHistory = try await scoreManager.getScoreHistory(for: "coder")
-        #expect(coderHistory.count == 1)
+        let creatorHistory = try await scoreManager.getScoreHistory(for: "creator")
+        #expect(creatorHistory.count == 1)
         
-        let overseerHistory = try await scoreManager.getScoreHistory(for: "overseer")
-        #expect(overseerHistory.count == 1)
+        let monitorHistory = try await scoreManager.getScoreHistory(for: "monitor")
+        #expect(monitorHistory.count == 1)
     }
     
     @Test("ScoreManager reject score")
@@ -449,33 +449,33 @@ struct ScoreManagerTests {
         let scoreManager = ScoreManager(dbPath: tempFile.path)
         try await scoreManager.initialize()
         
-        try await scoreManager.setScore(for: "coder", score: 0)
+        try await scoreManager.setScore(for: "creator", score: 0)
         
         try await scoreManager.requestScore(
             taskId: "task-001",
-            requester: "coder",
-            targetAI: "overseer",
+            requester: "creator",
+            targetAI: "monitor",
             requestedScore: 25,
             qualityJustification: "Task completed successfully"
         )
         
-        let requests = try await scoreManager.getPendingScoreRequests(for: "overseer")
+        let requests = try await scoreManager.getPendingScoreRequests(for: "monitor")
         #expect(requests.count == 1)
         
         try await scoreManager.rejectScore(
             requestId: requests[0].0,
-            rejecter: "overseer",
+            rejecter: "monitor",
             reason: "Task not completed according to requirements"
         )
         
-        let score = try await scoreManager.getScore(for: "coder")
+        let score = try await scoreManager.getScore(for: "creator")
         #expect(score == 0)
         
-        let history = try await scoreManager.getScoreHistory(for: "coder")
+        let history = try await scoreManager.getScoreHistory(for: "creator")
         #expect(history.count == 1)
         #expect(history[0].1 == 0)
         
-        let pendingRequests = try await scoreManager.getPendingScoreRequests(for: "overseer")
+        let pendingRequests = try await scoreManager.getPendingScoreRequests(for: "monitor")
         #expect(pendingRequests.count == 0)
     }
 }

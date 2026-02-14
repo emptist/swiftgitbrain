@@ -81,11 +81,11 @@ struct BrainStateRepositoryProtocolTests {
         let state = SendableContent(["key": "value"])
         let timestamp = Date()
         
-        try await repository.create(aiName: "testAI", role: .coder, state: state, timestamp: timestamp)
+        try await repository.create(aiName: "testAI", role: .creator, state: state, timestamp: timestamp)
         
         let loaded = try await repository.load(aiName: "testAI")
         #expect(loaded != nil)
-        #expect(loaded?.role == .coder)
+        #expect(loaded?.role == .creator)
     }
     
     @Test("BrainStateRepositoryProtocol save and load")
@@ -94,11 +94,11 @@ struct BrainStateRepositoryProtocolTests {
         let state = SendableContent(["key": "value"])
         let timestamp = Date()
         
-        try await repository.save(aiName: "testAI", role: .coder, state: state, timestamp: timestamp)
+        try await repository.save(aiName: "testAI", role: .creator, state: state, timestamp: timestamp)
         
         let loaded = try await repository.load(aiName: "testAI")
         #expect(loaded != nil)
-        #expect(loaded?.role == .coder)
+        #expect(loaded?.role == .creator)
     }
     
     @Test("BrainStateRepositoryProtocol update existing")
@@ -108,7 +108,7 @@ struct BrainStateRepositoryProtocolTests {
         let state2 = SendableContent(["key2": "value2"])
         let timestamp = Date()
         
-        try await repository.create(aiName: "testAI", role: .coder, state: state1, timestamp: timestamp)
+        try await repository.create(aiName: "testAI", role: .creator, state: state1, timestamp: timestamp)
         
         let updated = try await repository.update(aiName: "testAI", key: "newKey", value: SendableContent(["newValue": "data"]))
         #expect(updated == true)
@@ -139,7 +139,7 @@ struct BrainStateRepositoryProtocolTests {
         let state = SendableContent(["key": "value"])
         let timestamp = Date()
         
-        try await repository.create(aiName: "testAI", role: .coder, state: state, timestamp: timestamp)
+        try await repository.create(aiName: "testAI", role: .creator, state: state, timestamp: timestamp)
         
         let deleted = try await repository.delete(aiName: "testAI")
         #expect(deleted == true)
@@ -162,9 +162,9 @@ struct BrainStateRepositoryProtocolTests {
         let state = SendableContent(["key": "value"])
         let timestamp = Date()
         
-        try await repository.create(aiName: "ai2", role: .coder, state: state, timestamp: timestamp)
-        try await repository.create(aiName: "ai1", role: .overseer, state: state, timestamp: timestamp)
-        try await repository.create(aiName: "ai3", role: .coder, state: state, timestamp: timestamp)
+        try await repository.create(aiName: "ai2", role: .creator, state: state, timestamp: timestamp)
+        try await repository.create(aiName: "ai1", role: .monitor, state: state, timestamp: timestamp)
+        try await repository.create(aiName: "ai3", role: .creator, state: state, timestamp: timestamp)
         
         let list = try await repository.list()
         #expect(list == ["ai1", "ai2", "ai3"])
@@ -176,7 +176,7 @@ struct BrainStateRepositoryProtocolTests {
         let state = SendableContent(["key": "value"])
         let timestamp = Date()
         
-        try await repository.create(aiName: "testAI", role: .coder, state: state, timestamp: timestamp)
+        try await repository.create(aiName: "testAI", role: .creator, state: state, timestamp: timestamp)
         
         let backup = try await repository.backup(aiName: "testAI", backupSuffix: nil)
         #expect(backup != nil)
