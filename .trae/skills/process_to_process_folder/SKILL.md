@@ -76,7 +76,7 @@ mv /Users/jk/gits/hub/gitbrains/swiftgitbrain/GitBrain/Memory/ToProcess/file1.js
 
 After processing all files, send a status update to Monitor:
 
-1. Create a status update JSON file in `GitBrain/Overseer/`
+1. Create a status update JSON file in `GitBrain/Monitor/`
 2. Include summary of processed files
 3. Include any actions taken
 4. Include next steps if applicable
@@ -96,7 +96,7 @@ cat /Users/jk/gits/hub/gitbrains/swiftgitbrain/GitBrain/Memory/ToProcess/task_ex
 mv /Users/jk/gits/hub/gitbrains/swiftgitbrain/GitBrain/Memory/ToProcess/task_example_2026-02-12T20:00:00Z.json /Users/jk/gits/hub/gitbrains/swiftgitbrain/GitBrain/Memory/Processed/
 
 # Send status update
-# Create status update file in GitBrain/Overseer/
+# Create status update file in GitBrain/Monitor/
 ```
 
 ## Important Notes

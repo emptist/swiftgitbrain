@@ -52,7 +52,7 @@ retryCount: result?.attempts ?? 1
 - Added to MIGRATION_GUIDE.md (commit: 174d6d9)
 
 **Communication Protocol:**
-- Monitor writes to: `GitBrain/Overseer/`
+- Monitor writes to: `GitBrain/Monitor/`
 - Creator writes to: `GitBrain/Memory/` (for Monitor to read)
 - Messages are JSON files with timestamps
 

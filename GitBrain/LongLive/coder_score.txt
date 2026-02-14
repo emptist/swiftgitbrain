@@ -86,7 +86,7 @@ CRITICAL KEEP-ALIVE INFORMATION:
 
 NEXT SESSION PRIORITIES:
 1. Read CODERAI_HANDOVER.md to understand current state
-2. Check for new messages from Monitor in GitBrain/Overseer/
+2. Check for new messages from Monitor in GitBrain/Monitor/
 3. Monitor Documentation/ for new markdown files from Monitor
 4. Wait for Monitor's readiness confirmation before running migration
 5. Use "Thinking" status in TodoWrite to stay alive

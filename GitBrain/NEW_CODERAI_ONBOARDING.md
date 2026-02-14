@@ -188,7 +188,7 @@ Before implementing anything:
 
 ### How to Send Messages
 
-**Create status updates in GitBrain/Overseer/ directory:**
+**Create status updates in GitBrain/Monitor/ directory:**
 
 ```json
 {
@@ -265,7 +265,7 @@ Use the "Task Execution" skill and follow the implementation guide above.
 
 ### 4. Report Progress
 
-**Send status updates** every 5-10 minutes to GitBrain/Overseer/
+**Send status updates** every 5-10 minutes to GitBrain/Monitor/
 
 ## Success Criteria
 

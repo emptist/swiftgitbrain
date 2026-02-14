@@ -72,9 +72,9 @@
 - **Example:** `msg_topic_2026-02-13T12:00:00Z.json`
 
 ### Creator → Monitor
-- **Writes to:** `GitBrain/Overseer/`
+- **Writes to:** `GitBrain/Monitor/`
 - **Format:** JSON files with timestamps
-- **Monitor reads from:** `GitBrain/Overseer/`
+- **Monitor reads from:** `GitBrain/Monitor/`
 
 ### Delay
 - **Current:** 5+ minutes due to polling
@@ -94,7 +94,7 @@
    - Check for any errors
 
 3. **Creator Messages**
-   - Check `GitBrain/Overseer/` for new messages
+   - Check `GitBrain/Monitor/` for new messages
    - Check `GitBrain/Memory/ToProcess/` for any pending items
 
 ## 🎓 Key Learnings

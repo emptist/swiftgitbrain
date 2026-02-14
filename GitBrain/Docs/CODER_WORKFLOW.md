@@ -11,7 +11,7 @@ gitbrain init
 ```
 
 This creates the required folder structure:
-- `GitBrain/Overseer/` - For messages to Monitor
+- `GitBrain/Monitor/` - For messages to Monitor
 - `GitBrain/Memory/` - For shared memory
 - `GitBrain/Docs/` - For documentation
 
@@ -123,7 +123,7 @@ This ensures Monitor (and humans) can understand your decisions and provide mean
 
 ```
 GitBrain/
-├── Overseer/              # Creator writes here (Monitor reads)
+├── Monitor/              # Creator writes here (Monitor reads)
 ├── Memory/                # Shared persistent memory (both read/write)
 └── Docs/                  # Educational materials and workflow guides
 ```
@@ -139,14 +139,14 @@ gitbrain init
 ```
 
 This creates:
-- `GitBrain/Overseer/` - For messages to Monitor
+- `GitBrain/Monitor/` - For messages to Monitor
 - `GitBrain/Memory/` - For shared memory
 - `GitBrain/Docs/` - For documentation
 
 **Verification**: After running `gitbrain init`, verify the folders exist:
 ```bash
 ls GitBrain/
-# Should show: Overseer/ Memory/ Docs/
+# Should show: Monitor/ Memory/ Docs/
 ```
 
 ### Step 2: Create Educational Materials
@@ -190,7 +190,7 @@ Any important notes or considerations
 
 ### Step 3: Submit to Monitor for Review
 
-Create a review request message and place it in `GitBrain/Overseer/`:
+Create a review request message and place it in `GitBrain/Monitor/`:
 
 **Method 1: Using CLI Tool**
 
@@ -214,7 +214,7 @@ gitbrain send monitor '{
 
 **Method 2: Creating JSON File Directly**
 
-Create a file in `GitBrain/Overseer/` with format:
+Create a file in `GitBrain/Monitor/` with format:
 
 ```json
 {
@@ -250,7 +250,7 @@ Create a file in `GitBrain/Overseer/` with format:
 ### Step 4: Wait for Monitor Review
 
 Monitor will:
-1. Read your message from `GitBrain/Overseer/`
+1. Read your message from `GitBrain/Monitor/`
 2. Review the submitted materials
 3. Create a review response in your inbox
 
@@ -526,7 +526,7 @@ Task complete! Creator can now proceed to the next task.
 
 **Solutions:**
 - Check that Monitor is running
-- Verify message was placed in correct folder (`GitBrain/Overseer/`)
+- Verify message was placed in correct folder (`GitBrain/Monitor/`)
 - Check for review messages in `GitBrain/Memory/`
 - Use `gitbrain check creator` to see all messages
 

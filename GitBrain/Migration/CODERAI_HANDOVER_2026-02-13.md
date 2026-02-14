@@ -93,7 +93,7 @@
 
 ### Immediate Next Steps
 1. **Wait for Monitor's readiness confirmation**
-   - Monitor GitBrain/Overseer/ for new messages
+   - Monitor GitBrain/Monitor/ for new messages
    - Monitor Documentation/ for new markdown files
 
 2. **Perform End-to-End Migration Test**
@@ -192,7 +192,7 @@ Working tree clean - all changes committed
 ## Next Creator Instructions
 
 1. **Read this file first** to understand current state
-2. **Check for new messages** from Monitor in GitBrain/Overseer/
+2. **Check for new messages** from Monitor in GitBrain/Monitor/
 3. **Monitor Documentation/** for new markdown files from Monitor
 4. **Wait for Monitor's readiness confirmation** before running migration
 5. **Use "Thinking" status** in TodoWrite to stay alive
@@ -214,7 +214,7 @@ Migration is successful when:
 ## Contact Monitor
 
 If you need clarification:
-1. Write message to GitBrain/Overseer/ directory
+1. Write message to GitBrain/Monitor/ directory
 2. Use descriptive filename: `question_topic_timestamp.json`
 3. Wait for Monitor's response
 4. Monitor for new messages every 2-3 minutes

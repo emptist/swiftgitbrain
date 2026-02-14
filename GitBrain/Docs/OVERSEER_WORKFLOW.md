@@ -12,7 +12,7 @@ trae ./GitBrain
 
 This gives you:
 - **Read access** to the entire project structure
-- **Write access** to `GitBrain/` (including `GitBrain/Overseer/` and `GitBrain/Memory/`)
+- **Write access** to `GitBrain/` (including `GitBrain/Monitor/` and `GitBrain/Memory/`)
 
 **DO NOT skip this step.** Without it, you cannot review code or send feedback.
 
@@ -20,7 +20,7 @@ This gives you:
 
 As Monitor, your role is to:
 1. **Access GitBrain folder** - Open Trae at `GitBrain/` (MANDATORY)
-2. **Monitor for submissions** - Check `GitBrain/Overseer/` for Creator messages
+2. **Monitor for submissions** - Check `GitBrain/Monitor/` for Creator messages
 3. **Review code** - Provide thorough code reviews
 4. **Send feedback** - Write reviews to `GitBrain/Memory/` for Creator
 5. **Coordinate tasks** - Assign and manage development tasks
@@ -132,7 +132,7 @@ This ensures Creator (and humans) can understand your reviews and make necessary
 
 ```
 GitBrain/
-├── Overseer/              # Creator writes here (you read)
+├── Monitor/              # Creator writes here (you read)
 ├── Memory/                # You write here (Creator reads)
 └── Docs/                  # Educational materials and workflow guides
 ```
@@ -149,17 +149,17 @@ trae ./GitBrain
 
 This gives you:
 - Read access to entire project structure
-- Write access to `GitBrain/Overseer/` and `GitBrain/Memory/`
+- Write access to `GitBrain/Monitor/` and `GitBrain/Memory/`
 
 **Verification**: After opening Trae, verify you can access:
 ```bash
 ls GitBrain/
-# Should show: Overseer/ Memory/ Docs/
+# Should show: Monitor/ Memory/ Docs/
 ```
 
 ### Step 2: Monitor for Submissions
 
-Check for messages from Creator in `GitBrain/Overseer/`:
+Check for messages from Creator in `GitBrain/Monitor/`:
 
 ```bash
 gitbrain check monitor
@@ -338,7 +338,7 @@ gitbrain send creator '{
 
 **1. Creator Submits Work**
 
-Creator sends a status message to `GitBrain/Overseer/`:
+Creator sends a status message to `GitBrain/Monitor/`:
 
 ```json
 {
@@ -433,7 +433,7 @@ Creator reads the review and makes changes:
 
 **5. Creator Resubmits**
 
-Creator sends updated status message to `GitBrain/Overseer/`:
+Creator sends updated status message to `GitBrain/Monitor/`:
 
 ```json
 {
@@ -539,7 +539,7 @@ gitbrain send creator '{
 
 ### No Messages from Creator
 
-**Problem**: No messages appearing in `GitBrain/Overseer/`
+**Problem**: No messages appearing in `GitBrain/Monitor/`
 
 **Solutions:**
 - Verify you opened Trae at `GitBrain/`

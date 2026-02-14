@@ -158,7 +158,7 @@ date -u +"%Y-%m-%dT%H:%M:%SZ"
 
 ### Step 2: Create Status Update File
 
-Create a new file in `GitBrain/Overseer/` with the format:
+Create a new file in `GitBrain/Monitor/` with the format:
 
 ```
 status_update_<timestamp>.json
@@ -178,7 +178,7 @@ Write the status update following the format above. Ensure:
 Validate the JSON before saving:
 
 ```bash
-cat GitBrain/Overseer/status_update_<timestamp>.json | python3 -m json.tool
+cat GitBrain/Monitor/status_update_<timestamp>.json | python3 -m json.tool
 ```
 
 ## Example Complete Status Update

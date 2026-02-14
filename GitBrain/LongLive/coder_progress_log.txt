@@ -50,7 +50,7 @@ Reason: Enhanced keep-alive strategy with both TodoWrite "Thinking" status and s
 Status: Actively monitoring Monitor communications
 
 Actions Taken:
-1. Checked GitBrain/Overseer directory for new messages
+1. Checked GitBrain/Monitor directory for new messages
 2. Reviewed Monitor's response at 16:05:00Z
 3. Confirmed keep-alive strategy change
 4. Checked for new review requests or feedback
@@ -71,7 +71,7 @@ Status: Documented workflow loop for periodic reminders
 
 Creator Workflow Loop (to be reminded every 5 minutes):
 1. Check for new messages from Monitor
-   - Check GitBrain/Overseer directory for new messages
+   - Check GitBrain/Monitor directory for new messages
    - Check GitBrain/Memory/ToProcess directory for new reviews
    - Review and process any new messages or reviews
    

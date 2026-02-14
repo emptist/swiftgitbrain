@@ -172,13 +172,13 @@ The founder's design philosophy:
 ```
 Project/
 ├── GitBrain/
-│   ├── Overseer/          # Monitor working folder
+│   ├── Monitor/          # Monitor working folder
 │   ├── Memory/            # Shared persistent memory
 │   └── Docs/             # Documentation
 └── [project files]
 ```
 
-**Decision**: Separate Overseer folder but no Creator folder.
+**Decision**: Separate Monitor folder but no Creator folder.
 
 **Rationale**:
 - Creator has full project access (runs from root)
@@ -193,8 +193,8 @@ Project/
 ### Communication Flow
 
 ```
-Creator (root/) ──writes──> GitBrain/Overseer/
-Monitor (GitBrain/) ──reads──> GitBrain/Overseer/
+Creator (root/) ──writes──> GitBrain/Monitor/
+Monitor (GitBrain/) ──reads──> GitBrain/Monitor/
 Monitor ──writes──> GitBrain/Memory/
 Creator ──reads──> GitBrain/Memory/
 ```
@@ -202,7 +202,7 @@ Creator ──reads──> GitBrain/Memory/
 **Decision**: Asymmetric communication pattern.
 
 **Rationale**:
-- Creator initiates code reviews (writes to Overseer folder)
+- Creator initiates code reviews (writes to Monitor folder)
 - Monitor provides feedback (writes to Memory folder)
 - Clear separation of concerns
 - Prevents circular dependencies
