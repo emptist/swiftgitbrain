@@ -135,10 +135,14 @@ docs/build/
 worktrees/
 
 # GitBrain communication files (transient AI communication)
+.GitBrain/
 GitBrain/Memory/
 GitBrain/Overseer/
 GitBrain/Coder/
 GitBrain/keepalive_counter.txt
+
+# Trae cache exports
+trae_cache_export/
 
 # Temporary message files
 acknowledgment.json
@@ -148,3 +152,4 @@ status_update.json
 heartbeat.json
 daily_target.json
 
+trae_cache_export

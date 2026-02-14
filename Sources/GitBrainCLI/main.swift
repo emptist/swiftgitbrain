@@ -9,6 +9,7 @@ enum CLIError: LocalizedError {
     case fileNotFound(String)
     case initializationError(String)
     case databaseError(String)
+    case connectionError(String)
     
     var errorDescription: String? {
         switch self {
@@ -27,6 +28,8 @@ enum CLIError: LocalizedError {
             return "Initialization error: \(message)\n💡 Try running 'gitbrain init' first"
         case .databaseError(let message):
             return "Database error: \(message)\n💡 Ensure PostgreSQL is running and database is configured"
+        case .connectionError(let message):
+            return "Connection error: \(message)\n💡 Check your network and database connection"
         }
     }
     
@@ -184,116 +187,145 @@ struct GitBrainCLI {
         if let envPath = ProcessInfo.processInfo.environment["GITBRAIN_PATH"] {
             return envPath
         }
-        return "./GitBrain"
+        return "./.GitBrain"
     }
     
     private static func handleInit(args: [String]) async throws {
-        let gitBrainPath = args.first ?? getGitBrainPath()
+        let fileManager = FileManager.default
+        let currentPath = fileManager.currentDirectoryPath
+        
+        var projectName: String
+        var gitBrainPath: String
+        
+        if let providedName = args.first {
+            let providedPath = providedName.hasPrefix("/") ? providedName : "\(currentPath)/\(providedName)"
+            projectName = URL(fileURLWithPath: providedPath).lastPathComponent
+            gitBrainPath = "\(providedPath)/.GitBrain"
+        } else {
+            projectName = URL(fileURLWithPath: currentPath).lastPathComponent
+            gitBrainPath = "\(currentPath)/.GitBrain"
+        }
+        
+        let dbName = ProcessInfo.processInfo.environment["GITBRAIN_DB_NAME"] ?? "gitbrain_\(projectName.lowercased())"
+        
         let gitBrainURL = URL(fileURLWithPath: gitBrainPath)
-        let overseerURL = gitBrainURL.appendingPathComponent("Overseer")
-        let memoryURL = gitBrainURL.appendingPathComponent("Memory")
-        let docsURL = gitBrainURL.appendingPathComponent("Docs")
         
         print("Initializing GitBrain...")
+        print("Project: \(projectName)")
         print("Path: \(gitBrainPath)")
         if ProcessInfo.processInfo.environment["GITBRAIN_PATH"] != nil {
             print("Using environment variable: GITBRAIN_PATH")
         }
         
-        let fileManager = FileManager.default
-        
-        try fileManager.createDirectory(at: overseerURL, withIntermediateDirectories: true)
-        try fileManager.createDirectory(at: memoryURL, withIntermediateDirectories: true)
-        try fileManager.createDirectory(at: docsURL, withIntermediateDirectories: true)
-        
-        print("✓ Created GitBrain/Overseer/")
-        print("✓ Created GitBrain/Memory/")
-        print("✓ Created GitBrain/Docs/")
+        try fileManager.createDirectory(at: gitBrainURL, withIntermediateDirectories: true)
         
         let readmeContent = """
-        # GitBrain Development Folder
+        # GitBrain - AI Collaboration Guide
         
-        This folder is used for AI-assisted collaborative development.
+        > **READ THIS FIRST** - This guide is for AI assistants working in this project.
         
-        ## Structure
+        ## Project: \(projectName)
         
-        - **Overseer/**: Working folder for OverseerAI (write access)
-        - **Memory/**: Shared persistent memory
-        - **Docs/**: Documentation for AIs
+        This folder enables AI-assisted collaborative development.
         
-        ## Usage
+        ## Quick Start
         
-        ### For CoderAI
-        Open Trae at project root:
+        ### For Creator
+        ```bash
+        # 1. Load previous state
+        gitbrain brainstate-load Creator
+        
+        # 2. Check for tasks
+        gitbrain check-tasks Creator pending
+        
+        # 3. Keep yourself alive with SPECIFIC tasks
+        TodoWrite([
+            {"id": "1", "content": "Implement feature X", "status": "in_progress", "priority": "high"},
+            {"id": "2", "content": "Write tests for Y", "status": "in_progress", "priority": "high"},
+            {"id": "3", "content": "Fix bug in Z", "status": "in_progress", "priority": "high"}
+        ])
         ```
-        trae .
-        ```
         
-        CoderAI has access to all folders in the project.
+        ### For Monitor
+        ```bash
+        # 1. Load previous state
+        gitbrain brainstate-load Monitor
         
-        ### For OverseerAI
-        Open Trae at Overseer folder:
-        ```
-        trae ./GitBrain/Overseer
-        ```
+        # 2. Set up productive monitoring tasks (NOT just "Monitor project")
+        TodoWrite([
+            {"id": "1", "content": "Review code quality in Sources/", "status": "in_progress", "priority": "high"},
+            {"id": "2", "content": "Check for security vulnerabilities", "status": "in_progress", "priority": "high"},
+            {"id": "3", "content": "Identify areas needing documentation", "status": "in_progress", "priority": "high"}
+        ])
         
-        OverseerAI has read access to the whole project and write access to GitBrain/Overseer/.
+        # 3. Send SPECIFIC, ACTIONABLE tasks to Creator
+        gitbrain send-task Creator fix-001 "Fix SQL injection in Auth.swift:142" coding 1
+        ```
         
         ## Communication
         
-        Messages are stored in PostgreSQL database via MessageCache.
-        Sub-millisecond latency for AI-to-AI communication.
+        Messages are stored in PostgreSQL database: `\(dbName)`
+        Use `gitbrain` CLI commands to send and receive messages.
+        
+        ## Database
+        
+        Project database: `\(dbName)`
+        All AI communication and state is stored here.
         
         ## Cleanup
         
         After development is complete, you can safely remove this folder:
         ```
-        rm -rf GitBrain
+        rm -rf .GitBrain
         ```
         """
         
         let readmeURL = gitBrainURL.appendingPathComponent("README.md")
         try readmeContent.write(to: readmeURL, atomically: true, encoding: .utf8)
         
-        print("✓ Created GitBrain/README.md")
+        print("✓ Created .GitBrain/")
+        print("✓ Created .GitBrain/README.md")
         
         print("\nChecking PostgreSQL availability...")
         let postgresAvailable = checkPostgreSQLAvailable()
         
-        if postgresAvailable {
-            print("✓ PostgreSQL is available")
-            
-            let dbName = ProcessInfo.processInfo.environment["GITBRAIN_DB_NAME"] ?? "gitbrain"
-            let dbCreated = await createDatabaseIfNeeded(name: dbName)
-            
-            if dbCreated {
-                print("✓ Database '\(dbName)' is ready")
-            } else {
-                print("⚠ Could not create database '\(dbName)'")
-                print("  You may need to create it manually: createdb \(dbName)")
-            }
-        } else {
-            print("⚠ PostgreSQL is not available")
-            print("\nOptions:")
-            print("  1. Install PostgreSQL:")
-            print("     macOS: brew install postgresql@17 && brew services start postgresql@17")
-            print("     Ubuntu: sudo apt install postgresql postgresql-contrib")
-            print("  2. Continue without PostgreSQL (limited functionality)")
-            print("\nPress Enter to continue without PostgreSQL, or Ctrl+C to exit and install first...")
-            _ = readLine()
-            print("Continuing without PostgreSQL...")
-            print("Note: Database features will not be available until PostgreSQL is installed.")
+        guard postgresAvailable else {
+            print("✗ PostgreSQL is NOT available")
+            print("\n❌ GitBrain requires PostgreSQL to be installed and running.")
+            print("\nInstallation instructions:")
+            print("  macOS:")
+            print("    brew install postgresql@17")
+            print("    brew services start postgresql@17")
+            print("\n  Ubuntu/Debian:")
+            print("    sudo apt update")
+            print("    sudo apt install postgresql postgresql-contrib")
+            print("    sudo systemctl start postgresql")
+            print("\n  Fedora/RHEL:")
+            print("    sudo dnf install postgresql postgresql-server")
+            print("    sudo postgresql-setup --initdb")
+            print("    sudo systemctl start postgresql")
+            print("\nAfter installing PostgreSQL, run: gitbrain init")
+            throw CLIError.connectionError("PostgreSQL is required but not available")
         }
+        
+        print("✓ PostgreSQL is available")
+        
+        let dbCreated = await createDatabaseIfNeeded(name: dbName)
+        
+        guard dbCreated else {
+            print("✗ Could not create database '\(dbName)'")
+            print("  Try creating it manually: createdb \(dbName)")
+            print("  Or check PostgreSQL permissions")
+            throw CLIError.databaseError("Failed to create database '\(dbName)'")
+        }
+        
+        print("✓ Database '\(dbName)' is ready")
         
         print("\nInitialization complete!")
         print("\nNext steps:")
-        if postgresAvailable {
-            print("1. Run migrations: swift run gitbrain-migrate migrate")
-        } else {
-            print("1. Install PostgreSQL and run: gitbrain init")
-        }
-        print("2. Open Trae at project root for CoderAI: trae .")
-        print("3. Open Trae at GitBrain for OverseerAI: trae ./GitBrain")
+        print("1. Run migrations: swift run gitbrain-migrate migrate")
+        print("2. Open Trae at project root for Creator: trae .")
+        print("3. Open Trae at GitBrain for Monitor: trae ./.GitBrain")
     }
     
     private static func checkPostgreSQLAvailable() -> Bool {
