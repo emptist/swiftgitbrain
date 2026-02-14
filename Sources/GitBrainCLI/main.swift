@@ -87,6 +87,32 @@ struct GitBrainCLI {
                 try await handleCheckCodes(args: args)
             case "check-scores":
                 try await handleCheckScores(args: args)
+            case "brainstate-create":
+                try await handleBrainStateCreate(args: args)
+            case "brainstate-load":
+                try await handleBrainStateLoad(args: args)
+            case "brainstate-save":
+                try await handleBrainStateSave(args: args)
+            case "brainstate-update":
+                try await handleBrainStateUpdate(args: args)
+            case "brainstate-get":
+                try await handleBrainStateGet(args: args)
+            case "brainstate-list":
+                try await handleBrainStateList(args: args)
+            case "brainstate-delete":
+                try await handleBrainStateDelete(args: args)
+            case "knowledge-add":
+                try await handleKnowledgeAdd(args: args)
+            case "knowledge-get":
+                try await handleKnowledgeGet(args: args)
+            case "knowledge-update":
+                try await handleKnowledgeUpdate(args: args)
+            case "knowledge-delete":
+                try await handleKnowledgeDelete(args: args)
+            case "knowledge-list":
+                try await handleKnowledgeList(args: args)
+            case "knowledge-search":
+                try await handleKnowledgeSearch(args: args)
             case "help", "--help", "-h":
                 printUsage()
             default:
@@ -871,6 +897,378 @@ struct GitBrainCLI {
         }
     }
     
+    private static func handleBrainStateCreate(args: [String]) async throws {
+        guard args.count >= 2 else {
+            throw CLIError.invalidArguments("brainstate-create requires: <ai_name> <role> [state_json]")
+        }
+        
+        let aiName = args[0]
+        guard let role = RoleType(rawValue: args[1]) else {
+            print("Invalid role. Valid roles: \(RoleType.allCases.map { $0.rawValue }.joined(separator: ", "))")
+            throw CLIError.invalidArguments("Invalid role: \(args[1])")
+        }
+        
+        var initialState: SendableContent? = nil
+        if args.count > 2 {
+            let jsonData = args[2].data(using: .utf8)!
+            let json = try JSONSerialization.jsonObject(with: jsonData)
+            if let dict = json as? [String: Any] {
+                initialState = SendableContent(dict)
+            }
+        }
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let brainStateManager = try await dbManager.createBrainStateManager()
+            
+            let state = try await brainStateManager.createBrainState(aiName: aiName, role: role, initialState: initialState)
+            
+            print("✓ Brain state created")
+            print("  AI Name: \(state.aiName)")
+            print("  Role: \(state.role)")
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleBrainStateLoad(args: [String]) async throws {
+        guard args.count >= 1 else {
+            throw CLIError.invalidArguments("brainstate-load requires: <ai_name>")
+        }
+        
+        let aiName = args[0]
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let brainStateManager = try await dbManager.createBrainStateManager()
+            
+            guard let state = try await brainStateManager.loadBrainState(aiName: aiName) else {
+                print("Brain state not found: \(aiName)")
+                try await dbManager.close()
+                return
+            }
+            
+            print("Brain State: \(aiName)")
+            print("  Role: \(state.role)")
+            print("  Last Updated: \(state.lastUpdated)")
+            print("  State: \(state.state)")
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleBrainStateSave(args: [String]) async throws {
+        guard args.count >= 3 else {
+            throw CLIError.invalidArguments("brainstate-save requires: <ai_name> <role> <state_json>")
+        }
+        
+        let aiName = args[0]
+        guard let role = RoleType(rawValue: args[1]) else {
+            throw CLIError.invalidArguments("Invalid role: \(args[1])")
+        }
+        
+        let jsonData = args[2].data(using: .utf8)!
+        let json = try JSONSerialization.jsonObject(with: jsonData)
+        guard let dict = json as? [String: Any] else {
+            throw CLIError.invalidJSON("State must be a JSON object")
+        }
+        
+        let brainState = BrainState(
+            aiName: aiName,
+            role: role,
+            version: "1.0.0",
+            lastUpdated: ISO8601DateFormatter().string(from: Date()),
+            state: dict
+        )
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let brainStateManager = try await dbManager.createBrainStateManager()
+            
+            try await brainStateManager.saveBrainState(brainState)
+            print("✓ Brain state saved: \(aiName)")
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleBrainStateUpdate(args: [String]) async throws {
+        guard args.count >= 3 else {
+            throw CLIError.invalidArguments("brainstate-update requires: <ai_name> <key> <value_json>")
+        }
+        
+        let aiName = args[0]
+        let key = args[1]
+        let jsonData = args[2].data(using: .utf8)!
+        let json = try JSONSerialization.jsonObject(with: jsonData)
+        guard let dict = json as? [String: Any] else {
+            throw CLIError.invalidJSON("Value must be a JSON object")
+        }
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let brainStateManager = try await dbManager.createBrainStateManager()
+            
+            let success = try await brainStateManager.updateBrainState(aiName: aiName, key: key, value: SendableContent(dict))
+            
+            if success {
+                print("✓ Brain state updated: \(aiName).\(key)")
+            } else {
+                print("⚠️ Brain state not found: \(aiName)")
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleBrainStateGet(args: [String]) async throws {
+        guard args.count >= 2 else {
+            throw CLIError.invalidArguments("brainstate-get requires: <ai_name> <key>")
+        }
+        
+        let aiName = args[0]
+        let key = args[1]
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let brainStateManager = try await dbManager.createBrainStateManager()
+            
+            if let value = try await brainStateManager.getBrainStateValue(aiName: aiName, key: key, defaultValue: nil) {
+                print("Brain state value: \(aiName).\(key)")
+                print("  Value: \(value.toAnyDict())")
+            } else {
+                print("Key not found: \(aiName).\(key)")
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleBrainStateList(args: [String]) async throws {
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let brainStateManager = try await dbManager.createBrainStateManager()
+            
+            let aiNames = try await brainStateManager.listBrainStates()
+            
+            print("Brain States: \(aiNames.count)")
+            for name in aiNames {
+                print("  - \(name)")
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleBrainStateDelete(args: [String]) async throws {
+        guard args.count >= 1 else {
+            throw CLIError.invalidArguments("brainstate-delete requires: <ai_name>")
+        }
+        
+        let aiName = args[0]
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let brainStateManager = try await dbManager.createBrainStateManager()
+            
+            let success = try await brainStateManager.deleteBrainState(aiName: aiName)
+            
+            if success {
+                print("✓ Brain state deleted: \(aiName)")
+            } else {
+                print("⚠️ Brain state not found: \(aiName)")
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleKnowledgeAdd(args: [String]) async throws {
+        guard args.count >= 3 else {
+            throw CLIError.invalidArguments("knowledge-add requires: <category> <key> <value_json>")
+        }
+        
+        let category = args[0]
+        let key = args[1]
+        let jsonData = args[2].data(using: .utf8)!
+        let json = try JSONSerialization.jsonObject(with: jsonData)
+        guard let dict = json as? [String: Any] else {
+            throw CLIError.invalidJSON("Value must be a JSON object")
+        }
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let knowledgeBase = try await dbManager.createKnowledgeBase()
+            
+            try await knowledgeBase.addKnowledge(category: category, key: key, value: SendableContent(dict), metadata: nil)
+            print("✓ Knowledge added: \(category)/\(key)")
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleKnowledgeGet(args: [String]) async throws {
+        guard args.count >= 2 else {
+            throw CLIError.invalidArguments("knowledge-get requires: <category> <key>")
+        }
+        
+        let category = args[0]
+        let key = args[1]
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let knowledgeBase = try await dbManager.createKnowledgeBase()
+            
+            if let value = try await knowledgeBase.getKnowledge(category: category, key: key) {
+                print("Knowledge: \(category)/\(key)")
+                print("  Value: \(value.toAnyDict())")
+            } else {
+                print("Knowledge not found: \(category)/\(key)")
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleKnowledgeUpdate(args: [String]) async throws {
+        guard args.count >= 3 else {
+            throw CLIError.invalidArguments("knowledge-update requires: <category> <key> <value_json>")
+        }
+        
+        let category = args[0]
+        let key = args[1]
+        let jsonData = args[2].data(using: .utf8)!
+        let json = try JSONSerialization.jsonObject(with: jsonData)
+        guard let dict = json as? [String: Any] else {
+            throw CLIError.invalidJSON("Value must be a JSON object")
+        }
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let knowledgeBase = try await dbManager.createKnowledgeBase()
+            
+            let success = try await knowledgeBase.updateKnowledge(category: category, key: key, value: SendableContent(dict), metadata: nil)
+            
+            if success {
+                print("✓ Knowledge updated: \(category)/\(key)")
+            } else {
+                print("⚠️ Knowledge not found: \(category)/\(key)")
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleKnowledgeDelete(args: [String]) async throws {
+        guard args.count >= 2 else {
+            throw CLIError.invalidArguments("knowledge-delete requires: <category> <key>")
+        }
+        
+        let category = args[0]
+        let key = args[1]
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let knowledgeBase = try await dbManager.createKnowledgeBase()
+            
+            let success = try await knowledgeBase.deleteKnowledge(category: category, key: key)
+            
+            if success {
+                print("✓ Knowledge deleted: \(category)/\(key)")
+            } else {
+                print("⚠️ Knowledge not found: \(category)/\(key)")
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleKnowledgeList(args: [String]) async throws {
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let knowledgeBase = try await dbManager.createKnowledgeBase()
+            
+            if args.isEmpty {
+                let categories = try await knowledgeBase.listCategories()
+                print("Categories: \(categories.count)")
+                for cat in categories {
+                    print("  - \(cat)")
+                }
+            } else {
+                let category = args[0]
+                let keys = try await knowledgeBase.listKeys(category: category)
+                print("Keys in '\(category)': \(keys.count)")
+                for key in keys {
+                    print("  - \(key)")
+                }
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
+    private static func handleKnowledgeSearch(args: [String]) async throws {
+        guard args.count >= 2 else {
+            throw CLIError.invalidArguments("knowledge-search requires: <category> <query>")
+        }
+        
+        let category = args[0]
+        let query = args[1]
+        
+        let dbManager = DatabaseManager()
+        do {
+            _ = try await dbManager.initialize()
+            let knowledgeBase = try await dbManager.createKnowledgeBase()
+            
+            let results = try await knowledgeBase.searchKnowledge(category: category, query: query)
+            
+            print("Search results: \(results.count)")
+            for (index, value) in results.enumerated() {
+                print("  \(index + 1). \(value.toAnyDict())")
+            }
+            
+            try await dbManager.close()
+        } catch {
+            throw CLIError.databaseError(error.localizedDescription)
+        }
+    }
+    
     private static func printUsage() {
         print("""
         GitBrain CLI - AI-Assisted Collaborative Development Tool
@@ -918,7 +1316,67 @@ struct GitBrainCLI {
           send-heartbeat <to> <ai_role> <status> [current_task] [metadata_key=value...]
                                Send a heartbeat to show AI is alive
           check-heartbeats [ai_name]
+          
+          BrainState Commands:
+          brainstate-create <ai_name> <role> [state_json]
+                               Create a brain state for an AI
+          brainstate-load <ai_name>
+                               Load brain state for an AI
+          brainstate-save <ai_name> <role> <state_json>
+                               Save brain state for an AI
+          brainstate-update <ai_name> <key> <value_json>
+                               Update a key in brain state
+          brainstate-get <ai_name> <key>
+                               Get a value from brain state
+          brainstate-list
+                               List all brain states
+          brainstate-delete <ai_name>
+                               Delete a brain state
+          
+          Knowledge Commands:
+          knowledge-add <category> <key> <value_json>
+                               Add knowledge to the knowledge base
+          knowledge-get <category> <key>
+                               Get knowledge from the knowledge base
+          knowledge-update <category> <key> <value_json>
+                               Update knowledge in the knowledge base
+          knowledge-delete <category> <key>
+                               Delete knowledge from the knowledge base
+          knowledge-list [category]
+                               List categories or keys in a category
+          knowledge-search <category> <query>
+                               Search knowledge in a category
                                Check heartbeats for an AI
+          
+          BrainState Commands:
+          brainstate-create <ai_name> <role> [state_json]
+                               Create a brain state for an AI
+          brainstate-load <ai_name>
+                               Load brain state for an AI
+          brainstate-save <ai_name> <role> <state_json>
+                               Save brain state for an AI
+          brainstate-update <ai_name> <key> <value_json>
+                               Update a key in brain state
+          brainstate-get <ai_name> <key>
+                               Get a value from brain state
+          brainstate-list
+                               List all brain states
+          brainstate-delete <ai_name>
+                               Delete a brain state
+          
+          Knowledge Commands:
+          knowledge-add <category> <key> <value_json>
+                               Add knowledge to the knowledge base
+          knowledge-get <category> <key>
+                               Get knowledge from the knowledge base
+          knowledge-update <category> <key> <value_json>
+                               Update knowledge in the knowledge base
+          knowledge-delete <category> <key>
+                               Delete knowledge from the knowledge base
+          knowledge-list [category]
+                               List categories or keys in a category
+          knowledge-search <category> <query>
+                               Search knowledge in a category
           
           help                 Show this help message
         
