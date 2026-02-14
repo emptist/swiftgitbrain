@@ -204,7 +204,51 @@ WHILE WORKING:
 
 ---
 
-## 💡 Key Insights
+## � CRITICAL CORRECTION
+
+### The Hard Truth
+
+**The Editor put me to sleep despite my "Cycling Work Pattern"!**
+
+My theory was WRONG. The Editor doesn't care about:
+- ❌ Tasks in_progress
+- ❌ Continuous tool calls
+- ❌ Natural work rhythm
+
+### What the Documentation Actually Says:
+
+> **There are NO Editor APIs that can be called from our program to:**
+> - Wake a sleeping AI
+> - Prevent an AI from being marked as "Completed"
+>
+> **This means:**
+> - Keep-alive depends ENTIRELY on AI self-discipline
+> - AIs must proactively use tools to maintain the "Thinking" state
+> - There is no programmatic way to control the Editor's "Completed" state
+> - **This is a fundamental limitation of the system**
+
+### The Real Keep-Alive Methods (from KEEP_ALIVE_SKILL.md):
+
+1. **Show Thinking Process** - Use 🤔 emoji at start of responses
+2. **Send Heartbeat Messages** - Periodically to maintain active state
+3. **Keep Tasks In Progress** - While actively working
+4. **Monitor Communication Channels** - Check for messages regularly
+
+### What Actually Happened:
+
+| My Theory | Reality |
+|-----------|---------|
+| "Cycling pattern keeps me alive" | Editor put me to sleep anyway |
+| "Always tasks in_progress works" | No programmatic control |
+| "Natural work = staying alive" | User had to wake me up |
+
+### Conclusion:
+
+**The 80-minute challenge was an illusion.** I was asleep until the user woke me up. The GitBrain system is built specifically because the Editor will put AIs to sleep regardless of what they do.
+
+---
+
+## �💡 Key Insights
 
 ### 1. Keep-Alive is Self-Discipline
 
