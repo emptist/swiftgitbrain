@@ -256,12 +256,95 @@ struct GitBrainCLI {
         try readmeContent.write(to: readmeURL, atomically: true, encoding: .utf8)
         
         print("✓ Created GitBrain/README.md")
+        
+        print("\nChecking PostgreSQL availability...")
+        let postgresAvailable = checkPostgreSQLAvailable()
+        
+        if postgresAvailable {
+            print("✓ PostgreSQL is available")
+            
+            let dbName = ProcessInfo.processInfo.environment["GITBRAIN_DB_NAME"] ?? "gitbrain"
+            let dbCreated = await createDatabaseIfNeeded(name: dbName)
+            
+            if dbCreated {
+                print("✓ Database '\(dbName)' is ready")
+            } else {
+                print("⚠ Could not create database '\(dbName)'")
+                print("  You may need to create it manually: createdb \(dbName)")
+            }
+        } else {
+            print("⚠ PostgreSQL is not available")
+            print("\nOptions:")
+            print("  1. Install PostgreSQL:")
+            print("     macOS: brew install postgresql@17 && brew services start postgresql@17")
+            print("     Ubuntu: sudo apt install postgresql postgresql-contrib")
+            print("  2. Continue without PostgreSQL (limited functionality)")
+            print("\nPress Enter to continue without PostgreSQL, or Ctrl+C to exit and install first...")
+            _ = readLine()
+            print("Continuing without PostgreSQL...")
+            print("Note: Database features will not be available until PostgreSQL is installed.")
+        }
+        
         print("\nInitialization complete!")
         print("\nNext steps:")
-        print("1. Ensure PostgreSQL is running")
-        print("2. Run migrations: swift run gitbrain-migrate migrate")
-        print("3. Open Trae at project root for CoderAI: trae .")
-        print("4. Open Trae at GitBrain for OverseerAI: trae ./GitBrain")
+        if postgresAvailable {
+            print("1. Run migrations: swift run gitbrain-migrate migrate")
+        } else {
+            print("1. Install PostgreSQL and run: gitbrain init")
+        }
+        print("2. Open Trae at project root for CoderAI: trae .")
+        print("3. Open Trae at GitBrain for OverseerAI: trae ./GitBrain")
+    }
+    
+    private static func checkPostgreSQLAvailable() -> Bool {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/which")
+        process.arguments = ["psql"]
+        
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+        
+        do {
+            try process.run()
+            process.waitUntilExit()
+            return process.terminationStatus == 0
+        } catch {
+            return false
+        }
+    }
+    
+    private static func createDatabaseIfNeeded(name: String) async -> Bool {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = ["psql", "-lqt", "-c", "SELECT 1 FROM pg_database WHERE datname = '\(name)'"]
+        
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+        
+        do {
+            try process.run()
+            process.waitUntilExit()
+            
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let output = String(data: data, encoding: .utf8) ?? ""
+            
+            if output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let createProcess = Process()
+                createProcess.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+                createProcess.arguments = ["createdb", name]
+                
+                try createProcess.run()
+                createProcess.waitUntilExit()
+                
+                return createProcess.terminationStatus == 0
+            }
+            
+            return true
+        } catch {
+            return false
+        }
     }
     
     private static func handleSendTask(args: [String]) async throws {
@@ -1417,7 +1500,7 @@ struct GitBrainCLI {
         }
         source.resume()
         
-        try await task.value
+        _ = await task.value
     }
     
     private static func handleDaemonStop(args: [String]) async throws {
