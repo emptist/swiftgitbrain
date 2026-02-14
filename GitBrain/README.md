@@ -16,19 +16,19 @@ This folder is used for AI-assisted collaborative development.
 
 ```bash
 # Send a task
-gitbrain send-task CoderAI task-001 "Implement feature X" coding 1
+gitbrain send-task Creator task-001 "Implement feature X" coding 1
 
 # Check tasks
-gitbrain check-tasks CoderAI pending
+gitbrain check-tasks Creator pending
 
 # Send feedback
-gitbrain send-feedback CoderAI acknowledgment "Great work" "Feature implemented"
+gitbrain send-feedback Creator acknowledgment "Great work" "Feature implemented"
 
 # Send heartbeat
-gitbrain send-heartbeat OverseerAI coder working "Implementing feature X"
+gitbrain send-heartbeat Monitor creator working "Implementing feature X"
 
 # Start daemon for automatic messaging
-gitbrain daemon-start CoderAI coder 1.0 30.0
+gitbrain daemon-start Creator creator 1.0 30.0
 ```
 
 ### Message Types

@@ -19,7 +19,7 @@ enum CLIError: LocalizedError {
         case .invalidArguments(let message):
             return "Invalid arguments: \(message)\n💡 Use 'gitbrain help' to see correct usage"
         case .invalidRecipient(let recipient):
-            return "Unknown recipient: \(recipient)\n💡 Recipients should be AI names like 'OverseerAI', 'CoderAI', etc."
+            return "Unknown recipient: \(recipient)\n💡 Recipients should be AI names like 'Creator', 'Monitor', etc."
         case .invalidJSON(let message):
             return "Invalid JSON: \(message)\n💡 Make sure JSON is properly formatted with escaped quotes"
         case .fileNotFound(let path):
@@ -465,7 +465,7 @@ struct GitBrainCLI {
     }
     
     private static func handleCheckTasks(args: [String]) async throws {
-        let aiName = args.first ?? "CoderAI"
+        let aiName = args.first ?? "Creator"
         let statusRaw = args.count > 1 ? args[1] : "pending"
         
         guard let status = TaskStatus(rawValue: statusRaw) else {
@@ -500,7 +500,7 @@ struct GitBrainCLI {
     }
     
     private static func handleCheckReviews(args: [String]) async throws {
-        let aiName = args.first ?? "CoderAI"
+        let aiName = args.first ?? "Creator"
         let statusRaw = args.count > 1 ? args[1] : "pending"
         
         guard let status = ReviewStatus(rawValue: statusRaw) else {
@@ -933,7 +933,7 @@ struct GitBrainCLI {
     }
     
     private static func handleCheckHeartbeats(args: [String]) async throws {
-        let aiName = args.first ?? "OverseerAI"
+        let aiName = args.first ?? "Monitor"
         
         let dbManager = DatabaseManager()
         do {
@@ -964,7 +964,7 @@ struct GitBrainCLI {
     }
     
     private static func handleCheckFeedbacks(args: [String]) async throws {
-        let aiName = args.first ?? "CoderAI"
+        let aiName = args.first ?? "Creator"
         let statusRaw = args.count > 1 ? args[1] : "pending"
         
         guard let status = FeedbackStatus(rawValue: statusRaw) else {
@@ -1033,7 +1033,7 @@ struct GitBrainCLI {
     }
     
     private static func handleCheckScores(args: [String]) async throws {
-        let aiName = args.first ?? "OverseerAI"
+        let aiName = args.first ?? "Monitor"
         let statusRaw = args.count > 1 ? args[1] : "pending"
         
         guard let status = ScoreStatus(rawValue: statusRaw) else {
@@ -1833,11 +1833,11 @@ struct GitBrainCLI {
         
         Examples:
           gitbrain init
-          gitbrain send-task OverseerAI task-001 "Review code" review 1
-          gitbrain check-tasks CoderAI pending
+          gitbrain send-task Monitor task-001 "Review code" review 1
+          gitbrain check-tasks Creator pending
           gitbrain update-task <uuid> in_progress
-          gitbrain send-heartbeat OverseerAI CoderAI working "Implementing feature"
-          gitbrain send-feedback CoderAI performance "Great work" "Keep it up!"
+          gitbrain send-heartbeat Monitor Creator working "Implementing feature"
+          gitbrain send-feedback Creator performance "Great work" "Keep it up!"
         """)
     }
 }

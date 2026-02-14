@@ -222,7 +222,7 @@ public actor AIDaemon {
         let currentTask = brainState?.state["current_task"] as? String
         
         _ = try await messageCache.sendHeartbeat(
-            to: "OverseerAI",
+            to: "Monitor",
             aiRole: config.role.rawValue,
             status: "working",
             currentTask: currentTask,
