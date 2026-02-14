@@ -1,6 +1,7 @@
 import Fluent
 import Foundation
 
+@available(*, deprecated, message: "Use type-specific knowledge models (CodeSnippetModel, BestPracticeModel, etc.) instead")
 final class KnowledgeItemModel: Model, @unchecked Sendable {
     static let schema = "knowledge_items"
     

@@ -1,6 +1,7 @@
 import Fluent
 import Foundation
 
+@available(*, deprecated, message: "Use type-specific knowledge migrations (CreateCodeSnippets, CreateBestPractices, etc.) instead")
 struct CreateKnowledgeItems: AsyncMigration {
     func prepare(on database: any Database) async throws {
         try await database.schema("knowledge_items")
