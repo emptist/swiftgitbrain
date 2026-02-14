@@ -177,6 +177,41 @@ public actor DatabaseManager {
         return FluentBestPracticeRepository(database: db)
     }
     
+    public func createDocumentationRepository() async throws -> DocumentationRepositoryProtocol {
+        let db = try await getSharedDatabase()
+        return FluentDocumentationRepository(database: db)
+    }
+    
+    public func createTestingStrategyRepository() async throws -> TestingStrategyRepositoryProtocol {
+        let db = try await getSharedDatabase()
+        return FluentTestingStrategyRepository(database: db)
+    }
+    
+    public func createDesignPatternRepository() async throws -> DesignPatternRepositoryProtocol {
+        let db = try await getSharedDatabase()
+        return FluentDesignPatternRepository(database: db)
+    }
+    
+    public func createCodeExampleRepository() async throws -> CodeExampleRepositoryProtocol {
+        let db = try await getSharedDatabase()
+        return FluentCodeExampleRepository(database: db)
+    }
+    
+    public func createTroubleshootingGuideRepository() async throws -> TroubleshootingGuideRepositoryProtocol {
+        let db = try await getSharedDatabase()
+        return FluentTroubleshootingGuideRepository(database: db)
+    }
+    
+    public func createApiReferenceRepository() async throws -> ApiReferenceRepositoryProtocol {
+        let db = try await getSharedDatabase()
+        return FluentApiReferenceRepository(database: db)
+    }
+    
+    public func createArchitecturePatternRepository() async throws -> ArchitecturePatternRepositoryProtocol {
+        let db = try await getSharedDatabase()
+        return FluentArchitecturePatternRepository(database: db)
+    }
+    
     public func createKnowledgeBase() async throws -> KnowledgeBase {
         let repository = try await createKnowledgeRepository()
         return KnowledgeBase(repository: repository)
