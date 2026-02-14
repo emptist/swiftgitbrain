@@ -9,7 +9,7 @@ A Swift Package Manager (SwiftPM) implementation of GitBrain - a lightweight AI 
 ## Overview
 
 GitBrainSwift enables two AIs to collaborate on software development through:
-- **MessageHistory-based communication**: Real-time messaging via PostgreSQL database with sub-millisecond latency
+- **MessageCache-based communication**: Real-time messaging via PostgreSQL database with sub-millisecond latency
 - **File-based communication**: Legacy file-based messaging (being phased out)
 - **Message validation**: Schema-based validation for all message types
 - **Plugin system**: Extensible architecture for custom behavior
@@ -20,7 +20,7 @@ GitBrainSwift enables two AIs to collaborate on software development through:
 
 **IMPORTANT:** The architecture maintains clear boundaries between three independent systems:
 - **BrainState** - AI state management
-- **MessageHistory** - Message communication history
+- **MessageCache** - Message communication history
 - **KnowledgeBase** - Knowledge storage
 
 ## Use Case
@@ -32,7 +32,7 @@ GitBrainSwift is a **developer tool package** that enables AI-assisted collabora
 1. **Setup**: Initialize GitBrain folder structure in your project
 2. **CoderAI**: Open Trae at project root - has full access to all folders
 3. **OverseerAI**: Open Trae at `GitBrain/` - has read access to whole project, write access to GitBrain folder
-4. **Collaboration**: AIs communicate through MessageHistory-based real-time messaging (sub-millisecond latency)
+4. **Collaboration**: AIs communicate through MessageCache-based real-time messaging (sub-millisecond latency)
 5. **Cleanup**: Remove GitBrain folder when development is complete
 
 ### Critical Note: File-Based Messaging Does Not Work
@@ -43,7 +43,7 @@ The legacy file-based messaging system (`FileBasedCommunication`) has **critical
 - **660+ message files** cluttering file system
 - **Unreliable** (file I/O issues, no transactional safety)
 
-**Solution**: Use `MessageHistory` for real-time messaging:
+**Solution**: Use `MessageCache` for real-time messaging:
 - **Sub-millisecond latency** (300,000x improvement)
 - **Real-time notifications** via database
 - **Database-backed** (transactional safety)

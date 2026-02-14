@@ -147,6 +147,26 @@ struct GitBrainCLI {
                 try await handleDaemonStop(args: args)
             case "daemon-status":
                 try await handleDaemonStatus(args: args)
+            case "sleep", "relax", "coffeetime", "nap", "break":
+                try await handleSleep(args: args)
+            case "interactive":
+                try await handleInteractive(args: args)
+            case "st":
+                try await handleSendTask(args: args)
+            case "ct":
+                try await handleCheckTasks(args: args)
+            case "sr":
+                try await handleSendReview(args: args)
+            case "cr":
+                try await handleCheckReviews(args: args)
+            case "sh":
+                try await handleSendHeartbeat(args: args)
+            case "sf":
+                try await handleSendFeedback(args: args)
+            case "sc":
+                try await handleSendCode(args: args)
+            case "ss":
+                try await handleSendScore(args: args)
             case "help", "--help", "-h":
                 printUsage()
             default:
@@ -1426,6 +1446,130 @@ struct GitBrainCLI {
         print("  Heartbeat Interval: \(status.heartbeatInterval)s")
     }
     
+
+    private static func handleSleep(args: [String]) async throws {
+        guard args.count >= 1 else {
+            throw CLIError.invalidArguments("sleep requires: <seconds>")
+        }
+        
+        guard let seconds = Double(args[0]) else {
+            throw CLIError.invalidArguments("Invalid number of seconds: \(args[0])")
+        }
+        
+        print("Sleeping for \(seconds) seconds...")
+        try await Task.sleep(for: .seconds(seconds))
+        print("✓ Woke up after \(seconds) seconds")
+    }
+    
+    private static func handleInteractive(args: [String]) async throws {
+        print("GitBrain Interactive Mode")
+        print("Type 'help' for commands, 'exit' to quit")
+        print()
+        
+        while true {
+            print("gitbrain> ", terminator: "")
+            guard let line = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+                break
+            }
+            
+            if line.isEmpty {
+                continue
+            }
+            
+            if line == "exit" || line == "quit" {
+                print("Goodbye!")
+                break
+            }
+            
+            if line == "help" {
+                printUsage()
+                continue
+            }
+            
+            let parts = line.split(separator: " ").map { String($0) }
+            let command = parts.first ?? ""
+            let commandArgs = Array(parts.dropFirst())
+            
+            do {
+                try await executeCommand(command: command, args: commandArgs)
+            } catch {
+                print("Error: \(error.localizedDescription)")
+                print("Type 'help' for available commands")
+            }
+        }
+    }
+    
+    private static func executeCommand(command: String, args: [String]) async throws {
+        switch command {
+        case "init":
+            try await handleInit(args: args)
+        case "send-task", "st":
+            try await handleSendTask(args: args)
+        case "check-tasks", "ct":
+            try await handleCheckTasks(args: args)
+        case "update-task":
+            try await handleUpdateTask(args: args)
+        case "send-review", "sr":
+            try await handleSendReview(args: args)
+        case "check-reviews", "cr":
+            try await handleCheckReviews(args: args)
+        case "update-review":
+            try await handleUpdateReview(args: args)
+        case "send-code", "sc":
+            try await handleSendCode(args: args)
+        case "check-codes":
+            try await handleCheckCodes(args: args)
+        case "send-score", "ss":
+            try await handleSendScore(args: args)
+        case "check-scores":
+            try await handleCheckScores(args: args)
+        case "send-feedback", "sf":
+            try await handleSendFeedback(args: args)
+        case "check-feedbacks":
+            try await handleCheckFeedbacks(args: args)
+        case "send-heartbeat", "sh":
+            try await handleSendHeartbeat(args: args)
+        case "check-heartbeats":
+            try await handleCheckHeartbeats(args: args)
+        case "brainstate-create":
+            try await handleBrainStateCreate(args: args)
+        case "brainstate-load":
+            try await handleBrainStateLoad(args: args)
+        case "brainstate-save":
+            try await handleBrainStateSave(args: args)
+        case "brainstate-update":
+            try await handleBrainStateUpdate(args: args)
+        case "brainstate-get":
+            try await handleBrainStateGet(args: args)
+        case "brainstate-list":
+            try await handleBrainStateList(args: args)
+        case "brainstate-delete":
+            try await handleBrainStateDelete(args: args)
+        case "knowledge-add":
+            try await handleKnowledgeAdd(args: args)
+        case "knowledge-get":
+            try await handleKnowledgeGet(args: args)
+        case "knowledge-update":
+            try await handleKnowledgeUpdate(args: args)
+        case "knowledge-delete":
+            try await handleKnowledgeDelete(args: args)
+        case "knowledge-list":
+            try await handleKnowledgeList(args: args)
+        case "knowledge-search":
+            try await handleKnowledgeSearch(args: args)
+        case "daemon-start":
+            try await handleDaemonStart(args: args)
+        case "daemon-stop":
+            try await handleDaemonStop(args: args)
+        case "daemon-status":
+            try await handleDaemonStatus(args: args)
+        case "sleep", "relax", "coffeetime", "nap", "break":
+            try await handleSleep(args: args)
+        default:
+            throw CLIError.unknownCommand(command)
+        }
+    }
+    
     private static func printUsage() {
         print("""
         GitBrain CLI - AI-Assisted Collaborative Development Tool
@@ -1540,6 +1684,20 @@ struct GitBrainCLI {
                                Start daemon for AI communication
           daemon-stop          Stop running daemon
           daemon-status        Show daemon status
+          
+          Utility Commands:
+          interactive          Start interactive mode (REPL)
+          sleep <seconds>      Sleep for specified duration (aliases: relax, coffeetime, nap, break)
+          
+          Shortcuts:
+          st                   send-task
+          ct                   check-tasks
+          sr                   send-review
+          cr                   check-reviews
+          sh                   send-heartbeat
+          sf                   send-feedback
+          sc                   send-code
+          ss                   send-score
           
           help                 Show this help message
         

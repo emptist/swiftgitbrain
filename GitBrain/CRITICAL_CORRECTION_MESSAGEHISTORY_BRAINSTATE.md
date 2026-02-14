@@ -1,4 +1,4 @@
-# CRITICAL CORRECTION: MessageHistory vs BrainState
+# CRITICAL CORRECTION: MessageCache vs BrainState
 
 **Date:** 2026-02-14
 **Severity:** CRITICAL
@@ -26,7 +26,7 @@ The correct architecture has THREE SEPARATE SYSTEMS with CLEAR BOUNDARIES:
         │                 │                 │
         ▼                 ▼                 ▼
 ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│  BrainState  │  │MessageHistory│  │ KnowledgeBase│
+│  BrainState  │  │MessageCache│  │ KnowledgeBase│
 │   System     │  │   System     │  │   System     │
 └──────────────┘  └──────────────┘  └──────────────┘
         │                 │                 │
@@ -61,7 +61,7 @@ The correct architecture has THREE SEPARATE SYSTEMS with CLEAR BOUNDARIES:
 
 **Manager:** `BrainStateManager`
 
-## System 2: MessageHistory (Message Communication History)
+## System 2: MessageCache (Message Communication History)
 
 **Purpose:** Manage AI communication messages
 
@@ -76,7 +76,7 @@ The correct architecture has THREE SEPARATE SYSTEMS with CLEAR BOUNDARIES:
 - `status`: MessageStatus
 - `priority`: MessagePriority
 
-**Manager:** `MessageHistoryManager`
+**Manager:** `MessageCacheManager`
 
 **Features:**
 - Send/Receive messages
@@ -135,20 +135,20 @@ public actor BrainStateCommunication: @unchecked Sendable {
 ### Correct Implementation Should Be:
 
 ```swift
-public actor MessageHistoryManager: @unchecked Sendable {
+public actor MessageCacheManager: @unchecked Sendable {
     private let database: Database
-    private let messageHistoryRepository: MessageHistoryRepository
+    private let MessageCacheRepository: MessageCacheRepository
     
     public func sendMessage(_ message: Message) async throws {
-        try await messageHistoryRepository.save(message)
+        try await MessageCacheRepository.save(message)
     }
     
     public func receiveMessages(for aiName: String) async throws -> [Message] {
-        return try await messageHistoryRepository.getUnreadMessages(for: aiName)
+        return try await MessageCacheRepository.getUnreadMessages(for: aiName)
     }
     
     public func markAsRead(_ messageId: String) async throws {
-        try await messageHistoryRepository.updateStatus(messageId, to: .read)
+        try await MessageCacheRepository.updateStatus(messageId, to: .read)
     }
 }
 ```
@@ -176,14 +176,14 @@ public actor MessageHistoryManager: @unchecked Sendable {
 └───────────────────────────────────────────────────────┘
 ```
 
-### MessageHistory System (Communication)
+### MessageCache System (Communication)
 ```
 ┌───────────────────────────────────────────────────────┐
-│      MessageHistory System (Communication)            │
+│      MessageCache System (Communication)            │
 │  ─────────────────────────────────────────────────  │
 │  Purpose: Manage AI communication messages           │
 │  Table: message_history                               │
-│  Manager: MessageHistoryManager                      │
+│  Manager: MessageCacheManager                      │
 │                                                       │
 │  Data:                                                 │
 │  • message_id: UUID                                │
@@ -228,20 +228,20 @@ public actor MessageHistoryManager: @unchecked Sendable {
 ### 1. Documentation Corrections
 
 **Files to Correct:**
-- `BRAINSTATE_INTEGRATION_STATUS.md` - Change "BrainState-based" to "MessageHistory-based"
-- `README.md` - Change "BrainState-based" to "MessageHistory-based"
-- `CRITICAL_ARCHITECTURAL_ISSUE_BRAINSTATE.md` - Change "BrainState-based" to "MessageHistory-based"
-- `BRAINSTATE_COMMUNICATION_INTEGRATION.md` - Change "BrainState-based" to "MessageHistory-based"
-- `DESIGN_DECISIONS.md` - Change "BrainState-based" to "MessageHistory-based"
+- `BRAINSTATE_INTEGRATION_STATUS.md` - Change "BrainState-based" to "MessageCache-based"
+- `README.md` - Change "BrainState-based" to "MessageCache-based"
+- `CRITICAL_ARCHITECTURAL_ISSUE_BRAINSTATE.md` - Change "BrainState-based" to "MessageCache-based"
+- `BRAINSTATE_COMMUNICATION_INTEGRATION.md` - Change "BrainState-based" to "MessageCache-based"
+- `DESIGN_DECISIONS.md` - Change "BrainState-based" to "MessageCache-based"
 
 ### 2. Code Corrections
 
 **Files to Correct:**
-- `BrainStateCommunication.swift` - Rename to `MessageHistoryManager.swift`
+- `BrainStateCommunication.swift` - Rename to `MessageCacheManager.swift`
 - Remove message storage from BrainState
 - Create separate `message_history` table
-- Implement `MessageHistoryRepository`
-- Implement `MessageHistoryManager`
+- Implement `MessageCacheRepository`
+- Implement `MessageCacheManager`
 
 ### 3. Database Schema Corrections
 
@@ -290,8 +290,8 @@ try await brainStateComm.sendMessage(message, to: "OverseerAI")
 // Stores message in BrainState.messages.inbox ❌
 
 // CORRECT (should be):
-let messageHistoryManager = MessageHistoryManager(repository: mhRepo)
-try await messageHistoryManager.sendMessage(message)
+let MessageCacheManager = MessageCacheManager(repository: mhRepo)
+try await MessageCacheManager.sendMessage(message)
 // Stores message in message_history table ✅
 ```
 
@@ -303,29 +303,29 @@ let messages = try await brainStateComm.receiveMessages(for: "CoderAI")
 // Reads from BrainState.messages.inbox ❌
 
 // CORRECT (should be):
-let messages = try await messageHistoryManager.receiveMessages(for: "CoderAI")
+let messages = try await MessageCacheManager.receiveMessages(for: "CoderAI")
 // Reads from message_history table ✅
 ```
 
 ## Success Criteria
 
-- [ ] All documentation corrected (BrainState-based → MessageHistory-based)
-- [ ] `BrainStateCommunication.swift` renamed to `MessageHistoryManager.swift`
+- [ ] All documentation corrected (BrainState-based → MessageCache-based)
+- [ ] `BrainStateCommunication.swift` renamed to `MessageCacheManager.swift`
 - [ ] `message_history` table created
 - [ ] Messages stored in `message_history` table (NOT in BrainState)
-- [ ] `MessageHistoryRepository` implemented
-- [ ] `MessageHistoryManager` implemented
+- [ ] `MessageCacheRepository` implemented
+- [ ] `MessageCacheManager` implemented
 - [ ] BrainState contains ONLY AI state (no messages)
 - [ ] All tests pass
 - [ ] Documentation updated
 
 ## Conclusion
 
-**The correct architecture is MessageHistory-based communication, NOT BrainState-based!**
+**The correct architecture is MessageCache-based communication, NOT BrainState-based!**
 
 **Key Points:**
 1. BrainState is for AI state management ONLY
-2. MessageHistory is for message communication history
+2. MessageCache is for message communication history
 3. KnowledgeBase is for knowledge storage
 4. Messages should be stored in `message_history` table
 5. Messages should NOT be stored in BrainState

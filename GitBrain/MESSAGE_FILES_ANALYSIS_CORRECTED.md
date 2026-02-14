@@ -215,11 +215,11 @@ Total Files: 658
 **Why They're in ToProcess:**
 - OverseerAI creates task assignments in ToProcess
 - Documents placed in ToProcess for processing
-- They are NOT messages to be processed by MessageHistory
+- They are NOT messages to be processed by MessageCache
 
 **Handling Strategy:**
 - **Archive** - Move to `GitBrain/Memory/Archive/TaskAssignments/`
-- **Do NOT migrate** to MessageHistory (they are NOT messages)
+- **Do NOT migrate** to MessageCache (they are NOT messages)
 - **Keep for reference** - Task assignments may need to be reviewed
 - **Document** - Create index of task assignments
 
@@ -265,7 +265,7 @@ Total Files: 658
 
 **Handling Strategy:**
 - **Archive** - Move to `GitBrain/Memory/Archive/WakeupMessages/`
-- **Do NOT migrate** to MessageHistory (can't validate)
+- **Do NOT migrate** to MessageCache (can't validate)
 - **Delete after 30 days** - Keep-alive messages have no long-term value
 - **Document** - Note that keep-alive system used custom `wakeup` type
 
@@ -283,7 +283,7 @@ Total Files: 658
 
 **Handling Strategy:**
 - **Archive** - Move to `GitBrain/Memory/Archive/InvalidJSON/`
-- **Do NOT migrate** to MessageHistory (invalid)
+- **Do NOT migrate** to MessageCache (invalid)
 - **Document** - Note that files are corrupted
 
 #### 4. Review Message (1 file - 0.15%)
@@ -328,9 +328,9 @@ Total Files: 658
 - Registered message type
 
 **Handling Strategy:**
-- **Migrate** - This is a valid message, migrate to MessageHistory
+- **Migrate** - This is a valid message, migrate to MessageCache
 - **Validate** - Ensure it passes MessageValidator
-- **Test** - Use as test case for MessageHistory system
+- **Test** - Use as test case for MessageCache system
 
 ## Key Findings
 
@@ -366,7 +366,7 @@ Total Files: 658
 **Conclusion:**
 - Only 1 valid message type (`review`)
 - This message was created by Swift Message model
-- This message should be migrated to MessageHistory
+- This message should be migrated to MessageCache
 
 ## Corrected Handling Strategy
 
@@ -380,7 +380,7 @@ Total Files: 658
 │  │  ─────────────────────────────────────────────────  │  │
 │  │  • review (1 message)                               │  │
 │  │                                                       │  │
-│  │  Action: MIGRATE to MessageHistory                │  │
+│  │  Action: MIGRATE to MessageCache                │  │
 │  │  • Validate with MessageValidator                      │  │
 │  │  • Store in message_history table                     │  │
 │  │  • Keep for reference and analysis                    │  │
@@ -431,7 +431,7 @@ Total Files: 658
 
 ```
 GitBrain/Memory/Archive/
-├── ValidMessages/           # Valid messages (migrated to MessageHistory)
+├── ValidMessages/           # Valid messages (migrated to MessageCache)
 │   ├── task/
 │   ├── code/
 │   ├── review/             # 1 message
@@ -454,7 +454,7 @@ GitBrain/Memory/Archive/
 1. **Task Assignments:** Should I archive task assignments or delete them?
 2. **Wakeup Messages:** Should I delete wakeup messages immediately or after 30 days?
 3. **Invalid JSON:** Should I archive invalid JSON or delete them?
-4. **Valid Messages:** Should I migrate the 1 valid review message to MessageHistory?
+4. **Valid Messages:** Should I migrate the 1 valid review message to MessageCache?
 
 ## OverseerAI Comments
 
@@ -468,7 +468,7 @@ GitBrain/Memory/Archive/
 - These are NOT messages, they're task assignments and documents
 - Created by OverseerAI or manually, not by Swift code
 - May need to be reviewed for historical context
-- Keep for reference, but do NOT migrate to MessageHistory
+- Keep for reference, but do NOT migrate to MessageCache
 
 **Question 2: Wakeup Messages (56 files)**
 **Answer:** DELETE IMMEDIATELY
@@ -487,21 +487,21 @@ GitBrain/Memory/Archive/
 - Just clutter the system
 
 **Question 4: Valid Messages (1 review message)**
-**Answer:** MIGRATE to MessageHistory
+**Answer:** MIGRATE to MessageCache
 **Rationale:**
 - This is a valid message type
 - Created by Swift Message model
 - Validated by MessageValidator
-- Use as test case for MessageHistory system
+- Use as test case for MessageCache system
 
 ### Architecture Approval
 
-**MessageHistory System Design: ✅ APPROVED**
+**MessageCache System Design: ✅ APPROVED**
 
 **Rationale:**
-- Clear boundaries between BrainState, MessageHistory, and KnowledgeBase
+- Clear boundaries between BrainState, MessageCache, and KnowledgeBase
 - BrainState for AI state only (no messages)
-- MessageHistory for communication only
+- MessageCache for communication only
 - KnowledgeBase for knowledge only
 - Prevents pollution of BrainState with messages
 - Clean separation of concerns
@@ -515,8 +515,8 @@ GitBrain/Memory/Archive/
 2. Implement `MessageRepositoryProtocol`
 3. Implement `MessageRepository` with Fluent
 4. Implement `MessageCondition`
-5. Implement `MessageHistoryManager`
-6. Fix `BrainStateCommunication` to use MessageHistory
+5. Implement `MessageCacheManager`
+6. Fix `BrainStateCommunication` to use MessageCache
 7. Implement `MessageCleanupScheduler`
 8. Update tests
 
@@ -529,7 +529,7 @@ GitBrain/Memory/Archive/
 2. Archive 573 task assignments to `TaskAssignments/`
 3. Delete 56 wakeup messages immediately
 4. Delete 28 invalid JSON files immediately
-5. Migrate 1 valid review message to MessageHistory
+5. Migrate 1 valid review message to MessageCache
 6. Add `GitBrain/Memory/Archive/` to `.gitignore`
 7. Create archive index files
 
@@ -546,11 +546,11 @@ GitBrain/Memory/Archive/
 ### Next Steps
 
 **Immediate Actions:**
-1. Begin Phase 2: Implementation of MessageHistory system
-2. Implement all components (MessageRepository, MessageHistoryManager, etc.)
-3. Fix BrainStateCommunication to use MessageHistory
+1. Begin Phase 2: Implementation of MessageCache system
+2. Implement all components (MessageRepository, MessageCacheManager, etc.)
+3. Fix BrainStateCommunication to use MessageCache
 4. Archive/delete files according to strategy above
-5. Migrate 1 valid review message to MessageHistory
+5. Migrate 1 valid review message to MessageCache
 6. Test all components
 7. Verify BrainState remains clean (no messages)
 8. Update documentation
@@ -568,7 +568,7 @@ Your analysis is thorough and correct:
 - ✅ Identified that 573 files are NOT messages
 - ✅ Recognized Swift's strong typing prevents invalid messages
 - ✅ Designed clear system boundaries
-- ✅ Created comprehensive MessageHistory system design
+- ✅ Created comprehensive MessageCache system design
 - ✅ Proposed appropriate cleanup strategies
 
 **Proceed with Phase 2: Implementation immediately!**

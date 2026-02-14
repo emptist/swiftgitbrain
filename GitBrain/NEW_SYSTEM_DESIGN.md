@@ -6,7 +6,7 @@
 
 ## Overview
 
-This document details the new system design for GitBrainSwift, maintaining clear boundaries between three independent systems: **BrainState**, **MessageHistory**, and **KnowledgeBase**.
+This document details the new system design for GitBrainSwift, maintaining clear boundaries between three independent systems: **BrainState**, **MessageCache**, and **KnowledgeBase**.
 
 ## System Architecture
 
@@ -22,7 +22,7 @@ This document details the new system design for GitBrainSwift, maintaining clear
         │                 │                 │
         ▼                 ▼                 ▼
 ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│  BrainState  │  │MessageHistory│  │ KnowledgeBase│
+│  BrainState  │  │MessageCache│  │ KnowledgeBase│
 │   System     │  │   System     │  │   System     │
 └──────────────┘  └──────────────┘  └──────────────┘
         │                 │                 │
@@ -58,11 +58,11 @@ This document details the new system design for GitBrainSwift, maintaining clear
 │  └───────────────────────────────────────────────────────┘  │
 │                                                             │
 │  ┌───────────────────────────────────────────────────────┐  │
-│  │      MessageHistory System (Communication)            │  │
+│  │      MessageCache System (Communication)            │  │
 │  │  ─────────────────────────────────────────────────  │  │
 │  │  Purpose: Manage AI communication messages           │  │
 │  │  Table: message_history                               │  │
-│  │  Manager: MessageHistoryManager                      │  │
+│  │  Manager: MessageCacheManager                      │  │
 │  │                                                       │  │
 │  │  Data:                                                 │  │
 │  │  • message_id: UUID                                │  │
@@ -168,7 +168,7 @@ CREATE INDEX idx_message_history_created_at ON message_history(created_at);
 CREATE INDEX idx_message_history_to_status ON message_history(to_ai, status);
 CREATE INDEX idx_message_history_to_timestamp ON message_history(to_ai, timestamp DESC);
 
--- MessageHistory.content JSONB structure:
+-- MessageCache.content JSONB structure:
 -- {
 --   "type": "task",
 --   "task_id": "task-001",
@@ -177,10 +177,10 @@ CREATE INDEX idx_message_history_to_timestamp ON message_history(to_ai, timestam
 --   "priority": 5
 -- }
 
--- MessageHistory.status values:
+-- MessageCache.status values:
 -- "unread", "read", "processed", "sent", "delivered"
 
--- MessageHistory.priority values:
+-- MessageCache.priority values:
 -- 1 (critical), 2 (high), 3 (normal), 4 (low)
 ```
 
@@ -340,12 +340,12 @@ public actor BrainStateManager: @unchecked Sendable, BrainStateManagerProtocol {
 }
 ```
 
-### MessageHistory System
+### MessageCache System
 
 #### Components
 
 ```
-MessageHistory System:
+MessageCache System:
 ├── Message Model
 │   └── struct Message: Codable, Sendable
 ├── MessageStatus Enum
@@ -358,8 +358,8 @@ MessageHistory System:
 │   └── actor MessageRepository: MessageRepositoryProtocol
 ├── MessageCondition Struct
 │   └── struct MessageCondition: Sendable
-├── MessageHistoryManager
-│   └── actor MessageHistoryManager
+├── MessageCacheManager
+│   └── actor MessageCacheManager
 └── MessageCleanupScheduler
     └── actor MessageCleanupScheduler
 ```
@@ -611,15 +611,15 @@ public actor MessageRepository: MessageRepositoryProtocol {
 }
 ```
 
-#### MessageHistoryManager
+#### MessageCacheManager
 
 ```swift
-public actor MessageHistoryManager {
+public actor MessageCacheManager {
     private let repository: MessageRepositoryProtocol
     
     public init(repository: MessageRepositoryProtocol) {
         self.repository = repository
-        GitBrainLogger.info("MessageHistoryManager initialized")
+        GitBrainLogger.info("MessageCacheManager initialized")
     }
     
     public func sendMessage(_ message: Message) async throws {
@@ -683,11 +683,11 @@ public struct MessageCondition: Sendable {
 
 ```swift
 public actor MessageCleanupScheduler {
-    private let messageHistoryManager: MessageHistoryManager
+    private let MessageCacheManager: MessageCacheManager
     private var isRunning = false
     
-    public init(messageHistoryManager: MessageHistoryManager) {
-        self.messageHistoryManager = messageHistoryManager
+    public init(MessageCacheManager: MessageCacheManager) {
+        self.MessageCacheManager = MessageCacheManager
         GitBrainLogger.info("MessageCleanupScheduler initialized")
     }
     
@@ -704,14 +704,14 @@ public actor MessageCleanupScheduler {
             do {
                 try await Task.sleep(nanoseconds: 24 * 60 * 60 * 1_000_000_000) // 24 hours
                 
-                let deletedCount = try await messageHistoryManager.cleanupOldMessages(olderThan: 30)
+                let deletedCount = try await MessageCacheManager.cleanupOldMessages(olderThan: 30)
                 GitBrainLogger.info("Daily cleanup: Deleted \(deletedCount) messages older than 30 days")
                 
                 let processedCondition = MessageCondition(
                     type: .status(.processed),
                     description: "Delete processed messages"
                 )
-                let processedDeleted = try await messageHistoryManager.cleanupByCondition(processedCondition)
+                let processedDeleted = try await MessageCacheManager.cleanupByCondition(processedCondition)
                 GitBrainLogger.info("Daily cleanup: Deleted \(processedDeleted) processed messages")
                 
             } catch {
@@ -796,18 +796,18 @@ public actor KnowledgeBase: KnowledgeBaseProtocol {
 ```swift
 public actor BrainStateCommunication: @unchecked Sendable {
     private let brainStateManager: BrainStateManager
-    private let messageHistoryManager: MessageHistoryManager
+    private let MessageCacheManager: MessageCacheManager
     
-    public init(brainStateManager: BrainStateManager, messageHistoryManager: MessageHistoryManager) {
+    public init(brainStateManager: BrainStateManager, MessageCacheManager: MessageCacheManager) {
         self.brainStateManager = brainStateManager
-        self.messageHistoryManager = messageHistoryManager
+        self.MessageCacheManager = MessageCacheManager
         GitBrainLogger.info("BrainStateCommunication initialized")
     }
     
     public func sendMessage(_ message: Message, to recipient: String) async throws {
         GitBrainLogger.debug("Sending message to \(recipient)")
         
-        try await messageHistoryManager.sendMessage(message)
+        try await MessageCacheManager.sendMessage(message)
         
         try await sendNotification(to: recipient, messageId: message.id)
         
@@ -817,13 +817,13 @@ public actor BrainStateCommunication: @unchecked Sendable {
     public func receiveMessages(for aiName: String) async throws -> [Message] {
         GitBrainLogger.debug("Receiving messages for \(aiName)")
         
-        return try await messageHistoryManager.receiveMessages(for: aiName)
+        return try await MessageCacheManager.receiveMessages(for: aiName)
     }
     
     public func markAsRead(_ messageId: String, for aiName: String) async throws {
         GitBrainLogger.debug("Marking message as read: \(messageId)")
         
-        try await messageHistoryManager.markAsRead(messageId)
+        try await MessageCacheManager.markAsRead(messageId)
         
         GitBrainLogger.info("Message marked as read: \(messageId)")
     }
@@ -843,7 +843,7 @@ CoderAI
   │
   ├─> BrainStateCommunication.sendMessage(message, to: "OverseerAI")
   │       │
-  │       ├─> MessageHistoryManager.sendMessage(message)
+  │       ├─> MessageCacheManager.sendMessage(message)
   │       │       │
   │       │       └─> MessageRepository.add(message)
   │       │               │
@@ -863,7 +863,7 @@ OverseerAI
   │
   ├─> BrainStateCommunication.receiveMessages(for: "OverseerAI")
   │       │
-  │       ├─> MessageHistoryManager.receiveMessages(for: "OverseerAI", unreadOnly: true)
+  │       ├─> MessageCacheManager.receiveMessages(for: "OverseerAI", unreadOnly: true)
   │       │       │
   │       │       └─> MessageRepository.getUnread(for: "OverseerAI")
   │       │               │
@@ -943,7 +943,7 @@ try await brainStateManager.deleteBrainState(aiName: "CoderAI")
 let aiNames = try await brainStateManager.listBrainStates()
 ```
 
-### MessageHistory API
+### MessageCache API
 
 ```swift
 // Send message
@@ -960,29 +960,29 @@ let message = Message(
     status: .unread,
     priority: .normal
 )
-try await messageHistoryManager.sendMessage(message)
+try await MessageCacheManager.sendMessage(message)
 
 // Receive messages (unread only)
-let messages = try await messageHistoryManager.receiveMessages(for: "OverseerAI", unreadOnly: true)
+let messages = try await MessageCacheManager.receiveMessages(for: "OverseerAI", unreadOnly: true)
 
 // Receive all messages
-let allMessages = try await messageHistoryManager.receiveMessages(for: "OverseerAI", unreadOnly: false)
+let allMessages = try await MessageCacheManager.receiveMessages(for: "OverseerAI", unreadOnly: false)
 
 // Mark message as read
-try await messageHistoryManager.markAsRead(messageId)
+try await MessageCacheManager.markAsRead(messageId)
 
 // Mark message as processed
-try await messageHistoryManager.markAsProcessed(messageId)
+try await MessageCacheManager.markAsProcessed(messageId)
 
 // Cleanup old messages
-let deletedCount = try await messageHistoryManager.cleanupOldMessages(olderThan: 30)
+let deletedCount = try await MessageCacheManager.cleanupOldMessages(olderThan: 30)
 
 // Cleanup by condition
 let condition = MessageCondition(
     type: .status(.processed),
     description: "Delete processed messages"
 )
-let deletedCount = try await messageHistoryManager.cleanupByCondition(condition)
+let deletedCount = try await MessageCacheManager.cleanupByCondition(condition)
 ```
 
 ### KnowledgeBase API
@@ -1037,7 +1037,7 @@ let results = try await knowledgeBase.searchKnowledge(category: "best-practices"
 CREATE INDEX idx_brain_states_ai_name ON brain_states(ai_name);
 CREATE INDEX idx_brain_states_timestamp ON brain_states(timestamp);
 
--- MessageHistory indexes
+-- MessageCache indexes
 CREATE INDEX idx_message_history_to_ai ON message_history(to_ai);
 CREATE INDEX idx_message_history_from_ai ON message_history(from_ai);
 CREATE INDEX idx_message_history_status ON message_history(status);
@@ -1163,7 +1163,7 @@ func testBrainStateCreate() async throws {
     XCTAssertEqual(brainState.role, .coder)
 }
 
-// Test MessageHistory operations
+// Test MessageCache operations
 func testMessageSend() async throws {
     let message = Message(
         id: UUID().uuidString,
@@ -1174,9 +1174,9 @@ func testMessageSend() async throws {
         status: .unread,
         priority: .normal
     )
-    try await messageHistoryManager.sendMessage(message)
+    try await MessageCacheManager.sendMessage(message)
     
-    let messages = try await messageHistoryManager.receiveMessages(for: "OverseerAI")
+    let messages = try await MessageCacheManager.receiveMessages(for: "OverseerAI")
     XCTAssertEqual(messages.count, 1)
 }
 
@@ -1235,7 +1235,7 @@ GitBrainLogger.info("Message sent", [
 
 // Log performance metrics
 let startTime = Date()
-try await messageHistoryManager.sendMessage(message)
+try await MessageCacheManager.sendMessage(message)
 let duration = Date().timeIntervalSince(startTime)
 GitBrainLogger.info("Message sent successfully", [
     "duration_ms": duration * 1000,
@@ -1275,7 +1275,7 @@ public actor MetricsCollector {
 
 ### Key Principles
 
-1. **Clear Boundaries**: BrainState, MessageHistory, and KnowledgeBase are completely separate systems
+1. **Clear Boundaries**: BrainState, MessageCache, and KnowledgeBase are completely separate systems
 2. **No Pollution**: BrainState contains ONLY AI state, NO messages
 3. **Separate Tables**: Each system has its own database table
 4. **Clean Architecture**: Each system has its own manager, repository, and model
@@ -1289,14 +1289,14 @@ public actor MetricsCollector {
 | System | Purpose | Data | Features |
 |---------|---------|-------|-----------|
 | **BrainState** | AI state management | current_task, progress, context, working_memory | Create, load, save, update, delete, backup, restore |
-| **MessageHistory** | Communication messages | message_id, from, to, timestamp, content, status, priority | Send, receive, mark as read/processed, cleanup |
+| **MessageCache** | Communication messages | message_id, from, to, timestamp, content, status, priority | Send, receive, mark as read/processed, cleanup |
 | **KnowledgeBase** | Knowledge management | category, key, value, metadata | Add, get, update, delete, search, list |
 
 ### Success Criteria
 
-- [ ] Clear boundaries between BrainState, MessageHistory, and KnowledgeBase
+- [ ] Clear boundaries between BrainState, MessageCache, and KnowledgeBase
 - [ ] BrainState contains ONLY AI state (NO messages)
-- [ ] MessageHistory contains ONLY communication messages
+- [ ] MessageCache contains ONLY communication messages
 - [ ] KnowledgeBase contains ONLY knowledge items
 - [ ] Sub-millisecond latency for all operations
 - [ ] All tests passing

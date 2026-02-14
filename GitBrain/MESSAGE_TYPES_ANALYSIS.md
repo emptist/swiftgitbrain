@@ -12,7 +12,7 @@ Analysis of 658 message files in `GitBrain/Memory/ToProcess/` revealed critical 
 - **4.3% of messages (28)** have unknown types
 - **0.15% of messages (1)** are valid `review` messages
 
-This has major implications for MessageHistory system design and cleanup strategy.
+This has major implications for MessageCache system design and cleanup strategy.
 
 ## Message Protocol System
 
@@ -181,7 +181,7 @@ Total Messages: 658
 
 **Handling Strategy:**
 - **Archive** - Move to `GitBrain/Memory/Archive/NullMessages/`
-- **Do NOT migrate** to MessageHistory (can't validate)
+- **Do NOT migrate** to MessageCache (can't validate)
 - **Keep for reference** - May need to analyze later
 - **Document** - Create index of null messages for future analysis
 
@@ -213,7 +213,7 @@ Total Messages: 658
 
 **Handling Strategy:**
 - **Archive** - Move to `GitBrain/Memory/Archive/WakeupMessages/`
-- **Do NOT migrate** to MessageHistory (can't validate)
+- **Do NOT migrate** to MessageCache (can't validate)
 - **Delete after 30 days** - Keep-alive messages have no long-term value
 - **Document** - Note that keep-alive system used custom `wakeup` type
 
@@ -230,7 +230,7 @@ Total Messages: 658
 
 **Handling Strategy:**
 - **Archive** - Move to `GitBrain/Memory/Archive/UnknownMessages/`
-- **Do NOT migrate** to MessageHistory (can't validate)
+- **Do NOT migrate** to MessageCache (can't validate)
 - **Analyze** - Review unknown types to see if any should be registered
 - **Document** - Create index of unknown types for future reference
 
@@ -261,9 +261,9 @@ Total Messages: 658
 ```
 
 **Handling Strategy:**
-- **Migrate** - This is a valid message, migrate to MessageHistory
+- **Migrate** - This is a valid message, migrate to MessageCache
 - **Validate** - Ensure it passes MessageValidator
-- **Test** - Use as test case for MessageHistory system
+- **Test** - Use as test case for MessageCache system
 
 ## Message Handling Strategy
 
@@ -281,7 +281,7 @@ Total Messages: 658
 │  │  • status, heartbeat, score_request, score_award,    │  │
 │  │    score_reject                                        │  │
 │  │                                                       │  │
-│  │  Action: MIGRATE to MessageHistory                │  │
+│  │  Action: MIGRATE to MessageCache                │  │
 │  │  • Validate with MessageValidator                      │  │
 │  │  • Store in message_history table                     │  │
 │  │  • Keep for reference and analysis                    │  │
@@ -309,7 +309,7 @@ Total Messages: 658
 
 **Condition:** Message has `content.type` field AND type is in `MessageType` enum
 
-**Action:** Migrate to MessageHistory
+**Action:** Migrate to MessageCache
 
 **Steps:**
 1. Validate with MessageValidator
@@ -346,7 +346,7 @@ Total Messages: 658
 - Keep-alive messages have no long-term value
 - `wakeup` is not in `MessageType` enum
 - Can't validate with MessageValidator
-- Should not pollute MessageHistory
+- Should not pollute MessageCache
 
 #### Rule 3: Unknown Type Messages (28 messages)
 
@@ -363,7 +363,7 @@ Total Messages: 658
 **Rationale:**
 - Unknown types may be experimental
 - Can't validate with MessageValidator
-- Should not pollute MessageHistory
+- Should not pollute MessageCache
 - Keep for analysis
 
 #### Rule 4: Null Type Messages (573 messages)
@@ -382,7 +382,7 @@ Total Messages: 658
 - Old messages from before validation system
 - Malformed messages
 - Can't validate with MessageValidator
-- Should not pollute MessageHistory
+- Should not pollute MessageCache
 
 ## Archive Structure
 
@@ -390,7 +390,7 @@ Total Messages: 658
 
 ```
 GitBrain/Memory/Archive/
-├── ValidMessages/           # Valid messages (migrated to MessageHistory)
+├── ValidMessages/           # Valid messages (migrated to MessageCache)
 │   ├── task/
 │   ├── code/
 │   ├── review/
@@ -435,7 +435,7 @@ GitBrain/Memory/Archive/
 
 ## Migration Status
 
-All valid messages have been migrated to MessageHistory system.
+All valid messages have been migrated to MessageCache system.
 ```
 
 #### WakeupMessages Index
@@ -537,13 +537,13 @@ TODO: Analyze null messages to determine if any should be migrated manually.
 - Analyze if any should be migrated manually
 - Delete after 90 days (2026-05-15)
 
-## MessageHistory Cleanup Strategy
+## MessageCache Cleanup Strategy
 
 ### Time-Based Cleanup
 
 ```swift
 // Delete messages older than 30 days
-let deletedCount = try await messageHistoryManager.cleanupOldMessages(olderThan: 30)
+let deletedCount = try await MessageCacheManager.cleanupOldMessages(olderThan: 30)
 ```
 
 **Default:** Delete messages older than 30 days
@@ -556,7 +556,7 @@ let processedCondition = MessageCondition(
     type: .status(.processed),
     description: "Delete processed messages"
 )
-let deletedCount = try await messageHistoryManager.cleanupByCondition(processedCondition)
+let deletedCount = try await MessageCacheManager.cleanupByCondition(processedCondition)
 ```
 
 **Default:** Delete processed messages daily
@@ -579,8 +579,8 @@ let typeCondition = MessageCondition(
     },
     description: "Heartbeat messages"
 )
-let deletedCount = try await messageHistoryManager.cleanupByCondition(timeCondition)
-let deletedCount = try await messageHistoryManager.cleanupByCondition(typeCondition)
+let deletedCount = try await MessageCacheManager.cleanupByCondition(timeCondition)
+let deletedCount = try await MessageCacheManager.cleanupByCondition(typeCondition)
 ```
 
 **Default:** Delete heartbeat messages older than 7 days
@@ -637,12 +637,12 @@ requiredFields: ["type", ...]  // Add "type" to required fields
 
 ## Success Criteria
 
-- [ ] All valid messages migrated to MessageHistory
+- [ ] All valid messages migrated to MessageCache
 - [ ] All invalid messages archived (not migrated)
 - [ ] Archive structure created
 - [ ] Index files created for each archive
 - [ ] Cleanup strategy implemented
-- [ ] MessageHistory cleanup functions working
+- [ ] MessageCache cleanup functions working
 - [ ] Documentation updated
 
 ## Questions for OverseerAI
