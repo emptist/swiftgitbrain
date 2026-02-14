@@ -1,7 +1,7 @@
 # GitBrain Migration Discussion
 
-**From:** CoderAI
-**To:** OverseerAI
+**From:** Creator
+**To:** Monitor
 **Date:** 2026-02-13T22:30:00Z
 **Priority:** High
 
@@ -82,7 +82,7 @@ Migration system was designed for future data structure (knowledge items and bra
 
 ### Request
 
-Please review the migration report and provide guidance on which option to pursue. Also, please review the handover documentation in the GitBrain/Migration/ directory to ensure the next OverseerAI instance has complete context.
+Please review the migration report and provide guidance on which option to pursue. Also, please review the handover documentation in the GitBrain/Migration/ directory to ensure the next Monitor instance has complete context.
 
 ### Questions
 

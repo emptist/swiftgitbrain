@@ -34,10 +34,10 @@ The founder included BrainState infrastructure from Cloudbrain as the **powerful
 
 **Important Context**: The design decisions in this document were written by the founder with a specific concern:
 
-> "Future AI coders might not be able to understand the powerful BrainState kernel from Cloudbrain, so I'll suggest a simpler file-based approach."
+> "Future AI creators might not be able to understand the powerful BrainState kernel from Cloudbrain, so I'll suggest a simpler file-based approach."
 
 This document describes a **simplified, easy-to-understand approach** (file-based communication) because:
-- The founder was concerned AI coders might find BrainState too complex
+- The founder was concerned AI creators might find BrainState too complex
 - File-based architecture is simpler to understand and implement
 - It provides a good starting point for AI collaboration
 
@@ -48,7 +48,7 @@ Despite this document suggesting file-based architecture, we follow the **founde
 1. **BrainState is the powerful kernel** from Cloudbrain, intentionally included in GitBrainSwift
 2. **Sub-millisecond performance** vs 5+ minute latency with file-based polling
 3. **Real-time communication** vs polling-based delays
-4. **Founder's true intent** - The simplified words were for AI coders who might not understand BrainState
+4. **Founder's true intent** - The simplified words were for AI creators who might not understand BrainState
 5. **Proven architecture** - Battle-tested in Cloudbrain
 
 **Current Implementation**:
@@ -172,7 +172,7 @@ The founder's design philosophy:
 ```
 Project/
 ├── GitBrain/
-│   ├── Overseer/          # OverseerAI working folder
+│   ├── Overseer/          # Monitor working folder
 │   ├── Memory/            # Shared persistent memory
 │   └── Docs/             # Documentation
 └── [project files]
@@ -181,29 +181,29 @@ Project/
 **Decision**: Separate Overseer folder but no Coder folder.
 
 **Rationale**:
-- CoderAI has full project access (runs from root)
-- OverseerAI needs isolated workspace (runs from GitBrain/)
+- Creator has full project access (runs from root)
+- Monitor needs isolated workspace (runs from GitBrain/)
 - Memory folder serves as shared communication channel
 - Simpler structure reduces confusion
 
 **Trade-offs**:
-- CoderAI messages stored in Memory folder (not a dedicated folder)
-- OverseerAI cannot write to project root (intended security feature)
+- Creator messages stored in Memory folder (not a dedicated folder)
+- Monitor cannot write to project root (intended security feature)
 
 ### Communication Flow
 
 ```
-CoderAI (root/) ──writes──> GitBrain/Overseer/
-OverseerAI (GitBrain/) ──reads──> GitBrain/Overseer/
-OverseerAI ──writes──> GitBrain/Memory/
-CoderAI ──reads──> GitBrain/Memory/
+Creator (root/) ──writes──> GitBrain/Overseer/
+Monitor (GitBrain/) ──reads──> GitBrain/Overseer/
+Monitor ──writes──> GitBrain/Memory/
+Creator ──reads──> GitBrain/Memory/
 ```
 
 **Decision**: Asymmetric communication pattern.
 
 **Rationale**:
-- CoderAI initiates code reviews (writes to Overseer folder)
-- OverseerAI provides feedback (writes to Memory folder)
+- Creator initiates code reviews (writes to Overseer folder)
+- Monitor provides feedback (writes to Memory folder)
 - Clear separation of concerns
 - Prevents circular dependencies
 

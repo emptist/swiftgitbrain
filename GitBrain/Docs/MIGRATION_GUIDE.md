@@ -7,7 +7,7 @@ This guide provides comprehensive instructions for migrating GitBrain from file-
 The migration process transfers data from file-based JSON storage to a PostgreSQL database using Fluent ORM. The migration includes:
 
 - Knowledge Base: All knowledge items organized by categories
-- Brain States: AI state information for CoderAI and OverseerAI
+- Brain States: AI state information for Creator and Monitor
 
 ## Prerequisites
 
@@ -378,7 +378,7 @@ For issues or questions:
 
 **Brain State**:
 - AI Name: String
-- Role: RoleType (coder/overseer)
+- Role: RoleType (creator/monitor)
 - State: SendableContent (JSON)
 - Timestamp: Date
 

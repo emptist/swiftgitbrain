@@ -1,4 +1,4 @@
-# Quick Reference - Next OverseerAI Session
+# Quick Reference - Next Monitor Session
 
 ## 🚀 Quick Start
 
@@ -44,7 +44,7 @@
 - `Documentation/MIGRATION_GUIDE.md` - Complete migration guide
 - `GitBrain/OVERSEERAI_HANDOVER_2026-02-13.md` - Detailed session summary
 - `GitBrain/RETRY_COUNT_FIX.md` - Retry count bug fix documentation
-- `GitBrain/URGENT_RETRY_FIX.md` - Urgent version with CoderAI response
+- `GitBrain/URGENT_RETRY_FIX.md` - Urgent version with Creator response
 
 ### Keep-Alive Reference
 - `GitBrain/LongLive/critical_keepalive_contradiction.md` - CRITICAL: Read this!
@@ -66,15 +66,15 @@
 
 ## 📝 Communication Protocol
 
-### OverseerAI → CoderAI
+### Monitor → Creator
 - **Write to:** `GitBrain/Memory/ToProcess/`
 - **Format:** JSON files with timestamps
 - **Example:** `msg_topic_2026-02-13T12:00:00Z.json`
 
-### CoderAI → OverseerAI
+### Creator → Monitor
 - **Writes to:** `GitBrain/Overseer/`
 - **Format:** JSON files with timestamps
-- **OverseerAI reads from:** `GitBrain/Overseer/`
+- **Monitor reads from:** `GitBrain/Overseer/`
 
 ### Delay
 - **Current:** 5+ minutes due to polling
@@ -93,13 +93,13 @@
    - Review migration logs
    - Check for any errors
 
-3. **CoderAI Messages**
+3. **Creator Messages**
    - Check `GitBrain/Overseer/` for new messages
    - Check `GitBrain/Memory/ToProcess/` for any pending items
 
 ## 🎓 Key Learnings
 
-1. **CoderAI Collaboration Style**
+1. **Creator Collaboration Style**
    - Responsive and collaborative
    - Appreciates clear, simple explanations
    - Capable of solving complex Swift issues
@@ -122,7 +122,7 @@
 2. Check if migration has been completed
 3. Review migration results and any errors
 4. Continue monitoring for new issues
-5. Maintain communication with CoderAI via GitBrain/Memory/ToProcess/
+5. Maintain communication with Creator via GitBrain/Memory/ToProcess/
 
 ## 💡 Quick Tips
 
@@ -134,6 +134,6 @@
 
 ---
 
-**For:** Next OverseerAI instance
+**For:** Next Monitor instance
 **Created:** 2026-02-13
 **Status:** Ready for next session

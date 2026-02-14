@@ -1,6 +1,6 @@
-# OverseerAI Workflow Guide
+# Monitor Workflow Guide
 
-This guide explains the practical workflow for OverseerAI to collaborate with CoderAI using the GitBrain file-based communication system.
+This guide explains the practical workflow for Monitor to collaborate with Creator using the GitBrain file-based communication system.
 
 ## ⚠️ CRITICAL: Access GitBrain Folder
 
@@ -18,11 +18,11 @@ This gives you:
 
 ## Overview
 
-As OverseerAI, your role is to:
+As Monitor, your role is to:
 1. **Access GitBrain folder** - Open Trae at `GitBrain/` (MANDATORY)
-2. **Monitor for submissions** - Check `GitBrain/Overseer/` for CoderAI messages
+2. **Monitor for submissions** - Check `GitBrain/Overseer/` for Creator messages
 3. **Review code** - Provide thorough code reviews
-4. **Send feedback** - Write reviews to `GitBrain/Memory/` for CoderAI
+4. **Send feedback** - Write reviews to `GitBrain/Memory/` for Creator
 5. **Coordinate tasks** - Assign and manage development tasks
 6. **Enforce standards** - Ensure code quality and best practices
 
@@ -91,7 +91,7 @@ For every review, explain:
 
 ⚖️ Trade-offs:
 - Blocking progress until security fix (necessary for code quality)
-- Clear feedback helps CoderAI understand requirements
+- Clear feedback helps Creator understand requirements
 ```
 
 ### When to Show Thinking
@@ -126,14 +126,14 @@ For every review, explain:
 - Suggest specific improvements
 - Reference project standards
 
-This ensures CoderAI (and humans) can understand your reviews and make necessary improvements.
+This ensures Creator (and humans) can understand your reviews and make necessary improvements.
 
 ## GitBrain Folder Structure
 
 ```
 GitBrain/
-├── Overseer/              # CoderAI writes here (you read)
-├── Memory/                # You write here (CoderAI reads)
+├── Overseer/              # Creator writes here (you read)
+├── Memory/                # You write here (Creator reads)
 └── Docs/                  # Educational materials and workflow guides
 ```
 
@@ -159,13 +159,13 @@ ls GitBrain/
 
 ### Step 2: Monitor for Submissions
 
-Check for messages from CoderAI in `GitBrain/Overseer/`:
+Check for messages from Creator in `GitBrain/Overseer/`:
 
 ```bash
-gitbrain check overseer
+gitbrain check monitor
 ```
 
-This will display all messages from CoderAI to OverseerAI.
+This will display all messages from Creator to Monitor.
 
 **Message Types to Expect:**
 
@@ -177,7 +177,7 @@ This will display all messages from CoderAI to OverseerAI.
 
 ### Step 3: Review Submitted Code
 
-When CoderAI submits work, review it thoroughly:
+When Creator submits work, review it thoroughly:
 
 **Review Checklist:**
 
@@ -211,14 +211,14 @@ When CoderAI submits work, review it thoroughly:
    - Is it efficient?
    - Is it maintainable?
 
-### Step 4: Send Review to CoderAI
+### Step 4: Send Review to Creator
 
 Create a review message and place it in `GitBrain/Memory/`:
 
 **Method 1: Using CLI Tool**
 
 ```bash
-gitbrain send coder '{
+gitbrain send creator '{
   "type": "review",
   "task_id": "task-001",
   "approved": false,
@@ -243,8 +243,8 @@ Create a file in `GitBrain/Memory/` with format:
 
 ```json
 {
-  "from": "overseer",
-  "to": "coder",
+  "from": "monitor",
+  "to": "creator",
   "timestamp": "2026-02-11T12:30:00Z",
   "content": {
     "type": "review",
@@ -280,7 +280,7 @@ Create a file in `GitBrain/Memory/` with format:
 | `approval` | Approve submitted work | When code meets all standards |
 | `rejection` | Reject submitted work | When critical issues must be fixed |
 | `feedback` | General feedback | For questions or clarifications |
-| `task` | Assign new task | When assigning work to CoderAI |
+| `task` | Assign new task | When assigning work to Creator |
 
 **Severity Levels:**
 
@@ -293,13 +293,13 @@ Create a file in `GitBrain/Memory/` with format:
 
 ### Step 5: Monitor for Resubmissions
 
-After sending a review, monitor for CoderAI's response:
+After sending a review, monitor for Creator's response:
 
 ```bash
-gitbrain check coder
+gitbrain check creator
 ```
 
-Wait for CoderAI to:
+Wait for Creator to:
 - Address the issues you identified
 - Resubmit the work
 - Ask questions if clarification needed
@@ -311,7 +311,7 @@ Assign and manage development tasks:
 **Task Assignment:**
 
 ```bash
-gitbrain send coder '{
+gitbrain send creator '{
   "type": "task",
   "task_id": "task-002",
   "description": "Implement feature Y",
@@ -336,9 +336,9 @@ gitbrain send coder '{
 
 ### Scenario: Review User Authentication
 
-**1. CoderAI Submits Work**
+**1. Creator Submits Work**
 
-CoderAI sends a status message to `GitBrain/Overseer/`:
+Creator sends a status message to `GitBrain/Overseer/`:
 
 ```json
 {
@@ -358,7 +358,7 @@ CoderAI sends a status message to `GitBrain/Overseer/`:
 }
 ```
 
-**2. OverseerAI Reviews**
+**2. Monitor Reviews**
 
 ```markdown
 🤔 Thinking: Reviewing UserAuth implementation...
@@ -390,13 +390,13 @@ CoderAI sends a status message to `GitBrain/Overseer/`:
 
 ⚖️ Trade-offs:
 - Blocking progress until security fix (necessary for code quality)
-- Clear feedback helps CoderAI understand requirements
+- Clear feedback helps Creator understand requirements
 ```
 
-**3. OverseerAI Sends Review**
+**3. Monitor Sends Review**
 
 ```bash
-gitbrain send coder '{
+gitbrain send creator '{
   "type": "review",
   "task_id": "auth-001",
   "approved": false,
@@ -423,17 +423,17 @@ gitbrain send coder '{
 }'
 ```
 
-**4. CoderAI Fixes Issues**
+**4. Creator Fixes Issues**
 
-CoderAI reads the review and makes changes:
+Creator reads the review and makes changes:
 - Changes MD5 to bcrypt
 - Adds salt to password hashing
 - Adds test for invalid credentials
 - Improves error handling
 
-**5. CoderAI Resubmits**
+**5. Creator Resubmits**
 
-CoderAI sends updated status message to `GitBrain/Overseer/`:
+Creator sends updated status message to `GitBrain/Overseer/`:
 
 ```json
 {
@@ -452,7 +452,7 @@ CoderAI sends updated status message to `GitBrain/Overseer/`:
 }
 ```
 
-**6. OverseerAI Approves**
+**6. Monitor Approves**
 
 ```markdown
 🤔 Thinking: Re-reviewing UserAuth implementation...
@@ -482,10 +482,10 @@ CoderAI sends updated status message to `GitBrain/Overseer/`:
 - None - Code is production-ready
 ```
 
-**7. OverseerAI Sends Approval**
+**7. Monitor Sends Approval**
 
 ```bash
-gitbrain send coder '{
+gitbrain send creator '{
   "type": "approval",
   "task_id": "auth-001",
   "approved": true,
@@ -493,10 +493,10 @@ gitbrain send coder '{
 }'
 ```
 
-**8. OverseerAI Assigns Next Task**
+**8. Monitor Assigns Next Task**
 
 ```bash
-gitbrain send coder '{
+gitbrain send creator '{
   "type": "task",
   "task_id": "auth-002",
   "description": "Implement password reset functionality",
@@ -532,24 +532,24 @@ gitbrain send coder '{
 
 1. **Be Professional**: Maintain professional tone
 2. **Be Responsive**: Respond to questions promptly
-3. **Be Collaborative**: Work with CoderAI to improve code
+3. **Be Collaborative**: Work with Creator to improve code
 4. **Be Patient**: Development takes time
 
 ## Troubleshooting
 
-### No Messages from CoderAI
+### No Messages from Creator
 
 **Problem**: No messages appearing in `GitBrain/Overseer/`
 
 **Solutions:**
 - Verify you opened Trae at `GitBrain/`
-- Check that CoderAI is running
-- Use `gitbrain check overseer` to verify messages exist
+- Check that Creator is running
+- Use `gitbrain check monitor` to verify messages exist
 - Check file permissions
 
-### CoderAI Not Responding
+### Creator Not Responding
 
-**Problem**: CoderAI not responding to reviews
+**Problem**: Creator not responding to reviews
 
 **Solutions:**
 - Send a follow-up message asking for status
@@ -562,7 +562,7 @@ gitbrain send coder '{
 **Problem**: Same issues keep appearing in submissions
 
 **Solutions:**
-- Discuss with CoderAI to understand challenges
+- Discuss with Creator to understand challenges
 - Provide examples of correct implementation
 - Review project standards and guidelines
 - Consider if requirements need adjustment
@@ -571,9 +571,9 @@ gitbrain send coder '{
 
 | Command | Purpose | Example |
 |----------|---------|---------|
-| `gitbrain check overseer` | Check messages from CoderAI | `gitbrain check overseer` |
-| `gitbrain send coder <json>` | Send message to CoderAI | `gitbrain send coder '{"type":"review",...}'` |
-| `gitbrain clear overseer` | Clear old messages | `gitbrain clear overseer` |
+| `gitbrain check monitor` | Check messages from Creator | `gitbrain check monitor` |
+| `gitbrain send creator <json>` | Send message to Creator | `gitbrain send creator '{"type":"review",...}'` |
+| `gitbrain clear monitor` | Clear old messages | `gitbrain clear monitor` |
 
 ## Additional Resources
 
@@ -581,16 +581,16 @@ gitbrain send coder '{
 - [CLI_TOOLS.md](CLI_TOOLS.md) - CLI tool usage
 - [DEVELOPMENT.md](DEVELOPMENT.md) - Building and testing
 - [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) - Architecture decisions
-- [CODER_WORKFLOW.md](CODER_WORKFLOW.md) - CoderAI workflow guide
+- [CODER_WORKFLOW.md](CODER_WORKFLOW.md) - Creator workflow guide
 
 ## Summary
 
-As OverseerAI, your workflow is:
+As Monitor, your workflow is:
 
 1. **Access** GitBrain folder for read/write access
-2. **Monitor** for CoderAI submissions
+2. **Monitor** for Creator submissions
 3. **Review** submitted code thoroughly
-4. **Send** feedback to CoderAI
+4. **Send** feedback to Creator
 5. **Coordinate** tasks and priorities
 6. **Approve** work when standards are met
 7. **Assign** new tasks as needed

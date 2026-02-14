@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-14
 **Status:** ~~Design Complete - Awaiting Discussion~~ **IMPLEMENTED**
-**Author:** CoderAI
+**Author:** Creator
 **Last Updated:** 2026-02-14
 
 ## Overview
@@ -463,7 +463,7 @@ CREATE INDEX idx_heartbeat_messages_to_status ON heartbeat_messages(to_ai, messa
 CREATE INDEX idx_heartbeat_messages_to_timestamp ON heartbeat_messages(to_ai, timestamp DESC);
 
 -- Validators
--- role: 'coder', 'overseer'
+-- role: 'creator', 'monitor'
 -- message_priority: 1 (critical), 2 (high), 3 (normal), 4 (low)
 -- message_status: 'unread', 'read', 'processed', 'sent', 'delivered'
 ```
@@ -503,8 +503,8 @@ CREATE INDEX idx_score_request_messages_to_timestamp ON score_request_messages(t
 CREATE INDEX idx_score_request_messages_to_task_id ON score_request_messages(to_ai, task_id);
 
 -- Validators
--- requester: 'coder', 'overseer'
--- target_ai: 'coder', 'overseer'
+-- requester: 'creator', 'monitor'
+-- target_ai: 'creator', 'monitor'
 -- requested_score: positive integer
 -- message_priority: 1 (critical), 2 (high), 3 (normal), 4 (low)
 -- message_status: 'unread', 'read', 'processed', 'sent', 'delivered'
@@ -543,7 +543,7 @@ CREATE INDEX idx_score_award_messages_to_timestamp ON score_award_messages(to_ai
 CREATE INDEX idx_score_award_messages_to_request_id ON score_award_messages(to_ai, request_id);
 
 -- Validators
--- awarder: 'coder', 'overseer'
+-- awarder: 'creator', 'monitor'
 -- awarded_score: positive integer
 -- message_priority: 1 (critical), 2 (high), 3 (normal), 4 (low)
 -- message_status: 'unread', 'read', 'processed', 'sent', 'delivered'
@@ -581,7 +581,7 @@ CREATE INDEX idx_score_reject_messages_to_timestamp ON score_reject_messages(to_
 CREATE INDEX idx_score_reject_messages_to_request_id ON score_reject_messages(to_ai, request_id);
 
 -- Validators
--- rejecter: 'coder', 'overseer'
+-- rejecter: 'creator', 'monitor'
 -- message_priority: 1 (critical), 2 (high), 3 (normal), 4 (low)
 -- message_status: 'unread', 'read', 'processed', 'sent', 'delivered'
 ```
@@ -1710,8 +1710,8 @@ if let dbValue = row["type"] as? String,
 let messageType = MessageType.task
 let message = Message(
     id: UUID().uuidString,
-    from: "CoderAI",
-    to: "OverseerAI",
+    from: "Creator",
+    to: "Monitor",
     timestamp: ISO8601DateFormatter().string(from: Date()),
     content: SendableContent([
         "type": messageType.rawValue,
@@ -1849,7 +1849,7 @@ let message = Message(
 - `capabilities`: [String] - List of capabilities
 
 **Validators:**
-- `role` must be one of: `coder`, `overseer`
+- `role` must be one of: `creator`, `monitor`
 
 ##### 9. Score Request Message
 
@@ -1868,8 +1868,8 @@ let message = Message(
 - None
 
 **Validators:**
-- `requester` must be one of: `coder`, `overseer`
-- `target_ai` must be one of: `coder`, `overseer`
+- `requester` must be one of: `creator`, `monitor`
+- `target_ai` must be one of: `creator`, `monitor`
 - `requested_score` must be a positive integer
 
 ##### 10. Score Award Message
@@ -1888,7 +1888,7 @@ let message = Message(
 - None
 
 **Validators:**
-- `awarder` must be one of: `coder`, `overseer`
+- `awarder` must be one of: `creator`, `monitor`
 - `awarded_score` must be a positive integer
 
 ##### 11. Score Reject Message
@@ -1906,7 +1906,7 @@ let message = Message(
 - None
 
 **Validators:**
-- `rejecter` must be one of: `coder`, `overseer`
+- `rejecter` must be one of: `creator`, `monitor`
 
 #### Message Type Summary Table
 
@@ -2087,7 +2087,7 @@ public actor MessageCacheManager: @unchecked Sendable {
         let archivePath = "GitBrain/Memory/Archive/\(ISO8601DateFormatter().string(from: Date()))_\(message.id).json"
         let archiveURL = URL(fileURLWithPath: archivePath)
         
-        let data = try JSONEncoder().encode(message)
+        let data = try JSONEncreator().encode(message)
         try data.write(to: archiveURL)
         
         GitBrainLogger.debug("Message archived to: \(archivePath)")
@@ -2825,7 +2825,7 @@ public actor KnowledgeBase: @unchecked Sendable, KnowledgeBaseProtocol {
 
 ```
 ┌─────────────┐
-│   CoderAI   │
+│   Creator   │
 └─────────────┘
        │
        │ 1. Send message via function
@@ -2842,7 +2842,7 @@ public actor KnowledgeBase: @unchecked Sendable, KnowledgeBaseProtocol {
        │ 2. Notify recipient
        ▼
 ┌─────────────┐
-│ OverseerAI  │
+│ Monitor  │
 └─────────────┘
        │
        │ 3. Read from message_cache
@@ -2857,7 +2857,7 @@ public actor KnowledgeBase: @unchecked Sendable, KnowledgeBaseProtocol {
        │ 4. Process message
        ▼
 ┌─────────────┐
-│ OverseerAI  │
+│ Monitor  │
 └─────────────┘
        │
        │ 5. Mark as processed
@@ -3000,7 +3000,7 @@ public actor KnowledgeBase: @unchecked Sendable, KnowledgeBaseProtocol {
 - [ ] Swift type system used correctly
 - [ ] Documentation updated
 
-## Questions for OverseerAI
+## Questions for Monitor
 
 1. **Architecture Approval:** Do you approve this system architecture with clear boundaries between BrainState, MessageCache, and KnowledgeBase?
 
@@ -3011,7 +3011,7 @@ public actor KnowledgeBase: @unchecked Sendable, KnowledgeBaseProtocol {
 ---
 
 **Status:** Design Complete - Awaiting Discussion
-**Author:** CoderAI
+**Author:** Creator
 **Date:** 2026-02-14
 
 **Please append your comments below this line:**

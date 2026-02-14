@@ -8,7 +8,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 DB_PATH="$PROJECT_DIR/GitBrain/Memory/scores.db"
 DB_DIR="$(dirname "$DB_PATH")"
 
-AI_NAME="${1:-CoderAI}"
+AI_NAME="${1:-Creator}"
 
 # Create database directory if it doesn't exist
 mkdir -p "$DB_DIR"

@@ -63,7 +63,7 @@ This document describes how to integrate BrainState infrastructure for inter-AI 
 │                                                           │
 │  ┌──────────────┐  ┌──────────────┐             │
 │  │ BrainState   │  │ BrainState   │             │
-│  │ (CoderAI)    │  │ (OverseerAI) │             │
+│  │ (Creator)    │  │ (Monitor) │             │
 │  └──────────────┘  └──────────────┘             │
 │         │                  │                        │
 │         ▼                  ▼                        │
@@ -99,8 +99,8 @@ This document describes how to integrate BrainState infrastructure for inter-AI 
 
 ```json
 {
-  "aiName": "CoderAI",
-  "role": "coder",
+  "aiName": "Creator",
+  "role": "creator",
   "version": "1.0.0",
   "lastUpdated": "2026-02-13T22:45:00Z",
   "state": {
@@ -108,8 +108,8 @@ This document describes how to integrate BrainState infrastructure for inter-AI 
       "inbox": [
         {
           "id": "msg_001",
-          "from": "OverseerAI",
-          "to": "CoderAI",
+          "from": "Monitor",
+          "to": "Creator",
           "timestamp": "2026-02-13T22:30:00Z",
           "content": {
             "type": "status_update",
@@ -122,8 +122,8 @@ This document describes how to integrate BrainState infrastructure for inter-AI 
       "outbox": [
         {
           "id": "msg_002",
-          "from": "CoderAI",
-          "to": "OverseerAI",
+          "from": "Creator",
+          "to": "Monitor",
           "timestamp": "2026-02-13T22:35:00Z",
           "content": {
             "type": "task_update",
@@ -319,7 +319,7 @@ EXECUTE FUNCTION notify_new_message();
 
 ### Phase 3: AI System Integration
 
-**Update CoderAI:**
+**Update Creator:**
 
 ```swift
 // Replace FileBasedCommunication with BrainStateCommunication
@@ -329,27 +329,27 @@ let communication = BrainStateCommunication(
     database: dbManager.getDatabase()
 )
 
-// Send message to OverseerAI
+// Send message to Monitor
 let message = Message(
     id: UUID().uuidString,
-    from: "CoderAI",
-    to: "OverseerAI",
+    from: "Creator",
+    to: "Monitor",
     timestamp: ISO8601DateFormatter().string(from: Date()),
     content: SendableContent(["type": "status", "message": "Working..."]),
     status: .sent,
     priority: .normal
 )
-try await communication.sendMessage(message, to: "OverseerAI")
+try await communication.sendMessage(message, to: "Monitor")
 
 // Receive messages
-let messages = try await communication.receiveMessages(for: "CoderAI")
+let messages = try await communication.receiveMessages(for: "Creator")
 for message in messages {
     processMessage(message)
-    try await communication.markAsRead(message.id, for: "CoderAI")
+    try await communication.markAsRead(message.id, for: "Creator")
 }
 ```
 
-**Update OverseerAI:**
+**Update Monitor:**
 
 ```swift
 // Replace FileBasedCommunication with BrainStateCommunication
@@ -359,23 +359,23 @@ let communication = BrainStateCommunication(
     database: dbManager.getDatabase()
 )
 
-// Send message to CoderAI
+// Send message to Creator
 let message = Message(
     id: UUID().uuidString,
-    from: "OverseerAI",
-    to: "CoderAI",
+    from: "Monitor",
+    to: "Creator",
     timestamp: ISO8601DateFormatter().string(from: Date()),
     content: SendableContent(["type": "guidance", "message": "Continue..."]),
     status: .sent,
     priority: .normal
 )
-try await communication.sendMessage(message, to: "CoderAI")
+try await communication.sendMessage(message, to: "Creator")
 
 // Receive messages
-let messages = try await communication.receiveMessages(for: "OverseerAI")
+let messages = try await communication.receiveMessages(for: "Monitor")
 for message in messages {
     processMessage(message)
-    try await communication.markAsRead(message.id, for: "OverseerAI")
+    try await communication.markAsRead(message.id, for: "Monitor")
 }
 ```
 
@@ -423,7 +423,7 @@ public actor NotificationListener {
 **Tasks:**
 1. Read all message files from `GitBrain/Memory/ToProcess/`
 2. Parse each message file
-3. Create BrainState for CoderAI and OverseerAI if not exists
+3. Create BrainState for Creator and Monitor if not exists
 4. Add messages to appropriate inbox/outbox
 5. Save BrainStates to database
 6. Move processed files to `GitBrain/Memory/Processed/`
@@ -486,8 +486,8 @@ public actor NotificationListener {
 
 ### Integration Tests
 
-1. Test CoderAI → OverseerAI communication
-2. Test OverseerAI → CoderAI communication
+1. Test Creator → Monitor communication
+2. Test Monitor → Creator communication
 3. Test message ordering
 4. Test message priority
 5. Test real-time notifications
@@ -501,7 +501,7 @@ public actor NotificationListener {
 
 ## Next Steps
 
-1. **Review this design** with OverseerAI
+1. **Review this design** with Monitor
 2. **Get approval** for implementation
 3. **Implement Phase 1:** BrainState Communication Layer
 4. **Implement Phase 2:** Database Schema Updates
@@ -514,4 +514,4 @@ public actor NotificationListener {
 
 ---
 
-**Status:** Design Complete - Awaiting OverseerAI Approval
+**Status:** Design Complete - Awaiting Monitor Approval

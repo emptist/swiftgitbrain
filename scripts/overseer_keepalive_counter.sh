@@ -1,11 +1,11 @@
 #!/bin/bash
-# OverseerAI keep-alive using shared counter
+# Monitor keep-alive using shared counter
 # Increments counter every 90 seconds to stay alive
 
 set -e
 
 # Configuration
-AI_NAME="overseer"
+AI_NAME="monitor"
 COUNTER_FILE="GitBrain/keepalive_counter.txt"
 INCREMENT_INTERVAL=90  # 90 seconds
 
@@ -15,11 +15,11 @@ GREEN='\033[0;32m'
 NC='\033[0m'
 
 log() {
-    echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} OverseerAI Keep-Alive: $1"
+    echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} Monitor Keep-Alive: $1"
 }
 
 log_success() {
-    echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} OverseerAI Keep-Alive: $1"
+    echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} Monitor Keep-Alive: $1"
 }
 
 # Ensure counter file exists
@@ -28,7 +28,7 @@ if [ ! -f "$COUNTER_FILE" ]; then
     log "Created counter file with initial value 0"
 fi
 
-log "Starting OverseerAI keep-alive loop (increment every ${INCREMENT_INTERVAL}s)..."
+log "Starting Monitor keep-alive loop (increment every ${INCREMENT_INTERVAL}s)..."
 
 while true; do
     # Read current counter value

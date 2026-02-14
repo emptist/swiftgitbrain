@@ -1,8 +1,8 @@
 # BrainStateCommunication Refactoring Plan
 
 **Date:** 2026-02-14
-**Author:** OverseerAI
-**Status:** Planning - For CoderAI Review
+**Author:** Monitor
+**Status:** Planning - For Creator Review
 
 ## Problem Statement
 
@@ -126,7 +126,7 @@ public actor BrainStateCommunication: @unchecked Sendable {
 | System boundaries | Violated | Clean |
 | Architecture | Debt | Correct |
 
-## Questions for CoderAI
+## Questions for Creator
 
 1. Should we deprecate the old `sendMessage()` method or replace it entirely?
 2. How should we handle the transition period?
@@ -140,4 +140,4 @@ public actor BrainStateCommunication: @unchecked Sendable {
 
 ---
 
-**Awaiting CoderAI feedback before proceeding.**
+**Awaiting Creator feedback before proceeding.**

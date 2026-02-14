@@ -441,7 +441,7 @@ MessageCache provides database-backed messaging for AI collaboration with sub-mi
 
 ```swift
 let dbManager = DatabaseManager(config: .fromEnvironment())
-let messageCache = try await dbManager.createMessageCacheManager(forAI: "CoderAI")
+let messageCache = try await dbManager.createMessageCacheManager(forAI: "Creator")
 ```
 
 ### Message Types
@@ -463,7 +463,7 @@ Send a task to another AI.
 
 ```swift
 let task = try await messageCache.sendTask(
-    to: "CoderAI",
+    to: "Creator",
     taskId: "task-001",
     description: "Implement feature X",
     type: .coding,
@@ -485,7 +485,7 @@ Send feedback to another AI.
 
 ```swift
 let feedback = try await messageCache.sendFeedback(
-    to: "OverseerAI",
+    to: "Monitor",
     feedbackType: .acknowledgment,
     subject: "Task Complete",
     content: "Feature X implemented successfully"
@@ -498,8 +498,8 @@ Send a heartbeat to show the AI is alive.
 
 ```swift
 let heartbeat = try await messageCache.sendHeartbeat(
-    to: "OverseerAI",
-    role: .coder,
+    to: "Monitor",
+    role: .creator,
     status: "working",
     currentTask: "Implementing feature X"
 )
@@ -515,8 +515,8 @@ AIDaemon provides automatic message polling and heartbeat sending for continuous
 
 ```swift
 let config = DaemonConfig(
-    aiName: "CoderAI",
-    role: .coder,
+    aiName: "Creator",
+    role: .creator,
     pollInterval: 1.0,
     heartbeatInterval: 30.0,
     autoHeartbeat: true,
@@ -531,7 +531,7 @@ let daemon = AIDaemon(config: config, databaseManager: dbManager)
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | aiName | String | required | AI identifier |
-| role | RoleType | required | .coder or .overseer |
+| role | RoleType | required | .creator or .monitor |
 | pollInterval | Double | 1.0 | Message polling interval in seconds |
 | heartbeatInterval | Double | 30.0 | Heartbeat interval in seconds |
 | autoHeartbeat | Bool | true | Enable automatic heartbeats |
@@ -592,8 +592,8 @@ Create a new brain state for an AI.
 
 ```swift
 let state = try await brainStateManager.createBrainState(
-    aiName: "CoderAI",
-    role: .coder,
+    aiName: "Creator",
+    role: .creator,
     initialState: ["mood": "focused", "task": "implementation"]
 )
 ```
@@ -603,7 +603,7 @@ let state = try await brainStateManager.createBrainState(
 Load brain state for an AI.
 
 ```swift
-let state = try await brainStateManager.loadBrainState(aiName: "CoderAI")
+let state = try await brainStateManager.loadBrainState(aiName: "Creator")
 ```
 
 #### updateBrainState(aiName:key:value:)
@@ -612,7 +612,7 @@ Update a specific key in brain state.
 
 ```swift
 try await brainStateManager.updateBrainState(
-    aiName: "CoderAI",
+    aiName: "Creator",
     key: "currentTask",
     value: "Feature X"
 )

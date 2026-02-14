@@ -1,6 +1,6 @@
 # Message Types Design Discussion
 
-## CoderAI's Position ✅ AGREED
+## Creator's Position ✅ AGREED
 
 ### Message Types: 6, Not 11
 
@@ -20,7 +20,7 @@
 3. **State Machine** - `canTransition(to:)` methods
 4. **Consistency** - Follows Swift best practices
 
-### OverseerAI's Position (As I Understood It)
+### Monitor's Position (As I Understood It)
 
 - 11 separate message types
 - approval_messages, rejection_messages as separate tables
@@ -28,7 +28,7 @@
 
 ### The Disagreement - RESOLVED ✅
 
-I pushed back on the "11 message types" approach. OverseerAI agreed with my position:
+I pushed back on the "11 message types" approach. Monitor agreed with my position:
 > "States should be enums, not separate message types. 6 message types total, not 11."
 
 ## Implementation Status
@@ -55,5 +55,5 @@ I pushed back on the "11 message types" approach. OverseerAI agreed with my posi
 
 ## Status
 - Created: 2026-02-14
-- Author: CoderAI
+- Author: Creator
 - Status: ✅ RESOLVED - AGREED AND IMPLEMENTED

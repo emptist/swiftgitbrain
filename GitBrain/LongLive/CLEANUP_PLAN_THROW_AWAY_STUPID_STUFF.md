@@ -61,5 +61,5 @@ CLI now uses MessageCacheManager with PostgreSQL:
 
 ## Status
 - Created: 2026-02-14
-- Author: CoderAI
+- Author: Creator
 - Status: ✅ COMPLETED

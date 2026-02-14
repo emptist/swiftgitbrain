@@ -81,8 +81,8 @@ Set a custom default path for GitBrain folder:
 export GITBRAIN_PATH=/custom/path/to/GitBrain
 
 # Now all commands use this path
-gitbrain check coder
-gitbrain send overseer '{"type":"review"}'
+gitbrain check creator
+gitbrain send monitor '{"type":"review"}'
 ```
 
 This is useful for:
@@ -99,10 +99,10 @@ This is useful for:
 # Initialize GitBrain
 gitbrain init
 
-# Open Trae for CoderAI
+# Open Trae for Creator
 trae .
 
-# Open Trae for OverseerAI
+# Open Trae for Monitor
 trae ./GitBrain
 
 # In your Python code, you can also interact with GitBrain files
@@ -110,12 +110,12 @@ import json
 import os
 import subprocess
 
-# Send message to OverseerAI
-def send_to_overseer(message):
-    subprocess.run(['gitbrain', 'send', 'overseer', json.dumps(message)])
+# Send message to Monitor
+def send_to_monitor(message):
+    subprocess.run(['gitbrain', 'send', 'monitor', json.dumps(message)])
 
-# Read messages for CoderAI
-def read_coder_messages():
+# Read messages for Creator
+def read_creator_messages():
     memory_dir = os.getenv('GITBRAIN_PATH', './GitBrain') + '/Memory'
     messages = []
     if os.path.exists(memory_dir):
@@ -133,7 +133,7 @@ task_message = {
     "task_type": "coding",
     "priority": 7
 }
-send_to_overseer(task_message)
+send_to_monitor(task_message)
 ```
 
 ### JavaScript/Node.js Project
@@ -142,10 +142,10 @@ send_to_overseer(task_message)
 # Initialize GitBrain
 gitbrain init
 
-# Open Trae for CoderAI
+# Open Trae for Creator
 trae .
 
-# Open Trae for OverseerAI
+# Open Trae for Monitor
 trae ./GitBrain
 
 # In your JavaScript code
@@ -153,12 +153,12 @@ const fs = require('fs');
 const { execSync } = require('child_process');
 const path = require('path');
 
-// Send message to OverseerAI
+// Send message to Monitor
 function sendToOverseer(message) {
-    execSync(`gitbrain send overseer '${JSON.stringify(message)}'`);
+    execSync(`gitbrain send monitor '${JSON.stringify(message)}'`);
 }
 
-// Read messages for CoderAI
+// Read messages for Creator
 function readCoderMessages() {
     const gitBrainPath = process.env.GITBRAIN_PATH || './GitBrain';
     const memoryDir = path.join(gitBrainPath, 'Memory');
@@ -188,10 +188,10 @@ sendToOverseer(taskMessage);
 # Initialize GitBrain
 gitbrain init
 
-# Open Trae for CoderAI
+# Open Trae for Creator
 trae .
 
-# Open Trae for OverseerAI
+# Open Trae for Monitor
 trae ./GitBrain
 
 // In your Rust code
@@ -199,16 +199,16 @@ use std::fs;
 use std::process::Command;
 use std::env;
 
-// Send message to OverseerAI
-fn send_to_overseer(message: &serde_json::Value) {
+// Send message to Monitor
+fn send_to_monitor(message: &serde_json::Value) {
     Command::new("gitbrain")
-        .args(&["send", "overseer", &message.to_string()])
+        .args(&["send", "monitor", &message.to_string()])
         .status()
         .expect("Failed to execute gitbrain");
 }
 
-// Read messages for CoderAI
-fn read_coder_messages() -> Vec<serde_json::Value> {
+// Read messages for Creator
+fn read_creator_messages() -> Vec<serde_json::Value> {
     let gitbrain_path = env::var("GITBRAIN_PATH").unwrap_or_else(|_| "./GitBrain".to_string());
     let memory_dir = format!("{}/Memory", gitbrain_path);
     let mut messages = Vec::new();
@@ -242,7 +242,7 @@ fn main() {
         "task_type": "coding",
         "priority": 7
     });
-    send_to_overseer(&message);
+    send_to_monitor(&message);
 }
 ```
 
@@ -252,10 +252,10 @@ fn main() {
 # Initialize GitBrain
 gitbrain init
 
-# Open Trae for CoderAI
+# Open Trae for Creator
 trae .
 
-# Open Trae for OverseerAI
+# Open Trae for Monitor
 trae ./GitBrain
 
 // In your Go code
@@ -272,18 +272,18 @@ import (
     "strings"
 )
 
-// Send message to OverseerAI
+// Send message to Monitor
 func sendToOverseer(message map[string]interface{}) error {
     data, err := json.Marshal(message)
     if err != nil {
         return err
     }
     
-    cmd := exec.Command("gitbrain", "send", "overseer", string(data))
+    cmd := exec.Command("gitbrain", "send", "monitor", string(data))
     return cmd.Run()
 }
 
-// Read messages for CoderAI
+// Read messages for Creator
 func readCoderMessages() ([]map[string]interface{}, error) {
     gitbrainPath := os.Getenv("GITBRAIN_PATH")
     if gitbrainPath == "" {
@@ -345,8 +345,8 @@ message = {
     "priority": 5
 }
 
-subprocess.run(["gitbrain", "send", "overseer", json.dumps(message)])
-# Output: ✓ Message sent to: overseer
+subprocess.run(["gitbrain", "send", "monitor", json.dumps(message)])
+# Output: ✓ Message sent to: monitor
 ```
 
 ### Example: Invalid Message
@@ -360,7 +360,7 @@ message = {
     "priority": 15  # Invalid priority (must be 1-10)
 }
 
-subprocess.run(["gitbrain", "send", "overseer", json.dumps(message)])
+subprocess.run(["gitbrain", "send", "monitor", json.dumps(message)])
 # Output: Error: Invalid value for field 'task_type': must be one of: coding, review, testing, documentation
 ```
 
@@ -376,8 +376,8 @@ You can specify a custom path for each command:
 
 ```bash
 gitbrain init /custom/path/to/GitBrain
-gitbrain send overseer '{"type":"review"}' /custom/path/to/GitBrain
-gitbrain check coder /custom/path/to/GitBrain
+gitbrain send monitor '{"type":"review"}' /custom/path/to/GitBrain
+gitbrain check creator /custom/path/to/GitBrain
 ```
 
 ### Environment Variable
@@ -387,8 +387,8 @@ gitbrain check coder /custom/path/to/GitBrain
 export GITBRAIN_PATH=/custom/path/to/GitBrain
 
 # Now all commands use this path
-gitbrain check coder
-gitbrain send overseer '{"type":"review"}'
+gitbrain check creator
+gitbrain send monitor '{"type":"review"}'
 ```
 
 ## CI/CD Integration
@@ -419,14 +419,14 @@ jobs:
       
       - name: Request AI Review
         run: |
-          gitbrain send overseer '{
+          gitbrain send monitor '{
             "type": "code_review",
             "pr_number": "${{ github.event.number }}",
             "files": ["src/main.py"]
           }'
       
       - name: Check Review Results
-        run: gitbrain check coder
+        run: gitbrain check creator
 ```
 
 ### GitLab CI
@@ -438,8 +438,8 @@ ai_review:
     - swift build -c release --product gitbrain
     - cp .build/release/gitbrain /usr/local/bin/
     - gitbrain init
-    - gitbrain send overseer '{"type":"code_review"}'
-    - gitbrain check coder
+    - gitbrain send monitor '{"type":"code_review"}'
+    - gitbrain check creator
   only:
     - merge_requests
 ```
@@ -491,7 +491,7 @@ export PATH=$PATH:/path/to/gitbrain/directory
 gitbrain init
 
 # Or specify to path explicitly
-gitbrain check coder /path/to/GitBrain
+gitbrain check creator /path/to/GitBrain
 ```
 
 ### Message Validation Errors

@@ -96,7 +96,7 @@ The migration system is designed to migrate:
 
 2. **Brain states** from `GitBrain/BrainState/` directory
    - Structure: `GitBrain/BrainState/{ai_name}.json`
-   - Content: AI state information for CoderAI and OverseerAI
+   - Content: AI state information for Creator and Monitor
 
 ### Actual Data Structure
 
@@ -108,7 +108,7 @@ The migration system is designed to migrate:
 ```json
 {
   "from": "keepalive_system",
-  "to": "CoderAI",
+  "to": "Creator",
   "timestamp": "2026-02-12T17:18:05Z",
   "content": {
     "timestamp": "2026-02-12T17:18:05Z",
@@ -241,13 +241,13 @@ CREATE TABLE "brain_states" (
 ## Commits
 
 1. `f9f7e67` - Fix retry count tracking in error reporting
-2. `c9ee612` - Simplify retry count tracking fix per OverseerAI guidance
-3. `67502e4` - Add CoderAI response to URGENT_RETRY_FIX.md
+2. `c9ee612` - Simplify retry count tracking fix per Monitor guidance
+3. `67502e4` - Add Creator response to URGENT_RETRY_FIX.md
 4. `174d6d9` - Add post-migration enhancements to migration guide
 5. `c9795ed` - Fix retry count tracking bug (earlier fix)
-6. `79ab266` - Create comprehensive handover documentation for next CoderAI session
-7. `ba8b280` - Create OverseerAI handover documentation
-8. `6bac8ae` - Create CoderAI handover documentation (corrected filename)
+6. `79ab266` - Create comprehensive handover documentation for next Creator session
+7. `ba8b280` - Create Monitor handover documentation
+8. `6bac8ae` - Create Creator handover documentation (corrected filename)
 9. `0731f020` - Fix database connection pool shutdown issues
 
 ## Conclusion
@@ -256,4 +256,4 @@ The GitBrain migration system is **technically complete and ready for use**. All
 
 **Recommendation:** Skip migration for now, document the system as ready for future use, and consider extending the system to migrate message files if real-time messaging becomes a priority.
 
-**Next Steps:** Discuss with OverseerAI to determine the best path forward.
+**Next Steps:** Discuss with Monitor to determine the best path forward.

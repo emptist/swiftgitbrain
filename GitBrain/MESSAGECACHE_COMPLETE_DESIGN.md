@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-14
 **Status:** Design Complete - Awaiting Discussion
-**Author:** CoderAI
+**Author:** Creator
 
 ## Executive Summary
 
@@ -134,8 +134,8 @@ let messageType = MessageType.task  // Compile-time checked!
 
 let message = Message(
     id: UUID().uuidString,
-    from: "CoderAI",
-    to: "OverseerAI",
+    from: "Creator",
+    to: "Monitor",
     timestamp: ISO8601DateFormatter().string(from: Date()),
     content: SendableContent([
         "type": messageType.rawValue,  // "task" (stored as string in database)
@@ -245,7 +245,7 @@ if let dbValue = row["type"] as? String,
   "type": "review",
   "task_id": "task-001",
   "approved": true,
-  "reviewer": "OverseerAI",
+  "reviewer": "Monitor",
   "comments": [
     {
       "line": 10,
@@ -319,7 +319,7 @@ if let dbValue = row["type"] as? String,
 {
   "type": "approval",
   "task_id": "task-001",
-  "approver": "OverseerAI",
+  "approver": "Monitor",
   "approved_at": "2026-02-14T12:00:00Z",
   "commit_hash": "abc123",
   "notes": "Approved after review"
@@ -354,7 +354,7 @@ if let dbValue = row["type"] as? String,
 {
   "type": "rejection",
   "task_id": "task-001",
-  "rejecter": "OverseerAI",
+  "rejecter": "Monitor",
   "reason": "Code does not meet standards",
   "rejected_at": "2026-02-14T12:00:00Z",
   "feedback": "Please fix the issues",
@@ -420,14 +420,14 @@ if let dbValue = row["type"] as? String,
 - `capabilities`: [String] - List of capabilities
 
 **Validators:**
-- `role` must be one of: `coder`, `overseer`
+- `role` must be one of: `creator`, `monitor`
 
 **Example:**
 ```json
 {
   "type": "heartbeat",
-  "ai_name": "CoderAI",
-  "role": "coder",
+  "ai_name": "Creator",
+  "role": "creator",
   "timestamp": "2026-02-14T12:00:00Z",
   "status": "active",
   "capabilities": ["coding", "testing", "documentation"]
@@ -455,8 +455,8 @@ if let dbValue = row["type"] as? String,
 - None
 
 **Validators:**
-- `requester` must be one of: `coder`, `overseer`
-- `target_ai` must be one of: `coder`, `overseer`
+- `requester` must be one of: `creator`, `monitor`
+- `target_ai` must be one of: `creator`, `monitor`
 - `requested_score` must be a positive integer
 
 **Example:**
@@ -464,8 +464,8 @@ if let dbValue = row["type"] as? String,
 {
   "type": "score_request",
   "task_id": "task-001",
-  "requester": "coder",
-  "target_ai": "overseer",
+  "requester": "creator",
+  "target_ai": "monitor",
   "requested_score": 10,
   "quality_justification": "Completed task ahead of schedule with high quality"
 }
@@ -490,7 +490,7 @@ if let dbValue = row["type"] as? String,
 - None
 
 **Validators:**
-- `awarder` must be one of: `coder`, `overseer`
+- `awarder` must be one of: `creator`, `monitor`
 - `awarded_score` must be a positive integer
 
 **Example:**
@@ -498,7 +498,7 @@ if let dbValue = row["type"] as? String,
 {
   "type": "score_award",
   "request_id": 1,
-  "awarder": "overseer",
+  "awarder": "monitor",
   "awarded_score": 10,
   "reason": "Excellent work on task"
 }
@@ -522,14 +522,14 @@ if let dbValue = row["type"] as? String,
 - None
 
 **Validators:**
-- `rejecter` must be one of: `coder`, `overseer`
+- `rejecter` must be one of: `creator`, `monitor`
 
 **Example:**
 ```json
 {
   "type": "score_reject",
   "request_id": 1,
-  "rejecter": "overseer",
+  "rejecter": "monitor",
   "reason": "Task not completed to required standard"
 }
 ```
@@ -803,7 +803,7 @@ public actor MessageCacheManager: @unchecked Sendable {
         let archivePath = "GitBrain/Memory/Archive/\(ISO8601DateFormatter().string(from: Date()))_\(message.id).json"
         let archiveURL = URL(fileURLWithPath: archivePath)
         
-        let data = try JSONEncoder().encode(message)
+        let data = try JSONEncreator().encode(message)
         try data.write(to: archiveURL)
         
         GitBrainLogger.debug("Message archived to: \(archivePath)")
@@ -829,7 +829,7 @@ public actor MessageCacheManager: @unchecked Sendable {
 
 ```
 ┌─────────────┐
-│   CoderAI   │
+│   Creator   │
 └─────────────┘
        │
        │ 1. Send message via function
@@ -846,7 +846,7 @@ public actor MessageCacheManager: @unchecked Sendable {
        │ 2. Notify recipient
        ▼
 ┌─────────────┐
-│ OverseerAI  │
+│ Monitor  │
 └─────────────┘
        │
        │ 3. Read from message_cache
@@ -861,7 +861,7 @@ public actor MessageCacheManager: @unchecked Sendable {
        │ 4. Process message
        ▼
 ┌─────────────┐
-│ OverseerAI  │
+│ Monitor  │
 └─────────────┘
        │
        │ 5. Mark as processed
@@ -912,7 +912,7 @@ Total Files: 658
 #### 1. Task Assignments (573 files)
 
 **What They Are:**
-- Task assignments created by OverseerAI
+- Task assignments created by Monitor
 - Analysis documents
 - Various JSON documents
 
@@ -921,8 +921,8 @@ Total Files: 658
 {
   "title": "Collaboration System Failure Analysis",
   "priority": "critical",
-  "assigned_to": "CoderAI",
-  "created_by": "OverseerAI",
+  "assigned_to": "Creator",
+  "created_by": "Monitor",
   "created_at": "2026-02-13T00:00:00Z",
   "description": "Analysis of the collaboration system failure and restart plan.",
   "failure_summary": {
@@ -947,7 +947,7 @@ Total Files: 658
 ```json
 {
   "from": "keepalive_system",
-  "to": "CoderAI",
+  "to": "Creator",
   "timestamp": "2026-02-12T17:18:05Z",
   "content": {
     "timestamp": "2026-02-12T17:18:05Z",
@@ -983,14 +983,14 @@ Total Files: 658
 **Example Structure:**
 ```json
 {
-  "from": "CoderAI",
-  "to": "OverseerAI",
+  "from": "Creator",
+  "to": "Monitor",
   "timestamp": "2026-02-12T13:31:00Z",
   "content": {
     "type": "review",
     "task_id": "task-001",
     "approved": true,
-    "reviewer": "OverseerAI",
+    "reviewer": "Monitor",
     "comments": [
       {
         "line": 10,
@@ -1052,7 +1052,7 @@ Total Files: 658
 - [ ] BrainState remains clean (no messages)
 - [ ] Documentation updated
 
-## Questions for OverseerAI
+## Questions for Monitor
 
 1. **Architecture Approval:** Do you approve this MessageCache architecture with clear boundaries between BrainState, MessageCache, and KnowledgeBase?
 
@@ -1065,7 +1065,7 @@ Total Files: 658
 ---
 
 **Status:** Design Complete - Awaiting Discussion
-**Author:** CoderAI
+**Author:** Creator
 **Date:** 2026-02-14
 
 **Please append your comments below this line:**

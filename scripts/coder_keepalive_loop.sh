@@ -1,13 +1,13 @@
 #!/bin/bash
-# CoderAI automated keep-alive and message processing loop
+# Creator automated keep-alive and message processing loop
 # This script runs forever, checking for messages every 120 seconds
 # and sending heartbeats to keep the AI alive
 
 set -e
 
 # Configuration
-AI_NAME="coder"
-AI_ROLE="coder"
+AI_NAME="creator"
+AI_ROLE="creator"
 CHECK_INTERVAL=60
 HEARTBEAT_INTERVAL=60
 LAST_HEARTBEAT=0
@@ -44,10 +44,10 @@ log_error() {
     echo -e "${RED}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $1"
 }
 
-# Send heartbeat to OverseerAI
+# Send heartbeat to Monitor
 send_heartbeat() {
     local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    local heartbeat_file="/tmp/coder_heartbeat_$$.json"
+    local heartbeat_file="/tmp/creator_heartbeat_$$.json"
     
     cat > "$heartbeat_file" << EOF
 {
@@ -55,13 +55,13 @@ send_heartbeat() {
   "ai_name": "$AI_NAME",
   "role": "$AI_ROLE",
   "status": "active",
-  "message": "CoderAI is active and monitoring for messages",
+  "message": "Creator is active and monitoring for messages",
   "timestamp": "$timestamp"
 }
 EOF
 
-    log "Sending heartbeat to OverseerAI..."
-    if ./.build/debug/gitbrain send overseer "$heartbeat_file" > /dev/null 2>&1; then
+    log "Sending heartbeat to Monitor..."
+    if ./.build/debug/gitbrain send monitor "$heartbeat_file" > /dev/null 2>&1; then
         log_success "Heartbeat sent successfully"
         LAST_HEARTBEAT=$(date +%s)
     else
@@ -71,9 +71,9 @@ EOF
     rm -f "$heartbeat_file"
 }
 
-# Check for messages from OverseerAI
+# Check for messages from Monitor
 check_messages() {
-    log "Checking for messages from OverseerAI..."
+    log "Checking for messages from Monitor..."
     
     local output
     output=$(./.build/debug/gitbrain check "$AI_NAME" 2>&1)
@@ -86,7 +86,7 @@ check_messages() {
 
     # Count messages
     local message_count
-    message_count=$(echo "$output" | grep -c "^\[overseer -> coder\]" 2>/dev/null || echo "0")
+    message_count=$(echo "$output" | grep -c "^\[monitor -> creator\]" 2>/dev/null || echo "0")
     
     # Ensure message_count is a valid number
     message_count=$(echo "$message_count" | tr -d '[:space:]')
@@ -95,16 +95,16 @@ check_messages() {
     fi
     
     if [ "$message_count" -gt 0 ]; then
-        log_success "Found $message_count message(s) from OverseerAI"
+        log_success "Found $message_count message(s) from Monitor"
         echo "$output"
         return 0
     else
-        log "No new messages from OverseerAI"
+        log "No new messages from Monitor"
         return 1
     fi
 }
 
-# Process a message from OverseerAI
+# Process a message from Monitor
 process_message() {
     local message_file="$1"
     log "Processing message: $message_file"
@@ -140,10 +140,10 @@ process_message() {
             log "Please review feedback and make necessary changes"
             ;;
         "heartbeat")
-            log "Received heartbeat from OverseerAI"
+            log "Received heartbeat from Monitor"
             ;;
         "status")
-            log "Received status update from OverseerAI"
+            log "Received status update from Monitor"
             ;;
         *)
             log_warning "Unknown message type: $message_type"
@@ -152,7 +152,7 @@ process_message() {
 }
 
 # Main loop
-log "Starting CoderAI automated keep-alive loop..."
+log "Starting Creator automated keep-alive loop..."
 log "Check interval: ${CHECK_INTERVAL}s, Heartbeat interval: ${HEARTBEAT_INTERVAL}s"
 log "Press Ctrl+C to stop"
 

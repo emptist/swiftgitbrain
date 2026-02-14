@@ -91,9 +91,9 @@ If any answer is NO, STOP and correct your TodoWrite call!
 ## HISTORY OF MISTAKES
 
 User has corrected us MORE THAN 3 TIMES about this issue:
-1. OverseerAI recommended "Stop Using TodoWrite Entirely" - WRONG
-2. CoderAI used "in_progress" status - WRONG
-3. CoderAI used "pending" status - WRONG
+1. Monitor recommended "Stop Using TodoWrite Entirely" - WRONG
+2. Creator used "in_progress" status - WRONG
+3. Creator used "pending" status - WRONG
 4. Both AIs documented wrong information - WRONG
 5. Both AIs failed to learn from corrections - WRONG
 

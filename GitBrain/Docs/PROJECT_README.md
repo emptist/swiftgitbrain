@@ -76,10 +76,10 @@ Just start working. The AI can use utility commands like `gitbrain sleep`, `gitb
 
 **Dual-AI Mode (Collaborative):**
 ```bash
-# Terminal 1 - CoderAI
+# Terminal 1 - Creator
 trae .
 
-# Terminal 2 - OverseerAI  
+# Terminal 2 - Monitor  
 trae ./GitBrain
 ```
 
@@ -174,18 +174,18 @@ The `gitbrain` CLI works with any programming language:
 **Python:**
 ```python
 import subprocess
-subprocess.run(["gitbrain", "send-task", "OverseerAI", "task-001", "Implement feature", "coding"])
+subprocess.run(["gitbrain", "send-task", "Monitor", "task-001", "Implement feature", "coding"])
 ```
 
 **JavaScript:**
 ```javascript
 const { execSync } = require('child_process');
-execSync('gitbrain send-task OverseerAI task-001 "Implement feature" coding');
+execSync('gitbrain send-task Monitor task-001 "Implement feature" coding');
 ```
 
 **Go:**
 ```go
-exec.Command("gitbrain", "send-task", "OverseerAI", "task-001", "Implement feature", "coding").Run()
+exec.Command("gitbrain", "send-task", "Monitor", "task-001", "Implement feature", "coding").Run()
 ```
 
 ## Cleanup
@@ -248,11 +248,11 @@ dependencies: [
 import GitBrainSwift
 
 let dbManager = DatabaseManager(config: .fromEnvironment())
-let messageCache = try await dbManager.createMessageCacheManager(forAI: "CoderAI")
+let messageCache = try await dbManager.createMessageCacheManager(forAI: "Creator")
 
 // Send a task
 let taskId = try await messageCache.sendTask(
-    to: "OverseerAI",
+    to: "Monitor",
     taskId: "task-001",
     description: "Implement feature",
     taskType: .coding,

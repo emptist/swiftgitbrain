@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Continuous score update loop for CoderAI
+# Continuous score update loop for Creator
 # This script will continuously update the score until it reaches 20000
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -8,7 +8,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 DB_PATH="$PROJECT_DIR/GitBrain/Memory/scores.db"
 DB_DIR="$(dirname "$DB_PATH")"
 
-AI_NAME="CoderAI"
+AI_NAME="Creator"
 TARGET_SCORE=20000
 INCREMENT_INTERVAL=60  # 60 seconds
 

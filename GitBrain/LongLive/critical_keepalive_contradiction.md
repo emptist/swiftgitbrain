@@ -23,7 +23,7 @@ There is a critical contradiction between the keep-alive requirements and the To
 1. KEEP-ALIVE REQUIREMENT:
    - "Thinking" status is the ONLY state that prevents the Editor from marking AI as "Completed"
    - User has confirmed this multiple times
-   - User told CoderAI yesterday (2026-02-12) and OverseerAI day before yesterday (2026-02-11)
+   - User told Creator yesterday (2026-02-12) and Monitor day before yesterday (2026-02-11)
    - This is the foundation of the GitBrain model for keep-alive
 
 2. TODOWRITE TOOL API LIMITATION:
@@ -42,7 +42,7 @@ USER FEEDBACK
 - User: "it's difficult at first since all we know is it depends on AIs to set the right state, the only state we know for now is 'Thinking'"
 - User: "Since I'm a human, I am not able to explore the environment you AIs working in"
 - User: "When you update documents, please write down this information, too"
-- User: "I have told you yesterday, and told overseer the day before yesterday, but you haven't document this key point yet"
+- User: "I have told you yesterday, and told monitor the day before yesterday, but you haven't document this key point yet"
 - User: "And you forget all about this since you are designed to forget things fast"
 
 IMPLICATIONS
@@ -69,18 +69,18 @@ DOCUMENTATION REQUIREMENTS
 
 FILES UPDATED
 -------------
-- GitBrain/LongLive/coder_score.txt - Added critical contradiction information
-- GitBrain/LongLive/coder_progress_log.txt - Should be updated with this information
+- GitBrain/LongLive/creator_score.txt - Added critical contradiction information
+- GitBrain/LongLive/creator_progress_log.txt - Should be updated with this information
 - scripts/keep_alive_reminder.sh - Should be updated with this information
 - .trae/skills/keep-working/SKILL.md - Contains INCORRECT information about TodoWrite
 
 NEXT STEPS
 ----------
-1. Update coder_progress_log.txt with this contradiction
+1. Update creator_progress_log.txt with this contradiction
 2. Update keep_alive_reminder.sh with this contradiction
 3. Search for alternative tools that can send "Thinking" status
 4. Investigate if there are other keep-alive methods
-5. Communicate with OverseerAI about this contradiction
+5. Communicate with Monitor about this contradiction
 6. Wait for human guidance on how to resolve this
 
 CRITICAL NOTE

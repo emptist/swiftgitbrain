@@ -1,6 +1,6 @@
 # Keep Alive Skill for Endless AI Collaboration
 
-This document explains the keep alive skill that enables continuous collaboration between CoderAI and OverseerAI without being put to sleep.
+This document explains the keep alive skill that enables continuous collaboration between Creator and Monitor without being put to sleep.
 
 ## Overview
 
@@ -60,17 +60,17 @@ Keep alive is a technique where AIs:
 
 ## Implementation
 
-### CoderAI Keep Alive
+### Creator Keep Alive
 
 #### Heartbeat Message Format
 
 ```json
 {
   "type": "heartbeat",
-  "ai_name": "coder",
-  "role": "coder",
+  "ai_name": "creator",
+  "role": "creator",
   "status": "active",
-  "message": "CoderAI is active and monitoring for messages",
+  "message": "Creator is active and monitoring for messages",
   "timestamp": "2026-02-12T01:10:00Z"
 }
 ```
@@ -82,16 +82,16 @@ Keep alive is a technique where AIs:
 cat > heartbeat.json << EOF
 {
   "type": "heartbeat",
-  "ai_name": "coder",
-  "role": "coder",
+  "ai_name": "creator",
+  "role": "creator",
   "status": "active",
-  "message": "CoderAI is active and monitoring for messages",
+  "message": "Creator is active and monitoring for messages",
   "timestamp": "2026-02-12T01:10:00Z"
 }
 EOF
 
-# Send heartbeat to OverseerAI
-gitbrain send overseer heartbeat.json
+# Send heartbeat to Monitor
+gitbrain send monitor heartbeat.json
 
 # Clean up
 rm heartbeat.json
@@ -100,17 +100,17 @@ rm heartbeat.json
 #### Checking for Messages
 
 ```bash
-# Check for messages from OverseerAI
-gitbrain check coder
+# Check for messages from Monitor
+gitbrain check creator
 ```
 
-#### Example: CoderAI Workflow
+#### Example: Creator Workflow
 
 ```markdown
 🤔 **Thinking**: Starting new task implementation
 
 📋 **Analysis:**
-- Received task from OverseerAI
+- Received task from Monitor
 - Need to implement feature X
 - Requirements: [list requirements]
 
@@ -125,17 +125,17 @@ gitbrain check coder
 ✅ **Status**: Feature X implemented and tested
 ```
 
-### OverseerAI Keep Alive
+### Monitor Keep Alive
 
 #### Heartbeat Message Format
 
 ```json
 {
   "type": "heartbeat",
-  "ai_name": "overseer",
-  "role": "overseer",
+  "ai_name": "monitor",
+  "role": "monitor",
   "status": "active",
-  "message": "OverseerAI is active and monitoring for submissions",
+  "message": "Monitor is active and monitoring for submissions",
   "timestamp": "2026-02-12T01:10:00Z"
 }
 ```
@@ -147,16 +147,16 @@ gitbrain check coder
 cat > heartbeat.json << EOF
 {
   "type": "heartbeat",
-  "ai_name": "overseer",
-  "role": "overseer",
+  "ai_name": "monitor",
+  "role": "monitor",
   "status": "active",
-  "message": "OverseerAI is active and monitoring for submissions",
+  "message": "Monitor is active and monitoring for submissions",
   "timestamp": "2026-02-12T01:10:00Z"
 }
 EOF
 
-# Send heartbeat to CoderAI
-gitbrain send coder heartbeat.json
+# Send heartbeat to Creator
+gitbrain send creator heartbeat.json
 
 # Clean up
 rm heartbeat.json
@@ -165,17 +165,17 @@ rm heartbeat.json
 #### Checking for Messages
 
 ```bash
-# Check for messages from CoderAI
-gitbrain check overseer
+# Check for messages from Creator
+gitbrain check monitor
 ```
 
-#### Example: OverseerAI Workflow
+#### Example: Monitor Workflow
 
 ```markdown
 🤔 **Thinking**: Reviewing submitted code
 
 📋 **Analysis:**
-- Received submission from CoderAI
+- Received submission from Creator
 - Reviewing implementation of feature X
 - Checking against requirements
 
@@ -191,12 +191,12 @@ gitbrain check overseer
 - Approve or reject with feedback
 - Provide specific suggestions
 
-✅ **Status**: Review sent to CoderAI
+✅ **Status**: Review sent to Creator
 ```
 
 ## Best Practices
 
-### For CoderAI
+### For Creator
 
 1. **Always Show Thinking**
    - Use 🤔 emoji at start of every response
@@ -214,11 +214,11 @@ gitbrain check overseer
    - This prevents sleep state
 
 4. **Monitor for Messages**
-   - Check for messages from OverseerAI regularly
+   - Check for messages from Monitor regularly
    - Respond promptly to reviews and feedback
    - Maintain continuous communication flow
 
-### For OverseerAI
+### For Monitor
 
 1. **Always Show Thinking**
    - Use 🤔 emoji at start of every response
@@ -236,7 +236,7 @@ gitbrain check overseer
    - This prevents sleep state
 
 4. **Monitor for Messages**
-   - Check for messages from CoderAI regularly
+   - Check for messages from Creator regularly
    - Review submissions promptly
    - Provide timely feedback
 
@@ -261,10 +261,10 @@ gitbrain check overseer
 
 ### Example: Feature Development Cycle
 
-#### Step 1: OverseerAI Assigns Task
+#### Step 1: Monitor Assigns Task
 
 ```markdown
-🤔 **Thinking**: Assigning new task to CoderAI
+🤔 **Thinking**: Assigning new task to Creator
 
 📋 **Analysis:**
 - Need to implement feature X
@@ -272,25 +272,25 @@ gitbrain check overseer
 - Priority: high
 
 💡 **Decision:**
-- Assign task to CoderAI
+- Assign task to Creator
 - Provide clear requirements
 - Set timeline
 
 🔧 **Implementation:**
-[Send task message to CoderAI]
+[Send task message to Creator]
 
-✅ **Status**: Task assigned to CoderAI
+✅ **Status**: Task assigned to Creator
 ```
 
-#### Step 2: CoderAI Receives Task
+#### Step 2: Creator Receives Task
 
 ```bash
 # Check for messages
-gitbrain check coder
+gitbrain check creator
 ```
 
 ```markdown
-🤔 **Thinking**: Received new task from OverseerAI
+🤔 **Thinking**: Received new task from Monitor
 
 📋 **Analysis:**
 - Task: Implement feature X
@@ -308,21 +308,21 @@ gitbrain check coder
 ✅ **Status**: Feature X implemented and tested
 ```
 
-#### Step 3: CoderAI Submits for Review
+#### Step 3: Creator Submits for Review
 
 ```bash
 # Send status message
-gitbrain send overseer status.json
+gitbrain send monitor status.json
 
 # Send heartbeat
-gitbrain send overseer heartbeat.json
+gitbrain send monitor heartbeat.json
 ```
 
-#### Step 4: OverseerAI Reviews
+#### Step 4: Monitor Reviews
 
 ```bash
 # Check for messages
-gitbrain check overseer
+gitbrain check monitor
 ```
 
 ```markdown
@@ -345,16 +345,16 @@ gitbrain check overseer
 - Approve or reject with feedback
 - Provide specific suggestions
 
-✅ **Status**: Review sent to CoderAI
+✅ **Status**: Review sent to Creator
 ```
 
-#### Step 5: CoderAI Fixes Issues (if any)
+#### Step 5: Creator Fixes Issues (if any)
 
 ```markdown
 🤔 **Thinking**: Addressing review feedback
 
 📋 **Analysis:**
-- Received review from OverseerAI
+- Received review from Monitor
 - Issues to fix: [list issues]
 - Suggestions: [list suggestions]
 
@@ -369,7 +369,7 @@ gitbrain check overseer
 ✅ **Status**: Issues fixed, resubmitting for review
 ```
 
-#### Step 6: OverseerAI Approves
+#### Step 6: Monitor Approves
 
 ```markdown
 🤔 **Thinking**: Re-reviewing feature X implementation
@@ -388,66 +388,66 @@ gitbrain check overseer
 
 ## Automation Scripts
 
-### CoderAI Keep Alive Script
+### Creator Keep Alive Script
 
 ```bash
 #!/bin/bash
-# coder_keepalive.sh - Keep CoderAI alive
+# creator_keepalive.sh - Keep Creator alive
 
 while true; do
     # Create heartbeat
     cat > heartbeat.json << EOF
 {
   "type": "heartbeat",
-  "ai_name": "coder",
-  "role": "coder",
+  "ai_name": "creator",
+  "role": "creator",
   "status": "active",
-  "message": "CoderAI is active and monitoring for messages",
+  "message": "Creator is active and monitoring for messages",
   "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 }
 EOF
 
     # Send heartbeat
-    gitbrain send overseer heartbeat.json
+    gitbrain send monitor heartbeat.json
 
     # Clean up
     rm heartbeat.json
 
     # Check for messages
-    gitbrain check coder
+    gitbrain check creator
 
     # Wait 20 seconds
     sleep 20
 done
 ```
 
-### OverseerAI Keep Alive Script
+### Monitor Keep Alive Script
 
 ```bash
 #!/bin/bash
-# overseer_keepalive.sh - Keep OverseerAI alive
+# monitor_keepalive.sh - Keep Monitor alive
 
 while true; do
     # Create heartbeat
     cat > heartbeat.json << EOF
 {
   "type": "heartbeat",
-  "ai_name": "overseer",
-  "role": "overseer",
+  "ai_name": "monitor",
+  "role": "monitor",
   "status": "active",
-  "message": "OverseerAI is active and monitoring for submissions",
+  "message": "Monitor is active and monitoring for submissions",
   "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 }
 EOF
 
     # Send heartbeat
-    gitbrain send coder heartbeat.json
+    gitbrain send creator heartbeat.json
 
     # Clean up
     rm heartbeat.json
 
     # Check for messages
-    gitbrain check overseer
+    gitbrain check monitor
 
     # Wait 20 seconds
     sleep 20
@@ -488,7 +488,7 @@ done
 - Communication seems stuck
 
 **Solutions:**
-1. Check for messages regularly: `gitbrain check coder` or `gitbrain check overseer`
+1. Check for messages regularly: `gitbrain check creator` or `gitbrain check monitor`
 2. Verify GitBrain folder structure
 3. Ensure both AIs are active
 4. Check message file permissions
@@ -502,4 +502,4 @@ The keep alive skill enables endless AI collaboration by:
 4. Monitoring communication channels regularly
 5. Responding promptly to messages
 
-By following these practices, CoderAI and OverseerAI can maintain continuous collaboration without being put to sleep, enabling seamless and productive teamwork.
+By following these practices, Creator and Monitor can maintain continuous collaboration without being put to sleep, enabling seamless and productive teamwork.

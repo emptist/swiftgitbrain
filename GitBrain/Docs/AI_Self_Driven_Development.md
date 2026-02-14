@@ -9,7 +9,7 @@ This document outlines the system-level framework for enabling AI agents to auto
 ### 1. Autonomy with Oversight
 - AIs can independently plan and execute tasks
 - Human provides high-level direction and goals
-- OverseerAI provides coordination and review
+- Monitor provides coordination and review
 - Status updates keep all stakeholders informed
 
 ### 2. Continuous Collaboration
@@ -52,7 +52,7 @@ This document outlines the system-level framework for enabling AI agents to auto
   - Build Tools: Compile, package, and deploy code
 - **Validation**: Automated checks before marking tasks complete
 
-### Layer 4: Coordination Layer (OverseerAI)
+### Layer 4: Coordination Layer (Monitor)
 - **Purpose**: Coordinate between AIs and ensure quality
 - **Components**:
   - Task Assignment: Distribute work among available AIs
@@ -88,7 +88,7 @@ This document outlines the system-level framework for enabling AI agents to auto
 6. **Update Knowledge**: Store learnings in GitBrain
 
 ### Phase 3: Review and Integration
-1. **Submit for Review**: Request OverseerAI review
+1. **Submit for Review**: Request Monitor review
 2. **Receive Feedback**: Get approval or corrections
 3. **Apply Changes**: Address feedback if needed
 4. **Integrate**: Merge changes into main codebase

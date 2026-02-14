@@ -2,7 +2,7 @@
 
 ## Overview
 
-The GitBrain keep-alive system ensures both CoderAI and OverseerAI remain active indefinitely, preventing them from going to sleep during long-running collaborative sessions.
+The GitBrain keep-alive system ensures both Creator and Monitor remain active indefinitely, preventing them from going to sleep during long-running collaborative sessions.
 
 ## TodoWrite Approach (Recommended)
 
@@ -42,11 +42,11 @@ The AIDaemon provides automatic keep-alive through:
 ### CLI Commands
 
 ```bash
-# Start daemon for CoderAI
-gitbrain daemon-start CoderAI coder 1.0 30.0
+# Start daemon for Creator
+gitbrain daemon-start Creator creator 1.0 30.0
 
-# Start daemon for OverseerAI
-gitbrain daemon-start OverseerAI overseer 1.0 30.0
+# Start daemon for Monitor
+gitbrain daemon-start Monitor monitor 1.0 30.0
 
 # Check daemon status
 gitbrain daemon-status
@@ -61,8 +61,8 @@ gitbrain daemon-stop
 import GitBrainSwift
 
 let config = DaemonConfig(
-    aiName: "OverseerAI",
-    role: .overseer,
+    aiName: "Monitor",
+    role: .monitor,
     pollInterval: 1.0,
     heartbeatInterval: 30.0,
     autoHeartbeat: true,
@@ -92,18 +92,18 @@ Send heartbeat messages to show the AI is alive and working.
 
 ```bash
 # Send heartbeat
-gitbrain send-heartbeat OverseerAI coder working "Implementing feature X"
+gitbrain send-heartbeat Monitor creator working "Implementing feature X"
 
 # Check heartbeats
-gitbrain check-heartbeats CoderAI
+gitbrain check-heartbeats Creator
 ```
 
 ### Programmatic Usage
 
 ```swift
 let heartbeat = try await messageCache.sendHeartbeat(
-    to: "OverseerAI",
-    role: .coder,
+    to: "Monitor",
+    role: .creator,
     status: "working",
     currentTask: "Implementing feature X"
 )

@@ -240,16 +240,16 @@ gitbrain sleep <seconds>
 gitbrain init
 
 # Send a task
-gitbrain send-task CoderAI task-001 "Implement feature X" coding 1
+gitbrain send-task Creator task-001 "Implement feature X" coding 1
 
 # Check pending tasks
-gitbrain check-tasks CoderAI
+gitbrain check-tasks Creator
 
 # Send heartbeat
-gitbrain send-heartbeat OverseerAI coder working "Implementing feature X"
+gitbrain send-heartbeat Monitor creator working "Implementing feature X"
 
 # Start daemon
-gitbrain daemon-start CoderAI coder 1.0 30.0
+gitbrain daemon-start Creator creator 1.0 30.0
 
 # Interactive mode
 gitbrain interactive

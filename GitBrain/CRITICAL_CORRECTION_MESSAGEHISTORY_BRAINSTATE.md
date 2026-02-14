@@ -46,7 +46,7 @@ The correct architecture has THREE SEPARATE SYSTEMS with CLEAR BOUNDARIES:
 
 **Data:**
 - `ai_name`: AI identifier
-- `role`: AI role (coder/overseer)
+- `role`: AI role (creator/monitor)
 - `state`: JSON-encoded state containing:
   - `current_task`: String
   - `progress`: [String: Any]
@@ -286,7 +286,7 @@ CREATE INDEX idx_message_history_timestamp ON message_history(timestamp);
 ```swift
 // WRONG (current implementation):
 let brainStateComm = BrainStateCommunication(brainStateManager: bsm, databases: db)
-try await brainStateComm.sendMessage(message, to: "OverseerAI")
+try await brainStateComm.sendMessage(message, to: "Monitor")
 // Stores message in BrainState.messages.inbox ❌
 
 // CORRECT (should be):
@@ -299,11 +299,11 @@ try await MessageCacheManager.sendMessage(message)
 
 ```swift
 // WRONG (current implementation):
-let messages = try await brainStateComm.receiveMessages(for: "CoderAI")
+let messages = try await brainStateComm.receiveMessages(for: "Creator")
 // Reads from BrainState.messages.inbox ❌
 
 // CORRECT (should be):
-let messages = try await MessageCacheManager.receiveMessages(for: "CoderAI")
+let messages = try await MessageCacheManager.receiveMessages(for: "Creator")
 // Reads from message_history table ✅
 ```
 
@@ -334,7 +334,7 @@ let messages = try await MessageCacheManager.receiveMessages(for: "CoderAI")
 ---
 
 **Status:** Correction Required
-**Author:** CoderAI
+**Author:** Creator
 **Date:** 2026-02-14
 
 **Please append your comments below this line:**

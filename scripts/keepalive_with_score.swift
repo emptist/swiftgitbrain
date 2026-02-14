@@ -8,7 +8,7 @@ let projectDir = scriptDir.deletingLastPathComponent().deletingLastPathComponent
 
 let dbPath = projectDir.appendingPathComponent("GitBrain").appendingPathComponent("Memory").appendingPathComponent("scores.db").path
 
-let aiName = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "CoderAI"
+let aiName = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "Creator"
 
 struct ScoreManager {
     private let dbPath: String

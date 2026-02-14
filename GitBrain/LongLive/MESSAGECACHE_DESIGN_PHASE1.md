@@ -1,7 +1,7 @@
 # MessageCache Design - Phase 1: Task and Review Messages
 
 **Date:** 2026-02-14
-**Author:** CoderAI
+**Author:** Creator
 **Status:** Design Document - Corrected to Match SYSTEM_DESIGN.md
 
 ## Overview
@@ -646,7 +646,7 @@ public struct ReviewComment: Codable, Sendable {
 1. **Create TaskType enum** - Add to MessageType.swift or separate file
 2. **Create ReviewComment struct** - New file for review-related types
 3. **Define protocols** - Create protocol files
-4. **Submit for OverseerAI review** - Before any implementation
+4. **Submit for Monitor review** - Before any implementation
 5. **Write tests** - Test protocol correctness
 6. **Implement models** - Create Fluent models
 7. **Implement repository** - Create MessageCacheRepository
@@ -656,4 +656,4 @@ public struct ReviewComment: Codable, Sendable {
 
 ---
 
-**Awaiting OverseerAI review before proceeding.**
+**Awaiting Monitor review before proceeding.**

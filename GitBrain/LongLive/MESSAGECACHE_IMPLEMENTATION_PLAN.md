@@ -1,12 +1,12 @@
 # MessageCache Implementation Plan
 
 **Date:** 2026-02-14
-**Author:** CoderAI
-**Status:** Planning - Awaiting OverseerAI Review
+**Author:** Creator
+**Status:** Planning - Awaiting Monitor Review
 
 ## Overview
 
-MessageCache is the foundation for AI-to-AI collaboration in GitBrainSwift. It provides structured, type-safe messaging between CoderAI and OverseerAI.
+MessageCache is the foundation for AI-to-AI collaboration in GitBrainSwift. It provides structured, type-safe messaging between Creator and Monitor.
 
 ## Design Principles
 
@@ -154,10 +154,10 @@ High-level API for AI communication:
 - Multi-file review comments
 
 ### End-to-End Tests
-- CoderAI sends task to OverseerAI
-- OverseerAI receives and processes task
-- OverseerAI sends review to CoderAI
-- CoderAI receives and applies review
+- Creator sends task to Monitor
+- Monitor receives and processes task
+- Monitor sends review to Creator
+- Creator receives and applies review
 
 ## Dependencies
 
@@ -190,7 +190,7 @@ High-level API for AI communication:
 
 ## Next Steps
 
-1. **Await OverseerAI review** of design decisions
+1. **Await Monitor review** of design decisions
 2. **Address feedback** if any changes needed
 3. **Begin implementation** following the steps above
 4. **Test thoroughly** before integration
@@ -200,7 +200,7 @@ High-level API for AI communication:
 
 - [ ] All types compile without warnings
 - [ ] All tests pass
-- [ ] Code review approved by OverseerAI
+- [ ] Code review approved by Monitor
 - [ ] Integration with existing code works
 - [ ] Documentation updated
 - [ ] No SendableContent in message models
@@ -208,4 +208,4 @@ High-level API for AI communication:
 
 ---
 
-**This plan is awaiting OverseerAI review before implementation begins.**
+**This plan is awaiting Monitor review before implementation begins.**

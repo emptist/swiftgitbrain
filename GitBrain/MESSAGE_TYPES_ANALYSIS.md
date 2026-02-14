@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-14
 **Status:** Analysis Complete
-**Author:** CoderAI
+**Author:** Creator
 
 ## Executive Summary
 
@@ -112,21 +112,21 @@ public struct MessageSchema: Sendable {
 8. **heartbeat** - Keep-alive messages
    - Required: `ai_name`, `role`
    - Optional: `timestamp`, `status`, `capabilities`
-   - Validators: `role` must be one of: coder, overseer
+   - Validators: `role` must be one of: creator, monitor
 
 ### Score System Message Types (3 types)
 
 9. **score_request** - Score requests
    - Required: `task_id`, `requester`, `target_ai`, `requested_score`, `quality_justification`
-   - Validators: `requester` and `target_ai` must be coder or overseer
+   - Validators: `requester` and `target_ai` must be creator or monitor
 
 10. **score_award** - Score awards
     - Required: `request_id`, `awarder`, `awarded_score`, `reason`
-    - Validators: `awarder` must be coder or overseer
+    - Validators: `awarder` must be creator or monitor
 
 11. **score_reject** - Score rejections
     - Required: `request_id`, `rejecter`, `reason`
-    - Validators: `rejecter` must be coder or overseer
+    - Validators: `rejecter` must be creator or monitor
 
 ## Current Message Files Analysis
 
@@ -161,7 +161,7 @@ Total Messages: 658
 ```json
 {
   "from": "keepalive_system",
-  "to": "CoderAI",
+  "to": "Creator",
   "timestamp": "2026-02-12T17:18:05Z",
   "content": {
     "timestamp": "2026-02-12T17:18:05Z",
@@ -193,7 +193,7 @@ Total Messages: 658
 ```json
 {
   "from": "keepalive_system",
-  "to": "CoderAI",
+  "to": "Creator",
   "timestamp": "2026-02-12T17:18:05Z",
   "content": {
     "timestamp": "2026-02-12T17:18:05Z",
@@ -241,14 +241,14 @@ Total Messages: 658
 **Sample Message:**
 ```json
 {
-  "from": "CoderAI",
-  "to": "OverseerAI",
+  "from": "Creator",
+  "to": "Monitor",
   "timestamp": "2026-02-12T13:31:00Z",
   "content": {
     "type": "review",
     "task_id": "task-001",
     "approved": true,
-    "reviewer": "OverseerAI",
+    "reviewer": "Monitor",
     "comments": [
       {
         "line": 10,
@@ -456,7 +456,7 @@ These messages have no long-term value and will be deleted after 30 days.
 
 | Date | From | To | Status |
 |------|------|-----|--------|
-| 2026-02-12T17:18:05Z | keepalive_system | CoderAI | Archived |
+| 2026-02-12T17:18:05Z | keepalive_system | Creator | Archived |
 | ... | ... | ... | ... |
 
 ## Cleanup
@@ -508,7 +508,7 @@ These are old messages from before message validation system or malformed messag
 
 | Date | From | To | Status |
 |------|------|-----|--------|
-| 2026-02-12T17:18:05Z | keepalive_system | CoderAI | Archived |
+| 2026-02-12T17:18:05Z | keepalive_system | Creator | Archived |
 | ... | ... | ... | ... |
 
 ## Analysis
@@ -645,7 +645,7 @@ requiredFields: ["type", ...]  // Add "type" to required fields
 - [ ] MessageCache cleanup functions working
 - [ ] Documentation updated
 
-## Questions for OverseerAI
+## Questions for Monitor
 
 1. **Archive Strategy:** Do you approve this archive strategy (migrate valid, archive invalid)?
 2. **Wakeup Messages:** Should I register `wakeup` as a message type?
@@ -657,7 +657,7 @@ requiredFields: ["type", ...]  // Add "type" to required fields
 ---
 
 **Status:** Analysis Complete - Awaiting Discussion
-**Author:** CoderAI
+**Author:** Creator
 **Date:** 2026-02-14
 
 **Please append your comments below this line:**

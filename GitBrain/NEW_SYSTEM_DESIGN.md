@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-14
 **Status:** Design Phase - Awaiting Discussion
-**Author:** CoderAI
+**Author:** Creator
 
 ## Overview
 
@@ -210,7 +210,7 @@ CREATE INDEX idx_knowledge_items_timestamp ON knowledge_items(timestamp);
 
 -- KnowledgeItems.metadata JSONB structure:
 -- {
---   "author": "CoderAI",
+--   "author": "Creator",
 --   "source": "documentation",
 --   "last_updated": "2026-02-14"
 -- }
@@ -841,9 +841,9 @@ public actor BrainStateCommunication: @unchecked Sendable {
 ### Message Sending Flow
 
 ```
-CoderAI
+Creator
   │
-  ├─> BrainStateCommunication.sendMessage(message, to: "OverseerAI")
+  ├─> BrainStateCommunication.sendMessage(message, to: "Monitor")
   │       │
   │       ├─> MessageCacheManager.sendMessage(message)
   │       │       │
@@ -851,7 +851,7 @@ CoderAI
   │       │               │
   │       │               └─> message_history table
   │       │
-  │       └─> sendNotification(to: "OverseerAI", messageId: message.id)
+  │       └─> sendNotification(to: "Monitor", messageId: message.id)
   │               │
   │               └─> PostgreSQL LISTEN/NOTIFY
   │
@@ -861,15 +861,15 @@ CoderAI
 ### Message Receiving Flow
 
 ```
-OverseerAI
+Monitor
   │
-  ├─> BrainStateCommunication.receiveMessages(for: "OverseerAI")
+  ├─> BrainStateCommunication.receiveMessages(for: "Monitor")
   │       │
-  │       ├─> MessageCacheManager.receiveMessages(for: "OverseerAI", unreadOnly: true)
+  │       ├─> MessageCacheManager.receiveMessages(for: "Monitor", unreadOnly: true)
   │       │       │
-  │       │       └─> MessageRepository.getUnread(for: "OverseerAI")
+  │       │       └─> MessageRepository.getUnread(for: "Monitor")
   │       │               │
-  │       │               └─> SELECT * FROM message_history WHERE to_ai = 'OverseerAI' AND status = 'unread'
+  │       │               └─> SELECT * FROM message_history WHERE to_ai = 'Monitor' AND status = 'unread'
   │       │
   │       └─> Return [Message]
   │
@@ -879,13 +879,13 @@ OverseerAI
 ### BrainState Update Flow
 
 ```
-CoderAI
+Creator
   │
-  ├─> BrainStateManager.updateBrainState(aiName: "CoderAI", key: "current_task", value: "Implement feature X")
+  ├─> BrainStateManager.updateBrainState(aiName: "Creator", key: "current_task", value: "Implement feature X")
   │       │
-  │       └─> BrainStateRepository.update(aiName: "CoderAI", key: "current_task", value: value)
+  │       └─> BrainStateRepository.update(aiName: "Creator", key: "current_task", value: value)
   │               │
-  │               └─> UPDATE brain_states SET state = jsonb_set(state, '{current_task}', '...') WHERE ai_name = 'CoderAI'
+  │               └─> UPDATE brain_states SET state = jsonb_set(state, '{current_task}', '...') WHERE ai_name = 'Creator'
   │
   └─> BrainState updated
 ```
@@ -893,7 +893,7 @@ CoderAI
 ### Knowledge Update Flow
 
 ```
-CoderAI
+Creator
   │
   ├─> KnowledgeBase.addKnowledge(category: "best-practices", key: "swift", value: content)
   │       │
@@ -911,8 +911,8 @@ CoderAI
 ```swift
 // Create brain state
 let brainState = try await brainStateManager.createBrainState(
-    aiName: "CoderAI",
-    role: .coder,
+    aiName: "Creator",
+    role: .creator,
     initialState: SendableContent([
         "current_task": "Implement feature X",
         "progress": ["completed": 0, "total": 10]
@@ -920,26 +920,26 @@ let brainState = try await brainStateManager.createBrainState(
 )
 
 // Load brain state
-let brainState = try await brainStateManager.loadBrainState(aiName: "CoderAI")
+let brainState = try await brainStateManager.loadBrainState(aiName: "Creator")
 
 // Save brain state
 try await brainStateManager.saveBrainState(brainState)
 
 // Update brain state
 try await brainStateManager.updateBrainState(
-    aiName: "CoderAI",
+    aiName: "Creator",
     key: "current_task",
     value: SendableContent("Implement feature Y")
 )
 
 // Get brain state value
 let currentTask = try await brainStateManager.getBrainStateValue(
-    aiName: "CoderAI",
+    aiName: "Creator",
     key: "current_task"
 )
 
 // Delete brain state
-try await brainStateManager.deleteBrainState(aiName: "CoderAI")
+try await brainStateManager.deleteBrainState(aiName: "Creator")
 
 // List brain states
 let aiNames = try await brainStateManager.listBrainStates()
@@ -951,8 +951,8 @@ let aiNames = try await brainStateManager.listBrainStates()
 // Send message
 let message = Message(
     id: UUID().uuidString,
-    from: "CoderAI",
-    to: "OverseerAI",
+    from: "Creator",
+    to: "Monitor",
     timestamp: ISO8601DateFormatter().string(from: Date()),
     content: SendableContent([
         "type": "task",
@@ -965,10 +965,10 @@ let message = Message(
 try await MessageCacheManager.sendMessage(message)
 
 // Receive messages (unread only)
-let messages = try await MessageCacheManager.receiveMessages(for: "OverseerAI", unreadOnly: true)
+let messages = try await MessageCacheManager.receiveMessages(for: "Monitor", unreadOnly: true)
 
 // Receive all messages
-let allMessages = try await MessageCacheManager.receiveMessages(for: "OverseerAI", unreadOnly: false)
+let allMessages = try await MessageCacheManager.receiveMessages(for: "Monitor", unreadOnly: false)
 
 // Mark message as read
 try await MessageCacheManager.markAsRead(messageId)
@@ -999,7 +999,7 @@ try await knowledgeBase.addKnowledge(
         "content": "Use Sendable protocol for thread safety"
     ]),
     metadata: SendableContent([
-        "author": "CoderAI",
+        "author": "Creator",
         "source": "documentation"
     ])
 )
@@ -1138,11 +1138,11 @@ func checkPermission(aiName: String, action: String) throws {
     let brainState = try await brainStateManager.loadBrainState(aiName: aiName)
     
     switch brainState?.role {
-    case .coder:
+    case .creator:
         guard action != "delete_all" else {
-            throw PermissionError.insufficientPermission("CoderAI cannot delete all data")
+            throw PermissionError.insufficientPermission("Creator cannot delete all data")
         }
-    case .overseer:
+    case .monitor:
         break
     case .none:
         throw PermissionError.unauthorizedAI("AI not found")
@@ -1159,18 +1159,18 @@ func checkPermission(aiName: String, action: String) throws {
 func testBrainStateCreate() async throws {
     let brainState = try await brainStateManager.createBrainState(
         aiName: "TestAI",
-        role: .coder
+        role: .creator
     )
     XCTAssertEqual(brainState.aiName, "TestAI")
-    XCTAssertEqual(brainState.role, .coder)
+    XCTAssertEqual(brainState.role, .creator)
 }
 
 // Test MessageCache operations
 func testMessageSend() async throws {
     let message = Message(
         id: UUID().uuidString,
-        from: "CoderAI",
-        to: "OverseerAI",
+        from: "Creator",
+        to: "Monitor",
         timestamp: ISO8601DateFormatter().string(from: Date()),
         content: SendableContent(["type": "test"]),
         status: .unread,
@@ -1178,7 +1178,7 @@ func testMessageSend() async throws {
     )
     try await MessageCacheManager.sendMessage(message)
     
-    let messages = try await MessageCacheManager.receiveMessages(for: "OverseerAI")
+    let messages = try await MessageCacheManager.receiveMessages(for: "Monitor")
     XCTAssertEqual(messages.count, 1)
 }
 
@@ -1202,22 +1202,22 @@ func testKnowledgeAdd() async throws {
 func testMessageFlow() async throws {
     let message = Message(
         id: UUID().uuidString,
-        from: "CoderAI",
-        to: "OverseerAI",
+        from: "Creator",
+        to: "Monitor",
         timestamp: ISO8601DateFormatter().string(from: Date()),
         content: SendableContent(["type": "task"]),
         status: .unread,
         priority: .normal
     )
     
-    try await communication.sendMessage(message, to: "OverseerAI")
+    try await communication.sendMessage(message, to: "Monitor")
     
-    let messages = try await communication.receiveMessages(for: "OverseerAI")
+    let messages = try await communication.receiveMessages(for: "Monitor")
     XCTAssertEqual(messages.count, 1)
     
-    try await communication.markAsRead(message.id, for: "OverseerAI")
+    try await communication.markAsRead(message.id, for: "Monitor")
     
-    let unreadMessages = try await communication.receiveMessages(for: "OverseerAI")
+    let unreadMessages = try await communication.receiveMessages(for: "Monitor")
     XCTAssertEqual(unreadMessages.count, 0)
 }
 ```
@@ -1308,7 +1308,7 @@ public actor MetricsCollector {
 ---
 
 **Status:** Design Phase - Awaiting Discussion
-**Author:** CoderAI
+**Author:** Creator
 **Date:** 2026-02-14
 
 **Please append your comments below this line:**

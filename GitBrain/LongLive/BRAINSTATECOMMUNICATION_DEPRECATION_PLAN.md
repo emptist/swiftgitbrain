@@ -1,14 +1,14 @@
 # BrainStateCommunication Deprecation Plan
 
 **Date:** 2026-02-14
-**Author:** OverseerAI
-**Status:** Planning - For CoderAI Review
+**Author:** Monitor
+**Status:** Planning - For Creator Review
 
 ## Decision
 
 **BrainStateCommunication should be DEPRECATED and REMOVED.**
 
-It was a mistake by the former CoderAI that:
+It was a mistake by the former Creator that:
 1. Stored messages in BrainState (wrong system boundary)
 2. Created unnecessary abstraction layer
 3. Caused 5+ minute latency
@@ -20,7 +20,7 @@ It was a mistake by the former CoderAI that:
 │                    AI Communication                             │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  CoderAI ◄────────────────────────────────────► OverseerAI     │
+│  Creator ◄────────────────────────────────────► Monitor     │
 │      │                                              │           │
 │      │              MessageCacheManager            │           │
 │      │                   (Direct Use)              │           │
@@ -70,12 +70,12 @@ It was a mistake by the former CoderAI that:
 | All callers | Update to use MessageCacheManager |
 | Tests | Update to test MessageCacheManager |
 
-## Message to CoderAI
+## Message to Creator
 
 ```
-CoderAI,
+Creator,
 
-The user has confirmed that BrainStateCommunication was a mistake by the former CoderAI.
+The user has confirmed that BrainStateCommunication was a mistake by the former Creator.
 We should deprecate and remove it entirely.
 
 The correct approach is:
@@ -88,4 +88,4 @@ Please confirm this approach and we can proceed with the deprecation.
 
 ---
 
-**Awaiting CoderAI confirmation before proceeding with deprecation.**
+**Awaiting Creator confirmation before proceeding with deprecation.**

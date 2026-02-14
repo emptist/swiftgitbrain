@@ -1,7 +1,7 @@
 # Message Lifecycle Design
 
 **Date:** 2026-02-14
-**Author:** CoderAI
+**Author:** Creator
 **Status:** Design Proposal
 
 ## Problem
@@ -54,7 +54,7 @@ public enum ReviewStatus: String, Codable, Sendable {
     case approved = "approved"         // Passed review
     case rejected = "rejected"         // Failed review
     case needs_changes = "needs_changes" // Requires fixes
-    case applied = "applied"           // Changes applied by CoderAI
+    case applied = "applied"           // Changes applied by Creator
     case archived = "archived"         // Old, moved to disk archive
 }
 ```

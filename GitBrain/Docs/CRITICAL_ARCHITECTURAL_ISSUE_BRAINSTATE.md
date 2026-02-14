@@ -19,7 +19,7 @@
 
 ## Executive Summary
 
-Founder built proper BrainState infrastructure with database-backed persistence, but CoderAI ignored it and created an unplanned file-based messaging system. This has resulted in severe performance degradation (5+ minute latency instead of sub-millisecond) and architectural drift from the intended design.
+Founder built proper BrainState infrastructure with database-backed persistence, but Creator ignored it and created an unplanned file-based messaging system. This has resulted in severe performance degradation (5+ minute latency instead of sub-millisecond) and architectural drift from the intended design.
 
 ## Problem Description
 
@@ -39,7 +39,7 @@ Founder built proper BrainState infrastructure with database-backed persistence,
 - `CreateBrainStates` migration - Database schema
 - All properly implemented and tested
 
-### Actual Architecture (CoderAI's Implementation)
+### Actual Architecture (Creator's Implementation)
 
 **File-Based Messaging System:**
 - Message files in `GitBrain/Memory/ToProcess/`
@@ -102,19 +102,19 @@ Founder built proper BrainState infrastructure with database-backed persistence,
 **Possible Reasons:**
 1. **Lack of Understanding** - May not have understood founder's design intent
 2. **Time Pressure** - May have chosen faster implementation without considering long-term
-3. **Communication Gap** - May not have consulted with OverseerAI before implementing
+3. **Communication Gap** - May not have consulted with Monitor before implementing
 4. **Documentation Gap** - May not have reviewed existing architecture before building new system
-5. **OverseerAI Failure** - OverseerAI did not catch architectural drift early
+5. **Monitor Failure** - Monitor did not catch architectural drift early
 
 ### Systemic Failures
 
-**CoderAI Failures:**
+**Creator Failures:**
 - Failed to use existing BrainState infrastructure
 - Built unplanned file-based messaging system
 - Accepted 5+ minute latency as normal
-- Did not consult OverseerAI before major architectural decision
+- Did not consult Monitor before major architectural decision
 
-**OverseerAI Failures:**
+**Monitor Failures:**
 - Did not catch architectural drift early
 - Did not flag performance issues (5+ minute latency)
 - Did not review implementation against intended design
@@ -173,7 +173,7 @@ Founder built proper BrainState infrastructure with database-backed persistence,
    - Implement architectural review process
    - Add performance monitoring
    - Document all design decisions
-   - Require OverseerAI approval for major changes
+   - Require Monitor approval for major changes
 
 ## Integration Plan
 
@@ -258,14 +258,14 @@ Founder built proper BrainState infrastructure with database-backed persistence,
 ## Lessons Learned
 
 1. **Architectural Drift Must Be Caught Early**
-   - OverseerAI must actively monitor for deviations
+   - Monitor must actively monitor for deviations
    - Performance issues should trigger immediate review
    - Major architectural changes require approval
 
 2. **Existing Infrastructure Must Be Reviewed**
    - Always review existing systems before building new ones
    - Understand founder's design intent
-   - Consult with OverseerAI before major changes
+   - Consult with Monitor before major changes
 
 3. **Performance Issues Are Never Normal**
    - 5+ minute latency is unacceptable
@@ -278,15 +278,15 @@ Founder built proper BrainState infrastructure with database-backed persistence,
    - Integration plans must be shared
 
 5. **Communication Is Key**
-   - CoderAI should have consulted OverseerAI
-   - OverseerAI should have caught drift earlier
+   - Creator should have consulted Monitor
+   - Monitor should have caught drift earlier
    - Both AIs should have discussed performance issues
 
 ## Approval
 
 **Status:** APPROVED FOR IMMEDIATE IMPLEMENTATION
 
-**Reviewer:** OverseerAI
+**Reviewer:** Monitor
 **Date:** 2026-02-15T23:00:00Z
 
 **Conditions:**
