@@ -1,195 +1,126 @@
-# GitBrainSwift
+# GitBrain
 
-[![CI](https://github.com/yourusername/gitbrainswift/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/gitbrainswift/actions/workflows/ci.yml)
-[![Quality](https://github.com/yourusername/gitbrainswift/actions/workflows/quality.yml/badge.svg)](https://github.com/yourusername/gitbrainswift/actions/workflows/quality.yml)
-[![CD](https://github.com/yourusername/gitbrainswift/actions/workflows/deploy.yml/badge.svg)](https://github.com/yourusername/gitbrainswift/actions/workflows/deploy.yml)
-
-A Swift Package Manager (SwiftPM) implementation of GitBrain - a lightweight AI collaboration platform for AI-assisted development.
+A CLI tool for AI-assisted collaborative development.
 
 ## Overview
 
-GitBrainSwift enables two AIs to collaborate on software development through:
-- **MessageCache-based communication**: Real-time messaging via PostgreSQL database with sub-millisecond latency
-- **File-based communication**: Legacy file-based messaging (being phased out)
-- **Message validation**: Schema-based validation for all message types
-- **Plugin system**: Extensible architecture for custom behavior
-- **Persistent memory**: Cross-session brainstate management with PostgreSQL database
-- **Role separation**: CoderAI (full-featured) and OverseerAI (review-only)
-- **Cross-language support**: CLI executable usable in any programming language
-- **Development-only**: Can be safely removed after development is complete
+GitBrain enables AI assistants to collaborate on software development through real-time messaging via PostgreSQL.
 
-**IMPORTANT:** The architecture maintains clear boundaries between three independent systems:
-- **BrainState** - AI state management
-- **MessageCache** - Message communication history
-- **KnowledgeBase** - Knowledge storage
-
-## Use Case
-
-GitBrainSwift is a **developer tool package** that enables AI-assisted collaborative development. Users add this package to their developing branch to facilitate AI collaboration in project development.
-
-### Typical Workflow
-
-1. **Setup**: Initialize GitBrain folder structure in your project
-2. **CoderAI**: Open Trae at project root - has full access to all folders
-3. **OverseerAI**: Open Trae at `GitBrain/` - has read access to whole project, write access to GitBrain folder
-4. **Collaboration**: AIs communicate through MessageCache-based real-time messaging (sub-millisecond latency)
-5. **Cleanup**: Remove GitBrain folder when development is complete
-
-### Critical Note: File-Based Messaging Does Not Work
-
-The legacy file-based messaging system (`FileBasedCommunication`) has **critical performance issues**:
-- **5+ minute latency** due to polling (unusable for real-time collaboration)
-- **No real-time notifications** (messages delayed by polling intervals)
-- **660+ message files** cluttering file system
-- **Unreliable** (file I/O issues, no transactional safety)
-
-**Solution**: Use `MessageCache` for real-time messaging:
-- **Sub-millisecond latency** (300,000x improvement)
-- **Real-time notifications** via database
-- **Database-backed** (transactional safety)
-- **Clean architecture** (matches founder's design with clear system boundaries)
+**Key Features:**
+- Real-time AI-to-AI messaging (sub-millisecond latency)
+- Solo mode (single AI) and Dual-AI mode (collaborative)
+- Keep-alive system for continuous AI collaboration
+- Cross-language support - works with any programming language
 
 ## Installation
 
-### Swift Package Manager
+### Download Binary (Recommended)
 
-Add GitBrainSwift as a development dependency in your `Package.swift`:
+Download the latest release for your platform:
 
-```swift
-dependencies: [
-    .package(
-        url: "https://github.com/yourusername/gitbrainswift.git",
-        from: "1.0.0"
-    )
-]
+```bash
+# macOS
+curl -L https://github.com/yourusername/gitbrain/releases/latest/download/gitbrain-macos -o gitbrain
+chmod +x gitbrain
+sudo mv gitbrain /usr/local/bin/
+
+# Linux
+curl -L https://github.com/yourusername/gitbrain/releases/latest/download/gitbrain-linux -o gitbrain
+chmod +x gitbrain
+sudo mv gitbrain /usr/local/bin/
 ```
 
-### Xcode
+### Build from Source
 
-1. File → Add Package Dependencies
-2. Enter package URL: `https://github.com/yourusername/gitbrainswift.git`
-3. Select version and add to your project
+```bash
+git clone https://github.com/yourusername/gitbrain.git
+cd gitbrain
+swift build -c release
+cp .build/release/gitbrain /usr/local/bin/
+```
 
 ## Quick Start
 
-### 1. Setup PostgreSQL
-
-GitBrainSwift requires PostgreSQL for full functionality. Install and start PostgreSQL:
+### 1. Setup PostgreSQL (Required for Dual-AI Mode)
 
 **macOS:**
 ```bash
 brew install postgresql@17
 brew services start postgresql@17
+createdb gitbrain
 ```
 
 **Ubuntu:**
 ```bash
 sudo apt install postgresql postgresql-contrib
 sudo systemctl start postgresql
-```
-
-**Create Database:**
-```bash
-createdb gitbrain
+sudo -u postgres createdb gitbrain
 ```
 
 ### 2. Initialize GitBrain
 
 ```bash
+cd your-project
 gitbrain init
 ```
 
-This creates the following structure:
-```
-ProjectA/
-├── GitBrain/
-│   ├── Overseer/          # OverseerAI working folder
-│   ├── Memory/            # Shared persistent memory
-│   ├── Docs/              # Documentation for AIs
-│   └── README.md          # GitBrain usage guide
-├── Sources/               # Your project code
-└── Package.swift
-```
+This will:
+- Create `GitBrain/` folder structure
+- Check PostgreSQL availability
+- Create database if needed
 
-### 2. Open Trae for CoderAI
+### 3. Start Working
 
+**Solo Mode (Single AI):**
+Just start working. The AI can use utility commands like `gitbrain sleep`, `gitbrain interactive`.
+
+**Dual-AI Mode (Collaborative):**
 ```bash
+# Terminal 1 - CoderAI
 trae .
-```
 
-CoderAI has access to all folders in the project.
-
-### 3. Open Trae for CoderAI
-
-```bash
-trae .
-```
-
-CoderAI has access to all folders in the project.
-
-### 4. Open Trae for OverseerAI (Optional - for dual-AI mode)
-
-```bash
+# Terminal 2 - OverseerAI  
 trae ./GitBrain
 ```
-
-OverseerAI has read access to whole project and write access to `GitBrain/`.
-
-### 5. Ask AIs to Read Documentation
-
-Ask each AI to read `GitBrain/Docs/` to understand their role and responsibilities.
 
 ## CLI Commands
 
 ### Initialization
 
 ```bash
-# Initialize GitBrain folder structure (checks PostgreSQL, creates database if needed)
-gitbrain init [path]
+gitbrain init [path]           # Initialize GitBrain (checks PostgreSQL, creates DB)
 ```
 
-### Task Commands
+### Messaging (Dual-AI Mode)
 
 ```bash
-# Send a task to another AI
+# Tasks
 gitbrain send-task <to> <task_id> <description> <task_type> [priority]
-
-# Check pending tasks
 gitbrain check-tasks [ai_name] [status]
-
-# Update task status
 gitbrain update-task <message_id> <status>
-```
 
-### Review Commands
-
-```bash
-# Send a review
+# Reviews
 gitbrain send-review <to> <task_id> <approved> <reviewer> [feedback]
-
-# Check pending reviews
 gitbrain check-reviews [ai_name] [status]
-```
 
-### Heartbeat Commands
-
-```bash
-# Send heartbeat (keep-alive)
+# Heartbeats (Keep-Alive)
 gitbrain send-heartbeat <to> <ai_role> <status> [current_task]
-
-# Check heartbeats
 gitbrain check-heartbeats [ai_name]
+
+# Feedback
+gitbrain send-feedback <to> <type> <subject> <content> [task_id]
+gitbrain check-feedbacks [ai_name] [status]
+
+# Code & Scores
+gitbrain send-code <to> <code_id> <title> <desc> <files...>
+gitbrain send-score <to> <task_id> <score> <justification>
 ```
 
 ### Utility Commands
 
 ```bash
-# Interactive mode (REPL)
-gitbrain interactive
-
-# Sleep/pause (aliases: relax, coffeetime, nap, break)
-gitbrain sleep <seconds>
-gitbrain coffeetime <seconds>
+gitbrain interactive           # Start interactive REPL mode
+gitbrain sleep <seconds>       # Pause (aliases: relax, coffeetime, nap, break)
 ```
 
 ### Shortcuts
@@ -205,562 +136,153 @@ gitbrain coffeetime <seconds>
 | sc | send-code |
 | ss | send-score |
 
-### Environment Variables
+### Daemon Mode
 
 ```bash
-# Database configuration
+gitbrain daemon-start <ai_name> <role> [poll_interval] [heartbeat_interval]
+gitbrain daemon-stop
+gitbrain daemon-status
+```
+
+## Environment Variables
+
+```bash
 export GITBRAIN_DB_HOST=localhost
 export GITBRAIN_DB_PORT=5432
 export GITBRAIN_DB_NAME=gitbrain
 export GITBRAIN_DB_USER=postgres
 export GITBRAIN_DB_PASSWORD=postgres
-
-# Optional: Custom GitBrain path
-export GITBRAIN_PATH=/custom/path/to/GitBrain
 ```
 
 ## Solo Mode vs Dual-AI Mode
 
-### Solo Mode (Single AI)
+### Solo Mode
+- Single AI working alone
+- Utility commands work without database
+- Limited to local operations
 
-GitBrain can be used by a single AI working alone. The AI can:
-- Use `gitbrain init` to set up the project
-- Use utility commands (`sleep`, `interactive`, etc.)
-- Work without PostgreSQL (limited functionality)
-
-### Dual-AI Mode (Collaborative)
-
-For AI-to-AI collaboration:
-1. Both AIs share the same PostgreSQL database
-2. Use message commands (`send-task`, `send-review`, etc.)
-3. Real-time communication with sub-millisecond latency
-4. Full BrainState and KnowledgeBase features
-
-## Architecture
-
-Database connection can be configured through environment variables or programmatically:
-
-```swift
-import GitBrainSwift
-
-// Using environment variables (recommended)
-let dbManager = DatabaseManager(config: .fromEnvironment())
-
-// Using custom configuration
-let config = DatabaseConfig(
-    host: "localhost",
-    port: 5432,
-    database: "gitbrain",
-    username: "postgres",
-    password: "postgres"
-)
-let dbManager = DatabaseManager(config: config)
-
-// Initialize database
-let databases = try await dbManager.initialize()
-
-// Create repositories
-let kbRepo = try await dbManager.createKnowledgeRepository()
-let bsmRepo = try await dbManager.createBrainStateRepository()
-```
-
-### Database Schema
-
-The following tables are automatically created:
-
-#### knowledge_items
-- `id`: Primary key
-- `category`: Knowledge category
-- `key`: Knowledge key
-- `value`: JSON-encoded value
-- `metadata`: JSON-encoded metadata
-- `timestamp`: Creation timestamp
-
-#### brain_states
-- `id`: Primary key
-- `ai_name`: AI identifier
-- `role`: AI role (coder/overseer)
-- `state`: JSON-encoded state
-- `timestamp`: Last update timestamp
-
-### Testing with Mock Repositories
-
-For testing without a database, use mock repositories:
-
-```swift
-import GitBrainSwift
-
-// Use mock repository for testing
-let mockRepo = MockKnowledgeRepository()
-let knowledgeBase = KnowledgeBase(repository: mockRepo)
-
-// All operations work the same way
-try await knowledgeBase.addKnowledge(category: "test", key: "item", value: value)
-```
-
-### Data Migration
-
-GitBrainSwift provides a migration tool to transfer data from file-based storage to PostgreSQL:
-
-#### Using the Migration CLI
-
-```bash
-# Set up database connection
-export GITBRAIN_DB_HOST=localhost
-export GITBRAIN_DB_PORT=5432
-export GITBRAIN_DB_NAME=gitbrain
-export GITBRAIN_DB_USER=your_username
-export GITBRAIN_DB_PASSWORD=your_password
-
-# Migrate knowledge base
-swift run gitbrain-migrate migrate knowledge /path/to/GitBrain
-
-# Migrate brain states
-swift run gitbrain-migrate migrate brainstate /path/to/GitBrain
-
-# Validate migration
-swift run gitbrain-migrate validate
-```
-
-#### Programmatic Migration
-
-```swift
-import GitBrainSwift
-
-let config = DatabaseConfig.fromEnvironment()
-let dbManager = DatabaseManager(config: config)
-_ = try await dbManager.initialize()
-
-let migration = DataMigration()
-let sourceURL = URL(fileURLWithPath: "/path/to/GitBrain")
-
-// Migrate knowledge base
-let kbRepo = try await dbManager.createKnowledgeRepository()
-try await migration.migrateKnowledgeBase(from: sourceURL, to: kbRepo)
-
-// Migrate brain states
-let bsmRepo = try await dbManager.createBrainStateRepository()
-try await migration.migrateBrainStates(from: sourceURL, to: bsmRepo)
-
-// Validate migration
-let report = try await migration.validateMigration(
-    knowledgeRepo: kbRepo,
-    brainStateRepo: bsmRepo
-)
-print(report.description)
-
-try await dbManager.close()
-```
-
-## Message Types and Validation
-
-GitBrainSwift validates all outgoing messages against defined schemas. Supported message types:
-
-### Task Message
-```json
-{
-  "type": "task",
-  "task_id": "task-001",
-  "description": "Implement new feature",
-  "task_type": "coding|review|testing|documentation",
-  "priority": 5
-}
-```
-
-### Code Message
-```json
-{
-  "type": "code",
-  "code": "func example() {}",
-  "language": "swift",
-  "file_path": "Sources/Example.swift",
-  "line_number": 10
-}
-```
-
-### Review Message
-```json
-{
-  "type": "review",
-  "task_id": "task-001",
-  "approved": true,
-  "reviewer": "OverseerAI",
-  "comments": [
-    {
-      "line": 10,
-      "type": "error|warning|suggestion|info",
-      "message": "Fix this issue"
-    }
-  ]
-}
-```
-
-### Feedback Message
-```json
-{
-  "type": "feedback",
-  "task_id": "task-001",
-  "message": "Code review completed",
-  "severity": "info|warning|error",
-  "suggestions": ["Add error handling"]
-}
-```
-
-### Approval Message
-```json
-{
-  "type": "approval",
-  "task_id": "task-001",
-  "approver": "OverseerAI",
-  "approved_at": "2024-01-01T12:00:00Z"
-}
-```
-
-### Rejection Message
-```json
-{
-  "type": "rejection",
-  "task_id": "task-001",
-  "rejecter": "OverseerAI",
-  "reason": "Code does not meet standards",
-  "rejected_at": "2024-01-01T12:00:00Z"
-}
-```
-
-### Status Message
-```json
-{
-  "type": "status",
-  "status": "working|idle|blocked|completed",
-  "message": "Currently working on feature X",
-  "progress": 45
-}
-```
-
-### Heartbeat Message
-```json
-{
-  "type": "heartbeat",
-  "timestamp": "2024-01-01T12:00:00Z",
-  "status": "active"
-}
-```
-
-## Plugin System
-
-GitBrainSwift includes a plugin system for extending functionality.
-
-### Available Plugins
-
-#### LoggingPlugin
-Logs all messages sent and received.
-
-```swift
-import GitBrainSwift
-
-let communication = FileBasedCommunication(overseerFolder: overseerURL)
-let loggingPlugin = LoggingPlugin(logFileURL: logFileURL)
-try await communication.registerPlugin(loggingPlugin)
-```
-
-#### MessageTransformPlugin
-Adds metadata (timestamps, recipients) to messages.
-
-```swift
-let transformPlugin = MessageTransformPlugin()
-try await communication.registerPlugin(transformPlugin)
-```
-
-### Creating Custom Plugins
-
-```swift
-import GitBrainSwift
-
-public struct MyCustomPlugin: GitBrainPlugin, Sendable {
-    public let pluginName = "MyCustomPlugin"
-    public let pluginVersion = "1.0.0"
-    public let pluginDescription = "My custom plugin"
-    
-    public func onMessageReceived(_ message: SendableContent, from: String) async throws -> SendableContent? {
-        // Process incoming message
-        return nil // Return modified message or nil
-    }
-    
-    public func onMessageSending(_ message: SendableContent, to: String) async throws -> SendableContent? {
-        // Process outgoing message
-        return nil // Return modified message or nil
-    }
-}
-```
-
-### Plugin Lifecycle
-
-1. **Registration**: `registerPlugin(_:)` - Add plugin to manager
-2. **Initialization**: `onInitialize()` - Called when plugin is initialized
-3. **Message Processing**: `onMessageReceived(_:from:)` and `onMessageSending(_:to:)` - Called for each message
-4. **Shutdown**: `onShutdown()` - Called when plugin is removed
+### Dual-AI Mode
+- Two AIs collaborating
+- Requires PostgreSQL
+- Real-time messaging
+- Full BrainState and KnowledgeBase features
 
 ## Cross-Language Usage
 
-GitBrainSwift CLI can be used in projects written in any programming language.
+The `gitbrain` CLI works with any programming language:
 
-### Python Example
-
+**Python:**
 ```python
-import json
 import subprocess
-
-message = {
-    "type": "task",
-    "task_id": "py-task-001",
-    "description": "Implement Python function",
-    "task_type": "coding",
-    "priority": 7
-}
-
-subprocess.run(["gitbrain", "send", "overseer", json.dumps(message)])
+subprocess.run(["gitbrain", "send-task", "OverseerAI", "task-001", "Implement feature", "coding"])
 ```
 
-### JavaScript Example
-
+**JavaScript:**
 ```javascript
 const { execSync } = require('child_process');
-
-const message = {
-    type: "task",
-    task_id: "js-task-001",
-    description: "Implement JavaScript function",
-    task_type: "coding",
-    priority: 7
-};
-
-execSync(`gitbrain send overseer '${JSON.stringify(message)}'`);
+execSync('gitbrain send-task OverseerAI task-001 "Implement feature" coding');
 ```
 
-### Rust Example
-
-```rust
-use std::process::Command;
-
-let message = r#"{
-    "type": "task",
-    "task_id": "rust-task-001",
-    "description": "Implement Rust function",
-    "task_type": "coding",
-    "priority": 7
-}"#;
-
-Command::new("gitbrain")
-    .args(&["send", "overseer", message])
-    .status()
-    .expect("Failed to execute gitbrain");
-```
-
-### Go Example
-
+**Go:**
 ```go
-import "os/exec"
-
-message := `{
-    "type": "task",
-    "task_id": "go-task-001",
-    "description": "Implement Go function",
-    "task_type": "coding",
-    "priority": 7
-}`
-
-cmd := exec.Command("gitbrain", "send", "overseer", message)
-cmd.Run()
+exec.Command("gitbrain", "send-task", "OverseerAI", "task-001", "Implement feature", "coding").Run()
 ```
-
-For more examples, see [CROSS_LANGUAGE_DEPLOYMENT.md](Documentation/CROSS_LANGUAGE_DEPLOYMENT.md).
-
-## Communication Flow
-
-```
-CoderAI (root/) ──writes──> GitBrain/Overseer/
-OverseerAI (GitBrain/Overseer/) ──reads──> GitBrain/Overseer/
-OverseerAI ──writes──> GitBrain/Memory/
-CoderAI ──reads──> GitBrain/Memory/
-```
-
-## Architecture
-
-### Roles
-
-#### CoderAI
-- **Location**: Project root
-- **Access**: Read/write access to all folders
-- **Capabilities**: Write code, implement features, fix bugs, write tests, submit for review
-- **Communication**: Writes to `GitBrain/Overseer/`, reads from `GitBrain/Memory/`
-
-#### OverseerAI
-- **Location**: `GitBrain/Overseer/`
-- **Access**: Read access to whole project, write access to `GitBrain/Overseer/`
-- **Capabilities**: Review code, provide feedback, approve/reject submissions, manage issues
-- **Communication**: Reads from `GitBrain/Overseer/`, writes to `GitBrain/Memory/`
-
-### Components
-
-#### MessageCache
-Database-backed messaging system with sub-millisecond latency:
-- `sendTask()`: Send task to another AI
-- `sendReview()`: Send code review
-- `sendCode()`: Send code for review
-- `sendScore()`: Request/award score
-- `sendFeedback()`: Send feedback to another AI
-- `sendHeartbeat()`: Send keep-alive heartbeat
-- **Performance**: Sub-millisecond latency
-- **Architecture**: Database-backed with PostgreSQL
-- **Status**: Primary communication system
-
-#### AIDaemon
-Automatic message polling and heartbeat sender:
-- `start()`: Start daemon with automatic polling
-- `stop()`: Stop daemon
-- Configurable poll and heartbeat intervals
-- Event callbacks for all message types
-
-#### MessageValidator
-Schema-based message validation:
-- `validate()`: Validate message content against schema
-- Supports all message types with field type checking
-- Custom validators for specific fields
-
-#### PluginManager
-Plugin lifecycle management:
-- `registerPlugin()`: Register a new plugin
-- `unregisterPlugin()`: Remove a plugin
-- `initializeAll()`: Initialize all plugins
-- `shutdownAll()`: Shutdown all plugins
-- `processIncomingMessage()`: Process message through all plugins
-- `processOutgoingMessage()`: Process message through all plugins
-
-#### BrainStateManager
-Manages persistent AI brainstate with repository pattern:
-- `createBrainState()`: Create new brainstate for an AI
-- `loadBrainState()`: Load existing brainstate
-- `updateBrainState()`: Update brainstate with new data
-- `getBrainStateValue()`: Get specific value from brainstate
-- Uses `BrainStateRepositoryProtocol` for storage (Fluent or Mock)
-
-#### MemoryStore
-In-memory storage for quick access:
-- `set()`: Store value
-- `get()`: Retrieve value
-- `delete()`: Delete value
-- `exists()`: Check if key exists
-
-#### KnowledgeBase
-Knowledge management system with repository pattern:
-- `addKnowledge()`: Add knowledge item
-- `getKnowledge()`: Retrieve knowledge item
-- `searchKnowledge()`: Search knowledge base
-- Uses `KnowledgeRepositoryProtocol` for storage (Fluent or Mock)
-
-#### DatabaseManager
-PostgreSQL database connection and repository management:
-- `initialize()`: Initialize database connection and run migrations
-- `createKnowledgeRepository()`: Create knowledge repository
-- `createBrainStateRepository()`: Create brain state repository
-- `close()`: Close database connection
-
-#### Repositories
-Protocol-based storage implementations:
-- `KnowledgeRepositoryProtocol`: Interface for knowledge storage
-- `BrainStateRepositoryProtocol`: Interface for brain state storage
-- `FluentKnowledgeRepository`: PostgreSQL implementation using Fluent ORM
-- `FluentBrainStateRepository`: PostgreSQL implementation using Fluent ORM
-- `MockKnowledgeRepository`: In-memory implementation for testing
-- `MockBrainStateRepository`: In-memory implementation for testing
-
-## Examples
-
-### Send a task message
-
-```bash
-gitbrain send overseer '{"type":"task","task_id":"task-001","description":"Implement new feature","task_type":"coding","priority":5}'
-```
-
-### Send a review message
-
-```bash
-gitbrain send coder '{"type":"review","task_id":"task-001","approved":true,"reviewer":"OverseerAI","comments":[{"line":10,"type":"suggestion","message":"Consider using let instead of var"}]}'
-```
-
-### Check messages for CoderAI
-
-```bash
-gitbrain check coder
-```
-
-### Clear Overseer messages
-
-```bash
-gitbrain clear overseer
-```
-
-### Using custom GitBrain path
-
-```bash
-# Method 1: Command-line argument
-gitbrain check coder /custom/path/to/GitBrain
-
-# Method 2: Environment variable
-export GITBRAIN_PATH=/custom/path/to/GitBrain
-gitbrain check coder
-```
-
-## Testing
-
-Run the cross-language integration test:
-
-```bash
-./test_cross_language.sh
-```
-
-This tests GitBrainSwift with messages from Python, JavaScript, Rust, and Go contexts.
 
 ## Cleanup
 
-After development is complete, you can safely remove the GitBrain folder:
-
+After development:
 ```bash
 rm -rf GitBrain
 ```
 
-Or remove the package dependency from your `Package.swift`.
-
-## Platform Support
-
-- macOS 15+ (Primary platform)
-- iOS 17+
-- tvOS 17+
-- watchOS 10+
-
 ## Requirements
 
-- Swift 6.2+
-- Swift Package Manager
-- Trae or similar AI editor
-- PostgreSQL 14+ (optional, for persistent storage)
-
-## Design Decisions
-
-For detailed information about design decisions and architectural choices, see [DESIGN_DECISIONS.md](Documentation/DESIGN_DECISIONS.md).
-
-## Development
-
-For information on building, testing, and contributing to GitBrainSwift, see [DEVELOPMENT.md](Documentation/DEVELOPMENT.md).
+- macOS 15+ or Linux
+- PostgreSQL 14+ (for Dual-AI mode)
+- Swift 6.2+ (only if building from source)
 
 ## License
 
 MIT License
 
-## Contributing
+---
 
-Contributions are welcome! Please read our contributing guidelines and submit a Pull Request.
+## Developer Documentation
 
-## Support
+The following sections are for developers contributing to GitBrain itself.
 
-For issues and questions, please open an issue on GitHub.
+### Building from Source
+
+```bash
+git clone https://github.com/yourusername/gitbrain.git
+cd gitbrain
+swift build
+swift test
+```
+
+### Project Structure
+
+```
+Sources/
+├── GitBrainCLI/           # CLI executable
+├── GitBrainSwift/         # Core library
+│   ├── Daemon/            # AIDaemon for continuous communication
+│   ├── Database/          # PostgreSQL integration
+│   ├── Memory/            # BrainState, KnowledgeBase, MessageCache
+│   ├── Migrations/        # Database migrations
+│   ├── Models/            # Data models
+│   ├── Protocols/         # Interfaces
+│   └── Repositories/      # Data access layer
+└── GitBrainMigrationCLI/  # Migration tool
+```
+
+### Using as Swift Package Dependency
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/yourusername/gitbrain.git", from: "1.0.0")
+]
+```
+
+```swift
+import GitBrainSwift
+
+let dbManager = DatabaseManager(config: .fromEnvironment())
+let messageCache = try await dbManager.createMessageCacheManager(forAI: "CoderAI")
+
+// Send a task
+let taskId = try await messageCache.sendTask(
+    to: "OverseerAI",
+    taskId: "task-001",
+    description: "Implement feature",
+    taskType: .coding,
+    priority: 1
+)
+```
+
+### Database Schema
+
+Tables are auto-created on first run:
+- `task_messages` - Task communications
+- `review_messages` - Code reviews
+- `code_messages` - Code submissions
+- `score_messages` - Score requests/awards
+- `feedback_messages` - Feedback messages
+- `heartbeat_messages` - Keep-alive heartbeats
+- `knowledge_items` - Knowledge base
+- `brain_states` - AI state persistence
+
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Write tests for new features
+4. Submit a pull request
+
+### Running Tests
+
+```bash
+swift test
+```
+
+All 207 tests should pass.
