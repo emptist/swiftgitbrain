@@ -1,6 +1,6 @@
 # Automated Keep-Alive Scripts for Endless AI Collaboration
 
-This directory contains automated scripts that enable continuous collaboration between CoderAI and OverseerAI by running forever loops that check for messages and send heartbeats.
+This directory contains automated scripts that enable continuous collaboration between Creator and OverseerAI by running forever loops that check for messages and send heartbeats.
 
 ## Overview
 
@@ -12,9 +12,9 @@ These scripts implement the keep-alive skill by:
 
 ## Scripts
 
-### CoderAI Script: `coder_keepalive_loop.sh`
+### Creator Script: `coder_keepalive_loop.sh`
 
-Automated script for CoderAI that:
+Automated script for Creator that:
 - Checks for messages from OverseerAI every 60 seconds
 - Sends heartbeat to OverseerAI every 60 seconds
 - Processes incoming messages (tasks, reviews, approvals, rejections, etc.)
@@ -23,14 +23,14 @@ Automated script for CoderAI that:
 ### OverseerAI Script: `overseer_keepalive_loop.sh`
 
 Automated script for OverseerAI that:
-- Checks for messages from CoderAI every 60 seconds
-- Sends heartbeat to CoderAI every 60 seconds
+- Checks for messages from Creator every 60 seconds
+- Sends heartbeat to Creator every 60 seconds
 - Processes incoming messages (code submissions, status updates, etc.)
 - Provides colored logging output
 
 ## Usage
 
-### For CoderAI
+### For Creator
 
 1. Navigate to project root:
    ```bash
@@ -79,7 +79,7 @@ The scripts provide colored output:
 
 Example output:
 ```
-[2026-02-12 01:20:00] Starting CoderAI automated keep-alive loop...
+[2026-02-12 01:20:00] Starting Creator automated keep-alive loop...
 [2026-02-12 01:20:00] Check interval: 20s, Heartbeat interval: 60s
 [2026-02-12 01:20:00] Press Ctrl+C to stop
 [2026-02-12 01:20:00] Checking for messages from OverseerAI...
@@ -91,7 +91,7 @@ Example output:
 
 ## Message Processing
 
-### CoderAI Processes
+### Creator Processes
 
 - **task**: Task assignment from OverseerAI
 - **review**: Code review feedback
@@ -102,17 +102,17 @@ Example output:
 
 ### OverseerAI Processes
 
-- **code**: Code submission from CoderAI
-- **status**: Status update from CoderAI
-- **heartbeat**: Heartbeat from CoderAI
-- **request**: Request from CoderAI
-- **question**: Question from CoderAI
+- **code**: Code submission from Creator
+- **status**: Status update from Creator
+- **heartbeat**: Heartbeat from Creator
+- **request**: Request from Creator
+- **question**: Question from Creator
 
 ## Running Both Scripts
 
 For continuous collaboration, run both scripts simultaneously:
 
-### Terminal 1 (CoderAI):
+### Terminal 1 (Creator):
 ```bash
 cd /Users/jk/gits/hub/gitbrains/swiftgitbrain
 ./scripts/coder_keepalive_loop.sh
@@ -164,7 +164,7 @@ chmod +x scripts/overseer_keepalive_loop.sh
 
 These scripts can be integrated with IDE terminals:
 1. Open multiple terminals in your IDE
-2. Run CoderAI script in one terminal
+2. Run Creator script in one terminal
 3. Run OverseerAI script in another terminal
 4. Both AIs will stay alive and collaborate continuously
 

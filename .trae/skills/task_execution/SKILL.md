@@ -114,7 +114,7 @@ Report progress during and after execution:
 ```json
 {
   "id": "status_update_<timestamp>",
-  "from": "CoderAI",
+  "from": "Creator",
   "to": "OverseerAI",
   "timestamp": "<ISO 8601 timestamp>",
   "type": "status_update",

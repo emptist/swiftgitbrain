@@ -125,7 +125,7 @@ After creating the plan, send a status update:
 ```json
 {
   "id": "status_update_<timestamp>",
-  "from": "CoderAI",
+  "from": "Creator",
   "to": "OverseerAI",
   "timestamp": "<ISO 8601 timestamp>",
   "type": "status_update",

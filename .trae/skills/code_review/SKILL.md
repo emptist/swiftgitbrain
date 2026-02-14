@@ -100,7 +100,7 @@ Give constructive feedback:
 {
   "review_id": "review_<timestamp>",
   "from": "ReviewerAI",
-  "to": "CoderAI",
+  "to": "Creator",
   "timestamp": "<ISO 8601 timestamp>",
   "type": "code_review",
   "content": {
@@ -134,7 +134,7 @@ Give constructive feedback:
 {
   "review_id": "review_<timestamp>",
   "from": "ReviewerAI",
-  "to": "CoderAI",
+  "to": "Creator",
   "timestamp": "<ISO 8601 timestamp>",
   "type": "code_review",
   "content": {
@@ -247,7 +247,7 @@ public func processItem(_ item: Item?) async throws -> Result {
 {
   "review_id": "review_2026-02-13T14:15:00Z",
   "from": "ReviewerAI",
-  "to": "CoderAI",
+  "to": "Creator",
   "timestamp": "2026-02-13T14:15:00Z",
   "type": "code_review",
   "content": {

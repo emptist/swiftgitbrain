@@ -22,7 +22,7 @@ Review messages follow the standard Message format:
 {
   "id": "review_<timestamp>",
   "from": "OverseerAI",
-  "to": "CoderAI",
+  "to": "Creator",
   "timestamp": "<ISO 8601 timestamp>",
   "type": "review",
   "content": {
@@ -148,7 +148,7 @@ After applying changes and testing, send a status update to OverseerAI:
 ```json
 {
   "id": "status_update_<timestamp>",
-  "from": "CoderAI",
+  "from": "Creator",
   "to": "OverseerAI",
   "timestamp": "<ISO 8601 timestamp>",
   "type": "status_update",
@@ -190,7 +190,7 @@ mv /Users/jk/gits/hub/gitbrains/swiftgitbrain/GitBrain/Memory/ToProcess/review_<
 {
   "id": "review_async_syntax_fixes_2026-02-12T20:05:00Z",
   "from": "OverseerAI",
-  "to": "CoderAI",
+  "to": "Creator",
   "timestamp": "2026-02-12T20:05:00Z",
   "type": "review",
   "content": {
@@ -228,7 +228,7 @@ mv /Users/jk/gits/hub/gitbrains/swiftgitbrain/GitBrain/Memory/ToProcess/review_<
 ```json
 {
   "id": "status_update_2026-02-12T20:10:00Z",
-  "from": "CoderAI",
+  "from": "Creator",
   "to": "OverseerAI",
   "timestamp": "2026-02-12T20:10:00Z",
   "type": "status_update",

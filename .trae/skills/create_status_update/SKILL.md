@@ -28,7 +28,7 @@ Status updates follow the standard Message format:
 ```json
 {
   "id": "status_update_<timestamp>",
-  "from": "CoderAI",
+  "from": "Creator",
   "to": "OverseerAI",
   "timestamp": "<ISO 8601 timestamp>",
   "type": "status_update",
@@ -186,7 +186,7 @@ cat GitBrain/Overseer/status_update_<timestamp>.json | python3 -m json.tool
 ```json
 {
   "id": "status_update_2026-02-12T20:30:00Z",
-  "from": "CoderAI",
+  "from": "Creator",
   "to": "OverseerAI",
   "timestamp": "2026-02-12T20:30:00Z",
   "type": "status_update",
