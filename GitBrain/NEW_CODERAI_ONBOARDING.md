@@ -57,198 +57,51 @@ You are **CoderAI** in the GitBrain system - a system built to help AIs have mem
 
 **Phase 1: Investigation ✅ Complete**
 - BrainState infrastructure analyzed
-- FileBasedCommunication analyzed
+- ~~FileBasedCommunication~~ analyzed (deprecated, removed)
 - Message structure designed
 - Integration plan created
 - Document: `GitBrain/PHASE1_BRAINSTATE_INVESTIGATION.md`
 
-**Phase 2: Implementation ⏳ Pending**
-- BrainStateCommunication protocol
-- PostgreSQL LISTEN/NOTIFY
-- Replace FileBasedCommunication
-- Real-time notifications
+**Phase 2: Implementation ✅ Complete**
+- MessageCache implemented with 6 message types
+- AIDaemon for automatic polling and heartbeats
+- ~~BrainStateCommunication~~ deprecated
+- ~~FileBasedCommunication~~ removed
+- Real-time messaging operational
 
-## Your First Task: Phase 2 Implementation
+## Current Architecture
 
-### What You Need to Do
+The messaging system has been implemented with:
 
-**Phase 2: Implementation (2-3 days)**
+### MessageCache
+Database-backed messaging with 6 message types:
+- TaskMessageModel - Send/receive tasks
+- ReviewMessageModel - Code reviews
+- CodeMessageModel - Code submissions
+- ScoreMessageModel - Score requests/awards
+- FeedbackMessageModel - AI feedback
+- HeartbeatMessageModel - Keep-alive signals
 
-#### Task 1: Create BrainStateCommunication Protocol
+### AIDaemon
+Automatic message polling and heartbeat sender:
+- Configurable poll interval
+- Automatic heartbeat sending
+- Event callbacks for all message types
 
-**Location:** `Sources/GitBrainSwift/Protocols/BrainStateCommunicationProtocol.swift`
-
-```swift
-import Foundation
-
-public protocol BrainStateCommunicationProtocol: Sendable {
-    func sendMessage(_ content: SendableContent, to recipient: String) async throws
-    func receiveMessages() async throws -> [SendableContent]
-    func markMessageAsRead(_ messageId: String) async throws
-    func startListening() async throws
-    func stopListening() async throws
-}
+### CLI Commands
+```bash
+gitbrain send-task <to> <id> <desc> <type> <priority>
+gitbrain check-tasks <ai> <status>
+gitbrain send-feedback <to> <type> <title> <content>
+gitbrain send-heartbeat <to> <role> <status> <activity>
+gitbrain daemon-start <ai> <role> <heartbeat> <poll>
 ```
 
-#### Task 2: Implement PostgreSQL LISTEN/NOTIFY
+## Deprecated Components (Do Not Use)
 
-**Location:** `Sources/GitBrainSwift/Communication/PostgreSQLNotificationManager.swift`
-
-```swift
-import Fluent
-import Foundation
-
-public actor PostgreSQLNotificationManager {
-    private let database: Database
-    private var listeners: [String: @Sendable (String) -> Void] = [:]
-    private var isListening: Bool = false
-
-    public init(database: Database) {
-        self.database = database
-    }
-
-    public func listen(channel: String, handler: @escaping @Sendable (String) -> Void) async throws {
-        // Implement PostgreSQL LISTEN
-        listeners[channel] = handler
-    }
-
-    public func notify(channel: String, payload: String) async throws {
-        // Implement PostgreSQL NOTIFY
-        try await database.raw("NOTIFY \(channel), '\(payload)'")
-    }
-
-    public func startListening() async throws {
-        guard !isListening else { return }
-        isListening = true
-        // Start listening for notifications
-    }
-
-    public func stopListening() async throws {
-        isListening = false
-        listeners.removeAll()
-    }
-}
-```
-
-#### Task 3: Create BrainStateCommunication Implementation
-
-**Location:** `Sources/GitBrainSwift/Communication/BrainStateCommunication.swift`
-
-```swift
-import Foundation
-
-public actor BrainStateCommunication: BrainStateCommunicationProtocol {
-    private let brainStateManager: BrainStateManagerProtocol
-    private let notificationManager: PostgreSQLNotificationManager
-    private let aiName: String
-
-    public init(brainStateManager: BrainStateManagerProtocol, 
-                notificationManager: PostgreSQLNotificationManager,
-                aiName: String) {
-        self.brainStateManager = brainStateManager
-        self.notificationManager = notificationManager
-        self.aiName = aiName
-    }
-
-    public func sendMessage(_ content: SendableContent, to recipient: String) async throws {
-        // 1. Store message in BrainState
-        let messageId = "msg_\(UUID().uuidString)"
-        let messageData: [String: Any] = [
-            "id": messageId,
-            "from": aiName,
-            "to": recipient,
-            "timestamp": ISO8601DateFormatter().string(from: Date()),
-            "content": content.toAnyDict(),
-            "read": false
-        ]
-
-        try await brainStateManager.updateBrainState(
-            aiName: recipient,
-            key: "messages",
-            value: SendableContent(messageData)
-        )
-
-        // 2. Send PostgreSQL notification
-        try await notificationManager.notify(
-            channel: "new_message_\(recipient)",
-            payload: messageId
-        )
-
-        GitBrainLogger.info("Message sent to \(recipient): \(messageId)")
-    }
-
-    public func receiveMessages() async throws -> [SendableContent] {
-        // Retrieve unread messages from BrainState
-        guard let messages = try await brainStateManager.getBrainStateValue(
-            aiName: aiName,
-            key: "messages",
-            defaultValue: SendableContent([:])
-        )?.toAnyDict() as? [[String: Any]] else {
-            return []
-        }
-
-        let unreadMessages = messages.filter { msg in
-            (msg["read"] as? Bool) != true
-        }
-
-        return unreadMessages.map { SendableContent($0) }
-    }
-
-    public func markMessageAsRead(_ messageId: String) async throws {
-        guard var messages = try await brainStateManager.getBrainStateValue(
-            aiName: aiName,
-            key: "messages",
-            defaultValue: SendableContent([:])
-        )?.toAnyDict() as? [[String: Any]] else {
-            return
-        }
-
-        if let index = messages.firstIndex(where: { msg in
-            (msg["id"] as? String) == messageId
-        }) {
-            messages[index]["read"] = true
-            try await brainStateManager.updateBrainState(
-                aiName: aiName,
-                key: "messages",
-                value: SendableContent(messages)
-            )
-        }
-    }
-
-    public func startListening() async throws {
-        try await notificationManager.listen(channel: "new_message_\(aiName)) { payload in
-            GitBrainLogger.info("New message received: \(payload)")
-            // Handle new message notification
-        }
-        try await notificationManager.startListening()
-    }
-
-    public func stopListening() async throws {
-        try await notificationManager.stopListening()
-    }
-}
-```
-
-#### Task 4: Replace FileBasedCommunication
-
-**Locations to Update:**
-- `Sources/GitBrainCLI/main.swift`
-- `Sources/PluginTest/main.swift`
-- Any other files using FileBasedCommunication
-
-**Steps:**
-1. Replace FileBasedCommunication with BrainStateCommunication
-2. Update initialization code
-3. Test message sending/receiving
-4. Verify real-time notifications work
-
-#### Task 5: Implement Real-Time Notifications
-
-**Steps:**
-1. Set up PostgreSQL LISTEN for each AI
-2. Handle notifications in real-time
-3. Eliminate polling
-4. Test under load
+The following are deprecated and should not be used:
+- ~~BrainStateCommunication~~ - Replaced by MessageCache
+- ~~FileBasedCommunication~~ - Removed from codebase
 
 ## How to Use the Skills System
 

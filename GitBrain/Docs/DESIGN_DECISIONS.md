@@ -52,16 +52,15 @@ Despite this document suggesting file-based architecture, we follow the **founde
 5. **Proven architecture** - Battle-tested in Cloudbrain
 
 **Current Implementation**:
-- **BrainStateCommunication** - Uses BrainState kernel for real-time messaging
-- **Sub-millisecond latency** - 300,000x improvement over file-based polling
+- **MessageCache** - Database-backed messaging with sub-millisecond latency
+- **AIDaemon** - Automatic message polling and heartbeat sender
+- **Sub-millisecond latency** - Real-time collaboration
 - **Database-backed** - Transactional safety and reliability
-- **Real-time notifications** - Instant message delivery
+- **PostgreSQL** - Robust and scalable storage
 
-**Legacy System**:
-- **FileBasedCommunication** - Simplified approach (being phased out)
-- **5+ minute latency** - Unusable for real-time collaboration
-- **Polling-based** - No real-time notifications
-- **File I/O issues** - No transactional safety
+**Deprecated Systems**:
+- ~~BrainStateCommunication~~ - Replaced by MessageCache
+- ~~FileBasedCommunication~~ - Removed from codebase
 
 ### Design Philosophy
 

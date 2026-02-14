@@ -791,7 +791,9 @@ public actor KnowledgeBase: KnowledgeBaseProtocol {
 
 ## Communication System
 
-### BrainStateCommunication
+> **⚠️ Note:** The `BrainStateCommunication` class documented below has been deprecated. Use `MessageCache` directly for messaging operations. See [API.md](Docs/API.md) for current documentation.
+
+### BrainStateCommunication (Deprecated)
 
 ```swift
 public actor BrainStateCommunication: @unchecked Sendable {

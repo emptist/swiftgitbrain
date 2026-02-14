@@ -1061,7 +1061,8 @@ All components in GitBrainSwift are designed with thread safety in mind:
 - **KnowledgeBase**: Uses actor isolation for thread-safe access
 - **MemoryStore**: Uses actor isolation for thread-safe access
 - **GitManager**: Uses actor isolation for thread-safe Git operations
-- **FileBasedCommunication**: Uses file locking for concurrent access safety
+- **MessageCache**: Uses database transactions for concurrent access safety
+- **AIDaemon**: Uses async/await for safe concurrent operations
 
 All public APIs are safe to call from any thread or task.
 

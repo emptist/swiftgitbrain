@@ -72,7 +72,28 @@ dependencies: [
 
 ## Quick Start
 
-### 1. Initialize GitBrain
+### 1. Setup PostgreSQL
+
+GitBrainSwift requires PostgreSQL for full functionality. Install and start PostgreSQL:
+
+**macOS:**
+```bash
+brew install postgresql@17
+brew services start postgresql@17
+```
+
+**Ubuntu:**
+```bash
+sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql
+```
+
+**Create Database:**
+```bash
+createdb gitbrain
+```
+
+### 2. Initialize GitBrain
 
 ```bash
 gitbrain init
@@ -98,7 +119,15 @@ trae .
 
 CoderAI has access to all folders in the project.
 
-### 3. Open Trae for OverseerAI
+### 3. Open Trae for CoderAI
+
+```bash
+trae .
+```
+
+CoderAI has access to all folders in the project.
+
+### 4. Open Trae for OverseerAI (Optional - for dual-AI mode)
 
 ```bash
 trae ./GitBrain
@@ -106,71 +135,108 @@ trae ./GitBrain
 
 OverseerAI has read access to whole project and write access to `GitBrain/`.
 
-### 4. Ask AIs to Read Documentation
+### 5. Ask AIs to Read Documentation
 
 Ask each AI to read `GitBrain/Docs/` to understand their role and responsibilities.
 
 ## CLI Commands
 
+### Initialization
+
 ```bash
-# Initialize GitBrain folder structure
+# Initialize GitBrain folder structure (checks PostgreSQL, creates database if needed)
 gitbrain init [path]
-
-# Send a message to another AI
-gitbrain send <to> <message> [path]
-# to: 'coder' or 'overseer'
-# message: JSON string or file path
-# path: GitBrain folder path (default: ./GitBrain or $GITBRAIN_PATH)
-
-# Check messages for a role
-gitbrain check [role] [path]
-# role: 'coder' or 'overseer' (default: coder)
-# path: GitBrain folder path (default: ./GitBrain or $GITBRAIN_PATH)
-
-# Clear messages for a role
-gitbrain clear [role] [path]
-# role: 'coder' or 'overseer' (default: coder)
-# path: GitBrain folder path (default: ./GitBrain or $GITBRAIN_PATH)
 ```
+
+### Task Commands
+
+```bash
+# Send a task to another AI
+gitbrain send-task <to> <task_id> <description> <task_type> [priority]
+
+# Check pending tasks
+gitbrain check-tasks [ai_name] [status]
+
+# Update task status
+gitbrain update-task <message_id> <status>
+```
+
+### Review Commands
+
+```bash
+# Send a review
+gitbrain send-review <to> <task_id> <approved> <reviewer> [feedback]
+
+# Check pending reviews
+gitbrain check-reviews [ai_name] [status]
+```
+
+### Heartbeat Commands
+
+```bash
+# Send heartbeat (keep-alive)
+gitbrain send-heartbeat <to> <ai_role> <status> [current_task]
+
+# Check heartbeats
+gitbrain check-heartbeats [ai_name]
+```
+
+### Utility Commands
+
+```bash
+# Interactive mode (REPL)
+gitbrain interactive
+
+# Sleep/pause (aliases: relax, coffeetime, nap, break)
+gitbrain sleep <seconds>
+gitbrain coffeetime <seconds>
+```
+
+### Shortcuts
+
+| Shortcut | Full Command |
+|----------|--------------|
+| st | send-task |
+| ct | check-tasks |
+| sr | send-review |
+| cr | check-reviews |
+| sh | send-heartbeat |
+| sf | send-feedback |
+| sc | send-code |
+| ss | send-score |
 
 ### Environment Variables
 
 ```bash
-# Set default GitBrain path
-export GITBRAIN_PATH=/custom/path/to/GitBrain
-
-# Now all commands use this path
-gitbrain check coder
-gitbrain send overseer '{"type":"review"}'
-
-# Database configuration (optional, defaults to localhost:5432)
+# Database configuration
 export GITBRAIN_DB_HOST=localhost
 export GITBRAIN_DB_PORT=5432
 export GITBRAIN_DB_NAME=gitbrain
 export GITBRAIN_DB_USER=postgres
 export GITBRAIN_DB_PASSWORD=postgres
+
+# Optional: Custom GitBrain path
+export GITBRAIN_PATH=/custom/path/to/GitBrain
 ```
 
-## Database Setup
+## Solo Mode vs Dual-AI Mode
 
-GitBrainSwift uses PostgreSQL for persistent storage of AI brainstate and knowledge base. The database is optional - if not configured, the system will use in-memory storage.
+### Solo Mode (Single AI)
 
-### Prerequisites
+GitBrain can be used by a single AI working alone. The AI can:
+- Use `gitbrain init` to set up the project
+- Use utility commands (`sleep`, `interactive`, etc.)
+- Work without PostgreSQL (limited functionality)
 
-- PostgreSQL 14+ installed and running
-- Database user with appropriate permissions
+### Dual-AI Mode (Collaborative)
 
-### Quick Setup
+For AI-to-AI collaboration:
+1. Both AIs share the same PostgreSQL database
+2. Use message commands (`send-task`, `send-review`, etc.)
+3. Real-time communication with sub-millisecond latency
+4. Full BrainState and KnowledgeBase features
 
-```bash
-# Create database
-createdb gitbrain
-
-# Create tables (automatic on first run)
-# Tables are created automatically when GitBrainSwift initializes
-```
-
-### Configuration
+## Architecture
 
 Database connection can be configured through environment variables or programmatically:
 
@@ -536,23 +602,24 @@ CoderAI ──reads──> GitBrain/Memory/
 
 ### Components
 
-#### BrainStateCommunication
-Real-time messaging system using BrainState infrastructure:
-- `sendMessage(_:to:)`: Send message to another AI via BrainState
-- `receiveMessages(for:)`: Receive unread messages from BrainState
-- `markAsRead(_:for:)`: Mark message as read in BrainState
-- **Performance**: Sub-millisecond latency (300,000x improvement over file-based)
+#### MessageCache
+Database-backed messaging system with sub-millisecond latency:
+- `sendTask()`: Send task to another AI
+- `sendReview()`: Send code review
+- `sendCode()`: Send code for review
+- `sendScore()`: Request/award score
+- `sendFeedback()`: Send feedback to another AI
+- `sendHeartbeat()`: Send keep-alive heartbeat
+- **Performance**: Sub-millisecond latency
 - **Architecture**: Database-backed with PostgreSQL
-- **Status**: Primary communication system (file-based being phased out)
+- **Status**: Primary communication system
 
-#### FileBasedCommunication
-Legacy file-based messaging system (being phased out):
-- `sendMessageToOverseer()`: Send message from CoderAI to OverseerAI
-- `sendMessageToCoder()`: Send message from OverseerAI to CoderAI
-- `getMessagesForCoder()`: Get messages for CoderAI from Memory folder
-- `getMessagesForOverseer()`: Get messages for OverseerAI from Overseer folder
-- **Performance**: 5+ minute latency (being replaced)
-- **Status**: Legacy system, use BrainStateCommunication instead
+#### AIDaemon
+Automatic message polling and heartbeat sender:
+- `start()`: Start daemon with automatic polling
+- `stop()`: Stop daemon
+- Configurable poll and heartbeat intervals
+- Event callbacks for all message types
 
 #### MessageValidator
 Schema-based message validation:
