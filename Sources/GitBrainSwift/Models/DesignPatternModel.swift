@@ -1,78 +1,78 @@
 import Fluent
 import Foundation
 
-final class DesignPatternModel: Model, @unchecked Sendable {
-    static let schema = "design_patterns"
+public final class DesignPatternModel: Model, @unchecked Sendable {
+    public static let schema = "design_patterns"
     
     @ID(key: .id)
-    var id: UUID?
+    public var id: UUID?
     
     @Field(key: "knowledge_id")
-    var knowledgeId: UUID
+    public var knowledgeId: UUID
     
     @Field(key: "category")
-    var category: String
+    public var category: String
     
     @Field(key: "key")
-    var key: String
+    public var key: String
     
     @Field(key: "pattern_name")
-    var patternName: String
+    public var patternName: String
     
     @Field(key: "pattern_type")
-    var patternType: String
+    public var patternType: String
     
     @Field(key: "description")
-    var description: String
+    public var description: String
     
     @OptionalField(key: "intent")
-    var intent: String?
+    public var intent: String?
     
     @OptionalField(key: "motivation")
-    var motivation: String?
+    public var motivation: String?
     
     @OptionalField(key: "applicability")
-    var applicability: String?
+    public var applicability: String?
     
     @OptionalField(key: "structure")
-    var structure: String?
+    public var structure: String?
     
     @OptionalField(key: "participants")
-    var participants: [String]?
+    public var participants: [String]?
     
     @OptionalField(key: "collaborations")
-    var collaborations: String?
+    public var collaborations: String?
     
     @OptionalField(key: "consequences")
-    var consequences: [String]?
+    public var consequences: [String]?
     
     @OptionalField(key: "implementation")
-    var implementation: String?
+    public var implementation: String?
     
     @OptionalField(key: "sample_code")
-    var sampleCode: String?
+    public var sampleCode: String?
     
     @OptionalField(key: "known_uses")
-    var knownUses: [String]?
+    public var knownUses: [String]?
     
     @OptionalField(key: "related_patterns")
-    var relatedPatterns: [String]?
+    public var relatedPatterns: [String]?
     
     @Field(key: "created_by")
-    var createdBy: String
+    public var createdBy: String
     
     @OptionalField(key: "tags")
-    var tags: [String]?
+    public var tags: [String]?
     
     @Timestamp(key: "created_at", on: .create)
-    var createdAt: Date?
+    public var createdAt: Date?
     
     @Timestamp(key: "updated_at", on: .update)
-    var updatedAt: Date?
+    public var updatedAt: Date?
     
-    init() {}
+    public init() {}
     
-    init(
+    public init(
         id: UUID? = nil,
         knowledgeId: UUID,
         category: String,

@@ -1,72 +1,72 @@
 import Fluent
 import Foundation
 
-final class TestingStrategyModel: Model, @unchecked Sendable {
-    static let schema = "testing_strategies"
+public final class TestingStrategyModel: Model, @unchecked Sendable {
+    public static let schema = "testing_strategies"
     
     @ID(key: .id)
-    var id: UUID?
+    public var id: UUID?
     
     @Field(key: "knowledge_id")
-    var knowledgeId: UUID
+    public var knowledgeId: UUID
     
     @Field(key: "category")
-    var category: String
+    public var category: String
     
     @Field(key: "key")
-    var key: String
+    public var key: String
     
     @Field(key: "strategy_name")
-    var strategyName: String
+    public var strategyName: String
     
     @Field(key: "testing_type")
-    var testingType: String
+    public var testingType: String
     
     @Field(key: "description")
-    var description: String
+    public var description: String
     
     @OptionalField(key: "scope")
-    var scope: String?
+    public var scope: String?
     
     @OptionalField(key: "techniques")
-    var techniques: [String]?
+    public var techniques: [String]?
     
     @OptionalField(key: "tools")
-    var tools: [String]?
+    public var tools: [String]?
     
     @OptionalField(key: "best_practices")
-    var bestPractices: [String]?
+    public var bestPractices: [String]?
     
     @OptionalField(key: "coverage_goals")
-    var coverageGoals: String?
+    public var coverageGoals: String?
     
     @OptionalField(key: "automation_level")
-    var automationLevel: String?
+    public var automationLevel: String?
     
     @OptionalField(key: "test_data_strategy")
-    var testDataStrategy: String?
+    public var testDataStrategy: String?
     
     @OptionalField(key: "ci_cd_integration")
-    var ciCdIntegration: String?
+    public var ciCdIntegration: String?
     
     @OptionalField(key: "examples")
-    var examples: String?
+    public var examples: String?
     
     @Field(key: "created_by")
-    var createdBy: String
+    public var createdBy: String
     
     @OptionalField(key: "tags")
-    var tags: [String]?
+    public var tags: [String]?
     
     @Timestamp(key: "created_at", on: .create)
-    var createdAt: Date?
+    public var createdAt: Date?
     
     @Timestamp(key: "updated_at", on: .update)
-    var updatedAt: Date?
+    public var updatedAt: Date?
     
-    init() {}
+    public init() {}
     
-    init(
+    public init(
         id: UUID? = nil,
         knowledgeId: UUID,
         category: String,

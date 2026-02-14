@@ -1,72 +1,72 @@
 import Fluent
 import Foundation
 
-final class ApiReferenceModel: Model, @unchecked Sendable {
-    static let schema = "api_references"
+public final class ApiReferenceModel: Model, @unchecked Sendable {
+    public static let schema = "api_references"
     
     @ID(key: .id)
-    var id: UUID?
+    public var id: UUID?
     
     @Field(key: "knowledge_id")
-    var knowledgeId: UUID
+    public var knowledgeId: UUID
     
     @Field(key: "category")
-    var category: String
+    public var category: String
     
     @Field(key: "key")
-    var key: String
+    public var key: String
     
     @Field(key: "api_name")
-    var apiName: String
+    public var apiName: String
     
     @Field(key: "api_type")
-    var apiType: String
+    public var apiType: String
     
     @OptionalField(key: "endpoint")
-    var endpoint: String?
+    public var endpoint: String?
     
     @OptionalField(key: "method")
-    var method: String?
+    public var method: String?
     
     @OptionalField(key: "parameters")
-    var parameters: String?
+    public var parameters: String?
     
     @OptionalField(key: "response_schema")
-    var responseSchema: String?
+    public var responseSchema: String?
     
     @OptionalField(key: "authentication")
-    var authentication: String?
+    public var authentication: String?
     
     @OptionalField(key: "rate_limiting")
-    var rateLimiting: String?
+    public var rateLimiting: String?
     
     @OptionalField(key: "examples")
-    var examples: String?
+    public var examples: String?
     
     @OptionalField(key: "version")
-    var version: String?
+    public var version: String?
     
     @Field(key: "deprecated")
-    var deprecated: Bool
+    public var deprecated: Bool
     
     @OptionalField(key: "deprecation_note")
-    var deprecationNote: String?
+    public var deprecationNote: String?
     
     @Field(key: "created_by")
-    var createdBy: String
+    public var createdBy: String
     
     @OptionalField(key: "tags")
-    var tags: [String]?
+    public var tags: [String]?
     
     @Timestamp(key: "created_at", on: .create)
-    var createdAt: Date?
+    public var createdAt: Date?
     
     @Timestamp(key: "updated_at", on: .update)
-    var updatedAt: Date?
+    public var updatedAt: Date?
     
-    init() {}
+    public init() {}
     
-    init(
+    public init(
         id: UUID? = nil,
         knowledgeId: UUID,
         category: String,

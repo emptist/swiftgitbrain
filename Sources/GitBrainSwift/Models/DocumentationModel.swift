@@ -1,60 +1,60 @@
 import Fluent
 import Foundation
 
-final class DocumentationModel: Model, @unchecked Sendable {
-    static let schema = "documentation"
+public final class DocumentationModel: Model, @unchecked Sendable {
+    public static let schema = "documentation"
     
     @ID(key: .id)
-    var id: UUID?
+    public var id: UUID?
     
     @Field(key: "knowledge_id")
-    var knowledgeId: UUID
+    public var knowledgeId: UUID
     
     @Field(key: "category")
-    var category: String
+    public var category: String
     
     @Field(key: "key")
-    var key: String
+    public var key: String
     
     @Field(key: "title")
-    var title: String
+    public var title: String
     
     @Field(key: "content")
-    var content: String
+    public var content: String
     
     @OptionalField(key: "summary")
-    var summary: String?
+    public var summary: String?
     
     @OptionalField(key: "version")
-    var version: String?
+    public var version: String?
     
     @OptionalField(key: "last_reviewed")
-    var lastReviewed: Date?
+    public var lastReviewed: Date?
     
     @OptionalField(key: "review_status")
-    var reviewStatus: String?
+    public var reviewStatus: String?
     
     @OptionalField(key: "related_topics")
-    var relatedTopics: [String]?
+    public var relatedTopics: [String]?
     
     @OptionalField(key: "external_links")
-    var externalLinks: String?
+    public var externalLinks: String?
     
     @Field(key: "created_by")
-    var createdBy: String
+    public var createdBy: String
     
     @OptionalField(key: "tags")
-    var tags: [String]?
+    public var tags: [String]?
     
     @Timestamp(key: "created_at", on: .create)
-    var createdAt: Date?
+    public var createdAt: Date?
     
     @Timestamp(key: "updated_at", on: .update)
-    var updatedAt: Date?
+    public var updatedAt: Date?
     
-    init() {}
+    public init() {}
     
-    init(
+    public init(
         id: UUID? = nil,
         knowledgeId: UUID,
         category: String,

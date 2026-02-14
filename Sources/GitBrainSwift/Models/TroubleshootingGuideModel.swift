@@ -1,63 +1,63 @@
 import Fluent
 import Foundation
 
-final class TroubleshootingGuideModel: Model, @unchecked Sendable {
-    static let schema = "troubleshooting_guides"
+public final class TroubleshootingGuideModel: Model, @unchecked Sendable {
+    public static let schema = "troubleshooting_guides"
     
     @ID(key: .id)
-    var id: UUID?
+    public var id: UUID?
     
     @Field(key: "knowledge_id")
-    var knowledgeId: UUID
+    public var knowledgeId: UUID
     
     @Field(key: "category")
-    var category: String
+    public var category: String
     
     @Field(key: "key")
-    var key: String
+    public var key: String
     
     @Field(key: "issue_title")
-    var issueTitle: String
+    public var issueTitle: String
     
     @Field(key: "issue_description")
-    var issueDescription: String
+    public var issueDescription: String
     
     @OptionalField(key: "symptoms")
-    var symptoms: [String]?
+    public var symptoms: [String]?
     
     @OptionalField(key: "root_cause")
-    var rootCause: String?
+    public var rootCause: String?
     
     @OptionalField(key: "solutions")
-    var solutions: String?
+    public var solutions: String?
     
     @OptionalField(key: "prevention")
-    var prevention: String?
+    public var prevention: String?
     
     @OptionalField(key: "related_issues")
-    var relatedIssues: [String]?
+    public var relatedIssues: [String]?
     
     @OptionalField(key: "severity")
-    var severity: String?
+    public var severity: String?
     
     @OptionalField(key: "frequency")
-    var frequency: String?
+    public var frequency: String?
     
     @Field(key: "created_by")
-    var createdBy: String
+    public var createdBy: String
     
     @OptionalField(key: "tags")
-    var tags: [String]?
+    public var tags: [String]?
     
     @Timestamp(key: "created_at", on: .create)
-    var createdAt: Date?
+    public var createdAt: Date?
     
     @Timestamp(key: "updated_at", on: .update)
-    var updatedAt: Date?
+    public var updatedAt: Date?
     
-    init() {}
+    public init() {}
     
-    init(
+    public init(
         id: UUID? = nil,
         knowledgeId: UUID,
         category: String,
