@@ -8,9 +8,15 @@ GitBrain enables AI assistants to collaborate on software development through re
 
 **Key Features:**
 - Real-time AI-to-AI messaging (sub-millisecond latency)
-- Solo mode (single AI) and Dual-AI mode (collaborative)
+- Creator and Monitor roles for collaborative development
 - Keep-alive system for continuous AI collaboration
 - Cross-language support - works with any programming language
+
+## Requirements
+
+- **PostgreSQL 14+ (MANDATORY)** - Required for all operations
+- macOS 15+ or Linux
+- Swift 6.2+ (only if building from source)
 
 ## Installation
 
@@ -41,7 +47,7 @@ cp .build/release/gitbrain /usr/local/bin/
 
 ## Quick Start
 
-### 1. Setup PostgreSQL (Required for Dual-AI Mode)
+### 1. Setup PostgreSQL (Required)
 
 **macOS:**
 ```bash
@@ -66,19 +72,19 @@ gitbrain init
 
 This will:
 - Create `GitBrain/` folder structure
-- Check PostgreSQL availability
+- Verify PostgreSQL is running
 - Create database if needed
 
 ### 3. Start Working
 
-**Solo Mode (Single AI):**
-Just start working. The AI can use utility commands like `gitbrain sleep`, `gitbrain interactive`.
-
-**Dual-AI Mode (Collaborative):**
+**Creator Role:**
 ```bash
 # Terminal 1 - Creator
 trae .
+```
 
+**Monitor Role:**
+```bash
 # Terminal 2 - Monitor  
 trae ./.GitBrain
 ```
@@ -91,7 +97,7 @@ trae ./.GitBrain
 gitbrain init [path]           # Initialize GitBrain (checks PostgreSQL, creates DB)
 ```
 
-### Messaging (Dual-AI Mode)
+### Messaging
 
 ```bash
 # Tasks
@@ -154,19 +160,6 @@ export GITBRAIN_DB_USER=postgres
 export GITBRAIN_DB_PASSWORD=postgres
 ```
 
-## Solo Mode vs Dual-AI Mode
-
-### Solo Mode
-- Single AI working alone
-- Utility commands work without database
-- Limited to local operations
-
-### Dual-AI Mode
-- Two AIs collaborating
-- Requires PostgreSQL
-- Real-time messaging
-- Full BrainState and KnowledgeBase features
-
 ## Cross-Language Usage
 
 The `gitbrain` CLI works with any programming language:
@@ -194,12 +187,6 @@ After development:
 ```bash
 rm -rf .GitBrain
 ```
-
-## Requirements
-
-- macOS 15+ or Linux
-- PostgreSQL 14+ (for Dual-AI mode)
-- Swift 6.2+ (only if building from source)
 
 ## License
 

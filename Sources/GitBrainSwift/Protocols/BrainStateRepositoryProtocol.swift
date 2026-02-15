@@ -1,8 +1,8 @@
 import Foundation
 
 public protocol BrainStateRepositoryProtocol: Sendable {
-    func create(aiName: String, role: RoleType, state: SendableContent?, timestamp: Date) async throws
-    func load(aiName: String) async throws -> (role: RoleType, state: SendableContent?, timestamp: Date)?
+    func create(id: BrainStateID, aiName: String, role: RoleType, state: SendableContent?, timestamp: Date) async throws
+    func load(aiName: String) async throws -> (id: BrainStateID, role: RoleType, state: SendableContent?, timestamp: Date)?
     func save(aiName: String, role: RoleType, state: SendableContent, timestamp: Date) async throws
     func update(aiName: String, key: String, value: SendableContent) async throws -> Bool
     func get(aiName: String, key: String, defaultValue: SendableContent?) async throws -> SendableContent?

@@ -60,7 +60,7 @@ public protocol MessageCacheProtocol: Sendable {
     
     func sendFeedback(
         to: String,
-        feedbackType: String,
+        feedbackType: FeedbackType,
         subject: String,
         content: String,
         relatedTaskId: String?,
@@ -74,7 +74,7 @@ public protocol MessageCacheProtocol: Sendable {
     func sendHeartbeat(
         to: String,
         aiRole: String,
-        status: String,
+        status: HeartbeatStatus,
         currentTask: String?,
         metadata: [String: String]?
     ) async throws -> UUID

@@ -258,7 +258,7 @@ public actor FluentMessageCacheRepository: MessageCacheRepositoryProtocol {
         messageId: UUID,
         fromAI: String,
         toAI: String,
-        feedbackType: String,
+        feedbackType: FeedbackType,
         subject: String,
         content: String,
         relatedTaskId: String?,
@@ -318,7 +318,7 @@ public actor FluentMessageCacheRepository: MessageCacheRepositoryProtocol {
         fromAI: String,
         toAI: String,
         aiRole: String,
-        status: String,
+        status: HeartbeatStatus,
         currentTask: String?,
         metadata: [String: String]?
     ) async throws {

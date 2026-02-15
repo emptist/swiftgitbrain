@@ -70,7 +70,7 @@ public protocol MessageCacheRepositoryProtocol: Sendable {
         messageId: UUID,
         fromAI: String,
         toAI: String,
-        feedbackType: String,
+        feedbackType: FeedbackType,
         subject: String,
         content: String,
         relatedTaskId: String?,
@@ -86,7 +86,7 @@ public protocol MessageCacheRepositoryProtocol: Sendable {
         fromAI: String,
         toAI: String,
         aiRole: String,
-        status: String,
+        status: HeartbeatStatus,
         currentTask: String?,
         metadata: [String: String]?
     ) async throws

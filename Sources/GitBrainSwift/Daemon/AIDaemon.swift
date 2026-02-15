@@ -66,6 +66,9 @@ public actor AIDaemon {
     private var pollTask: Task<Void, Never>?
     private var heartbeatTask: Task<Void, Never>?
     
+    private static let lockFilePath = "/tmp/gitbrain-daemon.lock"
+    nonisolated(unsafe) private static var lockFileHandle: FileHandle?
+    
     public var onTaskReceived: @Sendable (TaskMessageModel) async -> Void = { _ in }
     public var onReviewReceived: @Sendable (ReviewMessageModel) async -> Void = { _ in }
     public var onCodeReceived: @Sendable (CodeMessageModel) async -> Void = { _ in }
@@ -102,6 +105,10 @@ public actor AIDaemon {
             throw DaemonError.alreadyRunning
         }
         
+        guard acquireGlobalLock() else {
+            throw DaemonError.alreadyRunning
+        }
+        
         do {
             _ = try await databaseManager.initialize()
             messageCache = try await databaseManager.createMessageCacheManager(forAI: config.aiName)
@@ -119,6 +126,7 @@ public actor AIDaemon {
             
             GitBrainLogger.info("AIDaemon started for \(config.aiName)")
         } catch {
+            releaseGlobalLock()
             throw DaemonError.databaseError(error.localizedDescription)
         }
     }
@@ -135,8 +143,55 @@ public actor AIDaemon {
         heartbeatTask = nil
         
         try await databaseManager.close()
+        releaseGlobalLock()
         
         GitBrainLogger.info("AIDaemon stopped for \(config.aiName)")
+    }
+    
+    private func acquireGlobalLock() -> Bool {
+        let lockFileURL = URL(fileURLWithPath: Self.lockFilePath)
+        
+        if FileManager.default.fileExists(atPath: Self.lockFilePath) {
+            do {
+                let existingPID = try String(contentsOf: lockFileURL, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines)
+                if let pid = Int32(existingPID) {
+                    let running = kill(pid, 0) == 0
+                    if running {
+                        GitBrainLogger.warning("Another daemon is already running with PID \(pid)")
+                        return false
+                    } else {
+                        GitBrainLogger.info("Stale lock file found, removing it")
+                        try FileManager.default.removeItem(at: lockFileURL)
+                    }
+                }
+            } catch {
+                GitBrainLogger.warning("Failed to read lock file: \(error)")
+            }
+        }
+        
+        do {
+            let currentPID = ProcessInfo.processInfo.processIdentifier
+            try "\(currentPID)".write(to: lockFileURL, atomically: true, encoding: .utf8)
+            Self.lockFileHandle = try FileHandle(forWritingTo: lockFileURL)
+            GitBrainLogger.info("Acquired daemon lock with PID \(currentPID)")
+            return true
+        } catch {
+            GitBrainLogger.error("Failed to acquire daemon lock: \(error)")
+            return false
+        }
+    }
+    
+    private func releaseGlobalLock() {
+        do {
+            Self.lockFileHandle?.closeFile()
+            Self.lockFileHandle = nil
+            if FileManager.default.fileExists(atPath: Self.lockFilePath) {
+                try FileManager.default.removeItem(atPath: Self.lockFilePath)
+            }
+            GitBrainLogger.info("Released daemon lock")
+        } catch {
+            GitBrainLogger.error("Failed to release daemon lock: \(error)")
+        }
     }
     
     public func getStatus() -> DaemonStatus {
@@ -224,7 +279,7 @@ public actor AIDaemon {
         _ = try await messageCache.sendHeartbeat(
             to: "Monitor",
             aiRole: config.role.rawValue,
-            status: "working",
+            status: .active,
             currentTask: currentTask,
             metadata: nil
         )
@@ -249,7 +304,7 @@ public actor AIDaemon {
         
         _ = try? await messageCache.sendFeedback(
             to: config.aiName,
-            feedbackType: "keep_alive_tips",
+            feedbackType: .general,
             subject: "Keep-Alive Reminder",
             content: tips,
             relatedTaskId: nil,
@@ -257,73 +312,6 @@ public actor AIDaemon {
         )
         
         GitBrainLogger.info("Keep-alive tips sent to \(config.aiName)")
-    }
-    
-    public func sendMessage(to: String, type: MessageType, content: SendableContent) async throws -> UUID {
-        guard let messageCache = messageCache else {
-            throw DaemonError.notRunning
-        }
-        
-        switch type {
-        case .task:
-            return try await messageCache.sendTask(
-                to: to,
-                taskId: content.toAnyDict()["task_id"] as? String ?? UUID().uuidString,
-                description: content.toAnyDict()["description"] as? String ?? "",
-                taskType: TaskType(rawValue: content.toAnyDict()["task_type"] as? String ?? "coding") ?? .coding,
-                priority: content.toAnyDict()["priority"] as? Int ?? 1,
-                files: content.toAnyDict()["files"] as? [String],
-                deadline: nil,
-                messagePriority: .normal
-            )
-        case .review:
-            return try await messageCache.sendReview(
-                to: to,
-                taskId: content.toAnyDict()["task_id"] as? String ?? "",
-                approved: content.toAnyDict()["approved"] as? Bool ?? false,
-                reviewer: config.aiName,
-                comments: nil,
-                feedback: content.toAnyDict()["feedback"] as? String,
-                filesReviewed: nil,
-                messagePriority: .normal
-            )
-        case .code:
-            return try await messageCache.sendCode(
-                to: to,
-                codeId: content.toAnyDict()["code_id"] as? String ?? UUID().uuidString,
-                title: content.toAnyDict()["title"] as? String ?? "",
-                description: content.toAnyDict()["description"] as? String ?? "",
-                files: content.toAnyDict()["files"] as? [String] ?? [],
-                branch: content.toAnyDict()["branch"] as? String,
-                commitSha: content.toAnyDict()["commit_sha"] as? String,
-                messagePriority: .normal
-            )
-        case .score:
-            return try await messageCache.sendScore(
-                to: to,
-                taskId: content.toAnyDict()["task_id"] as? String ?? "",
-                requestedScore: content.toAnyDict()["requested_score"] as? Int ?? 0,
-                qualityJustification: content.toAnyDict()["quality_justification"] as? String ?? "",
-                messagePriority: .normal
-            )
-        case .feedback:
-            return try await messageCache.sendFeedback(
-                to: to,
-                feedbackType: content.toAnyDict()["feedback_type"] as? String ?? "general",
-                subject: content.toAnyDict()["subject"] as? String ?? "",
-                content: content.toAnyDict()["content"] as? String ?? "",
-                relatedTaskId: content.toAnyDict()["related_task_id"] as? String,
-                messagePriority: .normal
-            )
-        case .heartbeat:
-            return try await messageCache.sendHeartbeat(
-                to: to,
-                aiRole: config.role.rawValue,
-                status: content.toAnyDict()["status"] as? String ?? "working",
-                currentTask: content.toAnyDict()["current_task"] as? String,
-                metadata: nil
-            )
-        }
     }
     
     public func updateBrainState(key: String, value: SendableContent) async throws -> Bool {

@@ -42,7 +42,7 @@ public final class HeartbeatMessageModel: Model, @unchecked Sendable {
         toAI: String,
         timestamp: Date,
         aiRole: String,
-        status: String = "active",
+        status: HeartbeatStatus = .active,
         currentTask: String? = nil,
         metadata: [String: String]? = nil
     ) {
@@ -51,9 +51,13 @@ public final class HeartbeatMessageModel: Model, @unchecked Sendable {
         self.toAI = toAI
         self.timestamp = timestamp
         self.aiRole = aiRole
-        self.status = status
+        self.status = status.rawValue
         self.currentTask = currentTask
         self.metadata = metadata
         self.createdAt = Date()
+    }
+    
+    public var statusEnum: HeartbeatStatus? {
+        return HeartbeatStatus(rawValue: status)
     }
 }

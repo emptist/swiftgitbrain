@@ -8,7 +8,7 @@ public actor FluentBrainStateRepository: BrainStateRepositoryProtocol {
         self.database = database
     }
     
-    public func create(aiName: String, role: RoleType, state: SendableContent?, timestamp: Date) async throws {
+    public func create(id: BrainStateID, aiName: String, role: RoleType, state: SendableContent?, timestamp: Date) async throws {
         let stateStr = state != nil ? String(data: try JSONSerialization.data(withJSONObject: state!.toAnyDict()), encoding: .utf8) ?? "{}" : "{}"
         
         let brainState = BrainStateModel(
@@ -17,11 +17,12 @@ public actor FluentBrainStateRepository: BrainStateRepositoryProtocol {
             state: stateStr,
             timestamp: timestamp
         )
+        brainState.brainStateId = id.value
         
         try await brainState.save(on: database)
     }
     
-    public func load(aiName: String) async throws -> (role: RoleType, state: SendableContent?, timestamp: Date)? {
+    public func load(aiName: String) async throws -> (id: BrainStateID, role: RoleType, state: SendableContent?, timestamp: Date)? {
         guard let brainState = try await BrainStateModel.query(on: database)
             .filter(\.$aiName == aiName)
             .first() else {
@@ -32,9 +33,14 @@ public actor FluentBrainStateRepository: BrainStateRepositoryProtocol {
             return nil
         }
         
+        guard let brainStateId = BrainStateID(fromHashed: brainState.brainStateId) else {
+            return nil
+        }
+        
         guard let stateData = brainState.state.data(using: .utf8),
               let stateDict = try JSONSerialization.jsonObject(with: stateData) as? [String: Any] else {
             return (
+                id: brainStateId,
                 role: role,
                 state: nil,
                 timestamp: brainState.timestamp
@@ -42,6 +48,7 @@ public actor FluentBrainStateRepository: BrainStateRepositoryProtocol {
         }
         
         return (
+            id: brainStateId,
             role: role,
             state: SendableContent(stateDict),
             timestamp: brainState.timestamp

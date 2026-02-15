@@ -10,15 +10,43 @@ public actor BrainStateManager: @unchecked Sendable, BrainStateManagerProtocol {
     
     public func createBrainState(aiName: String, role: RoleType, initialState: SendableContent? = nil) async throws -> BrainState {
         GitBrainLogger.debug("Creating brain state: aiName=\(aiName), role=\(role)")
-        try await repository.create(aiName: aiName, role: role, state: initialState, timestamp: Date())
-        GitBrainLogger.info("Successfully created brain state: aiName=\(aiName)")
+        let timestamp = Date()
+        let gitHash = Self.getCurrentGitHash()
+        let brainStateId = BrainStateID(aiName: aiName, gitHash: gitHash, timestamp: timestamp)
+        try await repository.create(id: brainStateId, aiName: aiName, role: role, state: initialState, timestamp: timestamp)
+        GitBrainLogger.info("Successfully created brain state: aiName=\(aiName), id=\(brainStateId.value)")
         return BrainState(
+            id: brainStateId,
             aiName: aiName,
             role: role,
             version: "1.0.0",
-            lastUpdated: ISO8601DateFormatter().string(from: Date()),
+            lastUpdated: ISO8601DateFormatter().string(from: timestamp),
             state: initialState?.toAnyDict() ?? [:]
         )
+    }
+    
+    private static func getCurrentGitHash() -> String {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        process.arguments = ["rev-parse", "--short", "HEAD"]
+        
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = Pipe()
+        
+        do {
+            try process.run()
+            process.waitUntilExit()
+            
+            guard process.terminationStatus == 0 else {
+                return "unknown"
+            }
+            
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "unknown"
+        } catch {
+            return "unknown"
+        }
     }
     
     public func loadBrainState(aiName: String) async throws -> BrainState? {
@@ -27,8 +55,9 @@ public actor BrainStateManager: @unchecked Sendable, BrainStateManagerProtocol {
             GitBrainLogger.debug("Brain state not found: aiName=\(aiName)")
             return nil
         }
-        GitBrainLogger.debug("Successfully loaded brain state: aiName=\(aiName)")
+        GitBrainLogger.debug("Successfully loaded brain state: aiName=\(aiName), id=\(result.id.value)")
         return BrainState(
+            id: result.id,
             aiName: aiName,
             role: result.role,
             version: "1.0.0",

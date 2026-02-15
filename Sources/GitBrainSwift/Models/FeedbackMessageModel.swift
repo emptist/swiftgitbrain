@@ -53,7 +53,7 @@ public final class FeedbackMessageModel: Model, @unchecked Sendable {
         fromAI: String,
         toAI: String,
         timestamp: Date,
-        feedbackType: String,
+        feedbackType: FeedbackType,
         subject: String,
         content: String,
         relatedTaskId: String? = nil,
@@ -65,7 +65,7 @@ public final class FeedbackMessageModel: Model, @unchecked Sendable {
         self.fromAI = fromAI
         self.toAI = toAI
         self.timestamp = timestamp
-        self.feedbackType = feedbackType
+        self.feedbackType = feedbackType.rawValue
         self.subject = subject
         self.content = content
         self.relatedTaskId = relatedTaskId
@@ -74,6 +74,10 @@ public final class FeedbackMessageModel: Model, @unchecked Sendable {
         self.messagePriority = messagePriority.rawValue
         self.createdAt = Date()
         self.updatedAt = Date()
+    }
+    
+    public var feedbackTypeEnum: FeedbackType? {
+        return FeedbackType(rawValue: feedbackType)
     }
     
     public var statusEnum: FeedbackStatus? {

@@ -157,7 +157,7 @@ public actor MessageCacheManager: MessageCacheProtocol {
     
     public func sendFeedback(
         to: String,
-        feedbackType: String,
+        feedbackType: FeedbackType,
         subject: String,
         content: String,
         relatedTaskId: String?,
@@ -192,7 +192,7 @@ public actor MessageCacheManager: MessageCacheProtocol {
     public func sendHeartbeat(
         to: String,
         aiRole: String,
-        status: String,
+        status: HeartbeatStatus,
         currentTask: String?,
         metadata: [String: String]?
     ) async throws -> UUID {
