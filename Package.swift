@@ -18,6 +18,10 @@ let package = Package(
         .executable(
             name: "gitbrain-migrate",
             targets: ["GitBrainMigrationCLI"]
+        ),
+        .executable(
+            name: "creator-daemon",
+            targets: ["CreatorDaemon"]
         )
     ],
     dependencies: [
@@ -43,6 +47,11 @@ let package = Package(
             name: "GitBrainMigrationCLI",
             dependencies: ["GitBrainSwift", .product(name: "ArgumentParser", package: "swift-argument-parser")],
             path: "Sources/GitBrainMigrationCLI"
+        ),
+        .executableTarget(
+            name: "CreatorDaemon",
+            dependencies: ["GitBrainSwift"],
+            path: "Sources/CreatorDaemon"
         ),
         .testTarget(
             name: "GitBrainSwiftTests",
