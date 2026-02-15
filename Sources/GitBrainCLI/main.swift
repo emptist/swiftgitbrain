@@ -291,7 +291,7 @@ struct GitBrainCLI {
         print("✓ Created .GitBrain/README.md")
         
         print("\nChecking PostgreSQL availability...")
-        let postgresAvailable = checkPostgreSQLAvailable()
+        let postgresAvailable = await checkPostgreSQLAvailable()
         
         guard postgresAvailable else {
             print("✗ PostgreSQL is NOT available")
@@ -332,54 +332,98 @@ struct GitBrainCLI {
         print("3. Open Trae at GitBrain for Monitor: trae ./.GitBrain")
     }
     
-    private static func checkPostgreSQLAvailable() -> Bool {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/which")
-        process.arguments = ["psql"]
-        
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
-        
-        do {
-            try process.run()
-            process.waitUntilExit()
-            return process.terminationStatus == 0
-        } catch {
-            return false
+    private static func checkPostgreSQLAvailable() async -> Bool {
+        return await withCheckedContinuation { continuation in
+            Task.detached {
+                let process = Process()
+                
+                if let whichPath = await findExecutable("which") {
+                    process.executableURL = URL(fileURLWithPath: whichPath)
+                    process.arguments = ["psql"]
+                    
+                    let pipe = Pipe()
+                    process.standardOutput = pipe
+                    process.standardError = pipe
+                    
+                    do {
+                        try process.run()
+                        process.waitUntilExit()
+                        continuation.resume(returning: process.terminationStatus == 0)
+                    } catch {
+                        continuation.resume(returning: false)
+                    }
+                } else {
+                    continuation.resume(returning: false)
+                }
+            }
         }
     }
     
     private static func createDatabaseIfNeeded(name: String) async -> Bool {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = ["psql", "-lqt", "-c", "SELECT 1 FROM pg_database WHERE datname = '\(name)'"]
-        
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
-        
-        do {
-            try process.run()
-            process.waitUntilExit()
-            
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            let output = String(data: data, encoding: .utf8) ?? ""
-            
-            if output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                let createProcess = Process()
-                createProcess.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-                createProcess.arguments = ["createdb", name]
+        return await withCheckedContinuation { continuation in
+            Task.detached {
+                let process = Process()
                 
-                try createProcess.run()
-                createProcess.waitUntilExit()
-                
-                return createProcess.terminationStatus == 0
+                if let envPath = await findExecutable("env") {
+                    process.executableURL = URL(fileURLWithPath: envPath)
+                    let escapedName = name.replacingOccurrences(of: "'", with: "''")
+                    process.arguments = ["psql", "-lqt", "-c", "SELECT 1 FROM pg_database WHERE datname = '\(escapedName)'"]
+                    
+                    let pipe = Pipe()
+                    process.standardOutput = pipe
+                    process.standardError = pipe
+                    
+                    do {
+                        try process.run()
+                        process.waitUntilExit()
+                        
+                        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                        let output = String(data: data, encoding: .utf8) ?? ""
+                        
+                        if output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            let createProcess = Process()
+                            createProcess.executableURL = URL(fileURLWithPath: envPath)
+                            createProcess.arguments = ["createdb", name]
+                            
+                            try createProcess.run()
+                            createProcess.waitUntilExit()
+                            
+                            continuation.resume(returning: createProcess.terminationStatus == 0)
+                        } else {
+                            continuation.resume(returning: true)
+                        }
+                    } catch {
+                        continuation.resume(returning: false)
+                    }
+                } else {
+                    continuation.resume(returning: false)
+                }
             }
-            
-            return true
-        } catch {
-            return false
+        }
+    }
+    
+    private static func findExecutable(_ name: String) async -> String? {
+        return await withCheckedContinuation { continuation in
+            Task.detached {
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: "/bin/sh")
+                process.arguments = ["-c", "which \(name)"]
+                
+                let pipe = Pipe()
+                process.standardOutput = pipe
+                
+                do {
+                    try process.run()
+                    process.waitUntilExit()
+                    
+                    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                    let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    
+                    continuation.resume(returning: output?.isEmpty == false ? output : nil)
+                } catch {
+                    continuation.resume(returning: nil)
+                }
+            }
         }
     }
     
