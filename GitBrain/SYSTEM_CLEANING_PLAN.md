@@ -2,6 +2,35 @@
 
 **Date:** 2026-02-15
 **Purpose:** Document critical design requirements and identify issues for system cleanup
+**Last Commit:** 2026-02-15 - "refactor: Fix critical design issues and clean up codebase"
+
+---
+
+## Current Status (2026-02-15 22:00)
+
+### Just Committed (103 changes):
+- ✅ Removed MessageType enum (redundant with 6 message structs)
+- ✅ Removed CreatorDaemon (use CLI `gitbrain daemon-start` instead)
+- ✅ Removed AIDaemon.sendMessage() generic function
+- ✅ Added FeedbackType and HeartbeatStatus enums
+- ✅ Updated message models to use strict enums
+- ✅ Implemented daemon uniqueness (file-based locking)
+- ✅ Fixed BrainStateID integration
+- ✅ Cleaned up legacy memory files (60+ JSON files deleted)
+- ✅ Cleaned up outdated documentation files
+
+### Remaining Tasks:
+1. ❌ Build and test the changes
+2. ❌ Clean up remaining documentation files
+3. ❌ Add daemon feature: hourly workflow tips reminder
+4. ❌ Add daemon feature: detect new messages and remind AI to read
+
+### User Feedback:
+> "the GBDaemon or AIDaemon should send you message with this tips for correct workflow once an hour, and will detect new messages and remind you to read"
+
+This is a NEW FEATURE REQUEST for the daemon:
+- Send workflow tips to AI every hour
+- Detect new messages and remind AI to read them
 
 ---
 
