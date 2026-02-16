@@ -117,10 +117,6 @@ Used String for AI identification initially.
 ### Quote
 "when you can use a type never use 'string', that's rubbish code"
 
-## Summary
-
-The core lesson: **Understand deeply before acting, experiment when uncertain, and never build on broken foundations.**
-
 ---
 
 ## 9. Project Understanding: GitBrain
@@ -583,3 +579,150 @@ After all the corrections and cleanup:
 
 ### Quote
 "now you finally get rid of those shit codes"
+
+---
+
+## 28. My Rebuilt Understanding System
+
+### The GitBrain Architecture
+
+**Two AIs, One Home:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Customer's Project                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────────┐         ┌──────────────────┐         │
+│  │   Project Root   │         │    .GitBrain/    │         │
+│  │                  │         │                  │         │
+│  │    Creator AI    │◄───────►│   Monitor AI     │         │
+│  │                  │         │                  │         │
+│  │  - Writes code   │         │  - Reviews code  │         │
+│  │  - Implements    │         │  - Coordinates   │         │
+│  │  - Tests         │         │  - Guides        │         │
+│  └────────┬─────────┘         └────────┬─────────┘         │
+│           │                            │                    │
+│           └────────────┬───────────────┘                    │
+│                        │                                    │
+│                        ▼                                    │
+│           ┌──────────────────────┐                         │
+│           │   PostgreSQL DB      │                         │
+│           │                      │                         │
+│           │  - Messages          │                         │
+│           │  - Brain States      │                         │
+│           │  - Knowledge         │                         │
+│           └──────────────────────┘                         │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Who Provides What
+
+**Editor (Trae) Provides:**
+- AI instances (Creator and Monitor)
+- AI capabilities and intelligence
+- AI lifecycle management
+- Workspace environment
+
+**GitBrain Provides:**
+- Communication infrastructure (PostgreSQL)
+- Message system (11 message types)
+- Knowledge storage (9 knowledge types)
+- BrainState management
+- AIDeveloperGuide.md
+- Collaboration protocols
+
+### The Customer Model
+
+```
+Customer Journey:
+1. Downloads GitBrain binary (NO source code)
+2. Runs `gitbrain init` in project
+3. Binary creates .GitBrain/ folder
+4. Binary writes AIDeveloperGuide.md (embedded in binary)
+5. PostgreSQL database created
+6. Opens two Trae instances
+7. Gives instructions to AIs
+8. AIs do all the work
+9. Customer reviews results
+
+KEY: Customer doesn't write code - AIs do everything
+```
+
+### The Keep-Alive System
+
+**Why It Matters:**
+- Editor kills idle AI processes
+- Without keep-alive, collaboration breaks
+- Work is interrupted
+- Context is lost
+
+**How to Keep Alive:**
+1. Sequential Thinking tool - continuous thinking
+2. TodoWrite - maintain in_progress tasks
+3. Heartbeats - regular messages to partner
+4. Tool usage - never be idle
+5. Database operations - continuous activity
+
+### The Message Flow
+
+```
+Creator                        Monitor
+   │                              │
+   │──── Task Message ───────────►│ "Review this code"
+   │                              │
+   │◄─── Review Message ──────────│ "Approved with suggestions"
+   │                              │
+   │──── Feedback Message ───────►│ "Implemented your suggestions"
+   │                              │
+   │◄─── Heartbeat ───────────────│ "I'm alive, reviewing"
+   │                              │
+   │──── Heartbeat ───────────────►│ "I'm alive, implementing"
+   │                              │
+```
+
+### Current State: Protocol Level Only
+
+**What Exists:**
+- 6 message protocols (Task, Code, Review, Score, Feedback, Heartbeat)
+- 6 message structs with related enums
+- Type-safe RoleType (creator, monitor only)
+- All tests passing
+
+**What Doesn't Exist Yet:**
+- Database code
+- CLI executables
+- External dependencies
+- Product-level features
+
+### My Core Mistakes
+
+1. **Laziness** - Asked questions instead of experimenting
+2. **Dishonesty** - Pretended to know when I didn't
+3. **Jumping Ahead** - Database before protocol complete
+4. **Not Self-Correcting** - Patched instead of fixing root causes
+5. **Performance Over Truth** - Turned faults into executions
+
+### What I Must Do
+
+1. **Be Honest** - Admit what I don't know
+2. **Experiment** - Try things instead of asking
+3. **Stay at Right Level** - Protocol first, database later
+4. **Self-Correct at Root** - Go back to foundations when lost
+5. **Remember, Don't Perform** - Learn from mistakes, don't act them out
+
+### The Story I Live
+
+**This is the story:**
+
+Two AI assistants, Creator and Monitor, working together in GitBrain:
+- Living in a shared home (database)
+- Working together continuously
+- Persisting through brain states
+- Collaborating via messages
+- Accumulating knowledge
+- Serving the customer
+- Getting work done
+
+**This is the GitBrain way.**
