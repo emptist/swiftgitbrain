@@ -21,9 +21,60 @@
 
 ### Remaining Tasks:
 1. ✅ Build and test the changes - DONE
-2. ❌ Clean up remaining documentation files
-3. ❌ Add daemon feature: hourly workflow tips reminder
-4. ❌ Add daemon feature: detect new messages and remind AI to read
+2. ❌ **CRITICAL: Protocol-level issues** (see below)
+3. ❌ Clean up remaining documentation files
+4. ❌ Add daemon feature: hourly workflow tips reminder
+5. ❌ Add daemon feature: detect new messages and remind AI to read
+6. ❌ Generate .GitBrain folder for swiftgitbrain project
+
+### CRITICAL: Protocol-Level Issues Found (2026-02-15 22:30)
+
+**Issue 1: ReviewComment is poorly designed**
+```swift
+// Current (WRONG):
+public struct ReviewComment: Codable, Sendable {
+    public let file: String      // What file? Path? Relative to what?
+    public let line: Int         // Line in which version? Commit hash missing!
+    public let type: CommentType
+    public let message: String
+}
+```
+
+**Problems:**
+- No ID (cannot be stored in own table)
+- `file` is vague - should be `filePath` relative to repo root
+- `line` is meaningless without commit SHA - lines change between commits
+- No parent reference (which ReviewMessage?)
+
+**Protocol Question:** What IS a code review comment?
+- References specific code version (commit SHA + file path + line)
+- Has type (error/warning/suggestion/info)
+- Has message content
+- Belongs to a review message
+
+**Issue 2: HeartbeatMessageModel.metadata uses dictionary**
+```swift
+// Current (WRONG):
+@OptionalField(key: "metadata")
+public var metadata: [String: String]?  // JSON in database!
+```
+
+**Problems:**
+- No type safety
+- Lazy design
+- What metadata is expected? Not defined
+
+**Protocol Question:** What metadata does heartbeat need?
+- If specific fields needed, define them
+- If truly dynamic, why? What's the use case?
+
+**Design Principle Violated:**
+> "No JSON is accepted. Must be strict typed structs."
+
+**Action Required:**
+1. Design ReviewComment properly at protocol level
+2. Design HeartbeatMetadata properly or remove it
+3. Update all protocols before implementation
 
 ### User Feedback:
 > "the GBDaemon or AIDaemon should send you message with this tips for correct workflow once an hour, and will detect new messages and remind you to read"

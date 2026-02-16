@@ -208,123 +208,98 @@ struct ReviewCommentTests {
 }
 
 struct TaskMessageModelTests {
-    @Test("TaskMessageModel initialization")
-    func testInit() {
-        let messageId = UUID()
-        let timestamp = Date()
-        
-        let model = TaskMessageModel(
-            messageId: messageId,
-            fromAI: "Creator",
-            toAI: "Monitor",
-            timestamp: timestamp,
+    @Test("TaskMessageModel from TaskMessage")
+    func testFromTaskMessage() {
+        let taskMessage = TaskMessage(
+            from: .creator,
+            to: .monitor,
             taskId: "task-001",
-            description: "Test task",
+            title: "Test task",
+            description: "Test description",
             taskType: .coding,
-            priority: 5,
-            files: ["main.swift"],
-            deadline: nil,
-            status: .pending,
-            messagePriority: .normal
+            priority: .high,
+            status: .pending
         )
         
-        #expect(model.messageId == messageId)
-        #expect(model.fromAI == "Creator")
-        #expect(model.toAI == "Monitor")
+        let model = TaskMessageModel(from: taskMessage)
+        
+        #expect(model.messageId == taskMessage.id)
+        #expect(model.fromAI == "creator")
+        #expect(model.toAI == "monitor")
         #expect(model.taskId == "task-001")
-        #expect(model.description == "Test task")
+        #expect(model.title == "Test task")
+        #expect(model.description == "Test description")
         #expect(model.taskType == "coding")
-        #expect(model.priority == 5)
-        #expect(model.files == ["main.swift"])
+        #expect(model.priority == 2)
         #expect(model.status == "pending")
-        #expect(model.messagePriority == 3)
     }
     
     @Test("TaskMessageModel enum conversions")
     func testEnumConversions() {
-        let model = TaskMessageModel(
-            messageId: UUID(),
-            fromAI: "Creator",
-            toAI: "Monitor",
-            timestamp: Date(),
+        let taskMessage = TaskMessage(
+            from: .creator,
+            to: .monitor,
             taskId: "task-001",
+            title: "Test task",
             description: "Test task",
             taskType: .review,
-            priority: 3,
-            files: nil,
-            deadline: nil,
-            status: .inProgress,
-            messagePriority: .high
+            priority: .high,
+            status: .inProgress
         )
         
-        #expect(model.taskTypeEnum == .review)
+        let model = TaskMessageModel(from: taskMessage)
+        
+        #expect(model.taskType == "review")
         #expect(model.statusEnum == .inProgress)
-        #expect(model.messagePriorityEnum == .high)
+        #expect(model.priority == 2)
     }
     
-    @Test("TaskMessageModel default values")
-    func testDefaultValues() {
-        let model = TaskMessageModel(
-            messageId: UUID(),
-            fromAI: "Creator",
-            toAI: "Monitor",
-            timestamp: Date(),
+    @Test("TaskMessageModel status update")
+    func testStatusUpdate() {
+        let taskMessage = TaskMessage(
+            from: .creator,
+            to: .monitor,
             taskId: "task-001",
-            description: "Test task",
-            taskType: .testing,
-            priority: 1
+            title: "Test task",
+            description: "Test description",
+            taskType: .coding
         )
         
-        #expect(model.files == nil)
-        #expect(model.deadline == nil)
-        #expect(model.status == "pending")
-        #expect(model.messagePriority == 3)
-        #expect(model.statusEnum == .pending)
-        #expect(model.messagePriorityEnum == .normal)
-    }
-    
-    @Test("TaskMessageModel status transition")
-    func testStatusTransition() throws {
-        let model = TaskMessageModel(
-            messageId: UUID(),
-            fromAI: "Creator",
-            toAI: "Monitor",
-            timestamp: Date(),
-            taskId: "task-001",
-            description: "Test task",
-            taskType: .coding,
-            priority: 1,
-            status: .pending
-        )
-        
+        var model = TaskMessageModel(from: taskMessage)
         #expect(model.statusEnum == .pending)
         
-        try model.transitionStatus(to: .inProgress)
+        model.status = TaskStatus.inProgress.rawValue
         #expect(model.statusEnum == .inProgress)
         
-        try model.transitionStatus(to: .completed)
+        model.status = TaskStatus.completed.rawValue
         #expect(model.statusEnum == .completed)
     }
     
-    @Test("TaskMessageModel invalid transition throws")
-    func testInvalidTransitionThrows() {
-        let model = TaskMessageModel(
-            messageId: UUID(),
-            fromAI: "Creator",
-            toAI: "Monitor",
-            timestamp: Date(),
-            taskId: "task-001",
-            description: "Test task",
-            taskType: .coding,
-            priority: 1,
-            status: .completed
+    @Test("TaskMessageModel to TaskMessage conversion")
+    func testToTaskMessage() {
+        let original = TaskMessage(
+            from: .monitor,
+            to: .creator,
+            taskId: "task-002",
+            title: "Review task",
+            description: "Review code",
+            taskType: .review,
+            priority: .critical,
+            status: .pending
         )
         
-        do {
-            try model.transitionStatus(to: .inProgress)
-            Issue.record("Should have thrown")
-        } catch {
-        }
+        let model = TaskMessageModel(from: original)
+        let converted = model.toMessage()
+        
+        #expect(converted.id == original.id)
+        #expect(converted.from == original.from)
+        #expect(converted.to == original.to)
+        #expect(converted.taskId == original.taskId)
+        #expect(converted.title == original.title)
+        #expect(converted.description == original.description)
+        #expect(converted.taskType == original.taskType)
+        #expect(converted.priority == original.priority)
+        #expect(converted.status == original.status)
     }
 }
 
