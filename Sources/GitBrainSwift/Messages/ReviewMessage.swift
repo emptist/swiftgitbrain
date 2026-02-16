@@ -68,3 +68,46 @@ public enum ReviewStatus: String, Codable, Sendable, CaseIterable {
         }
     }
 }
+
+public struct ReviewMessage: ReviewMessageProtocol {
+    public let id: UUID
+    public let from: RoleType
+    public let to: RoleType
+    public let createdAt: Date
+    public let priority: MessagePriority
+    public let taskId: String
+    public let approved: Bool
+    public let reviewer: String
+    public let comments: [ReviewComment]?
+    public let feedback: String
+    public let filesReviewed: [GitFileReference]?
+    public let status: ReviewStatus
+    
+    public init(
+        id: UUID = UUID(),
+        from: RoleType,
+        to: RoleType,
+        createdAt: Date = Date(),
+        priority: MessagePriority = .normal,
+        taskId: String,
+        approved: Bool,
+        reviewer: String,
+        comments: [ReviewComment]? = nil,
+        feedback: String = "",
+        filesReviewed: [GitFileReference]? = nil,
+        status: ReviewStatus = .pending
+    ) {
+        self.id = id
+        self.from = from
+        self.to = to
+        self.createdAt = createdAt
+        self.priority = priority
+        self.taskId = taskId
+        self.approved = approved
+        self.reviewer = reviewer
+        self.comments = comments
+        self.feedback = feedback
+        self.filesReviewed = filesReviewed
+        self.status = status
+    }
+}

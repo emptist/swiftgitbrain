@@ -58,3 +58,46 @@ public enum CodeStatus: String, Codable, Sendable, CaseIterable {
         }
     }
 }
+
+public struct CodeMessage: CodeMessageProtocol {
+    public let id: UUID
+    public let from: RoleType
+    public let to: RoleType
+    public let createdAt: Date
+    public let priority: MessagePriority
+    public let codeId: String
+    public let title: String
+    public let description: String
+    public let files: [GitFileReference]
+    public let branch: String?
+    public let commitSha: String?
+    public let status: CodeStatus
+    
+    public init(
+        id: UUID = UUID(),
+        from: RoleType,
+        to: RoleType,
+        createdAt: Date = Date(),
+        priority: MessagePriority = .normal,
+        codeId: String,
+        title: String,
+        description: String,
+        files: [GitFileReference],
+        branch: String? = nil,
+        commitSha: String? = nil,
+        status: CodeStatus = .pending
+    ) {
+        self.id = id
+        self.from = from
+        self.to = to
+        self.createdAt = createdAt
+        self.priority = priority
+        self.codeId = codeId
+        self.title = title
+        self.description = description
+        self.files = files
+        self.branch = branch
+        self.commitSha = commitSha
+        self.status = status
+    }
+}

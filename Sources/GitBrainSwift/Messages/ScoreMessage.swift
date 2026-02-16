@@ -53,3 +53,46 @@ public enum ScoreStatus: String, Codable, Sendable, CaseIterable {
         }
     }
 }
+
+public struct ScoreMessage: ScoreMessageProtocol {
+    public let id: UUID
+    public let from: RoleType
+    public let to: RoleType
+    public let createdAt: Date
+    public let priority: MessagePriority
+    public let taskId: String
+    public let requestedScore: Int
+    public let justification: String
+    public let awardedScore: Int?
+    public let awardReason: String?
+    public let rejectReason: String?
+    public let status: ScoreStatus
+    
+    public init(
+        id: UUID = UUID(),
+        from: RoleType,
+        to: RoleType,
+        createdAt: Date = Date(),
+        priority: MessagePriority = .normal,
+        taskId: String,
+        requestedScore: Int,
+        justification: String,
+        awardedScore: Int? = nil,
+        awardReason: String? = nil,
+        rejectReason: String? = nil,
+        status: ScoreStatus = .pending
+    ) {
+        self.id = id
+        self.from = from
+        self.to = to
+        self.createdAt = createdAt
+        self.priority = priority
+        self.taskId = taskId
+        self.requestedScore = requestedScore
+        self.justification = justification
+        self.awardedScore = awardedScore
+        self.awardReason = awardReason
+        self.rejectReason = rejectReason
+        self.status = status
+    }
+}
