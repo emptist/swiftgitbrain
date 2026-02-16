@@ -10,50 +10,19 @@ let package = Package(
         .library(
             name: "GitBrainSwift",
             targets: ["GitBrainSwift"]
-        ),
-        .executable(
-            name: "gitbrain",
-            targets: ["GitBrainCLI"]
-        ),
-        .executable(
-            name: "gitbrain-migrate",
-            targets: ["GitBrainMigrationCLI"]
         )
     ],
-    dependencies: [
-        .package(url: "git@github.com:vapor/fluent.git", from: "4.0.0"),
-        .package(url: "git@github.com:vapor/fluent-postgres-driver.git", from: "2.0.0"),
-        .package(url: "git@github.com:apple/swift-argument-parser.git", from: "1.0.0")
-    ],
+    dependencies: [],
     targets: [
         .target(
             name: "GitBrainSwift",
-            dependencies: [
-                .product(name: "Fluent", package: "fluent"),
-                .product(name: "FluentPostgresDriver", package: "fluent-postgres-driver")
-            ],
+            dependencies: [],
             path: "Sources/GitBrainSwift"
-        ),
-        .executableTarget(
-            name: "GitBrainCLI",
-            dependencies: ["GitBrainSwift"],
-            path: "Sources/GitBrainCLI"
-        ),
-        .executableTarget(
-            name: "GitBrainMigrationCLI",
-            dependencies: ["GitBrainSwift", .product(name: "ArgumentParser", package: "swift-argument-parser")],
-            path: "Sources/GitBrainMigrationCLI"
         ),
         .testTarget(
             name: "GitBrainSwiftTests",
             dependencies: ["GitBrainSwift"],
             path: "Tests/GitBrainSwiftTests"
-        ),
-        .executableTarget(
-            name: "GitBrainSwiftBenchmarks",
-            dependencies: ["GitBrainSwift"],
-            path: "Benchmarks",
-            exclude: ["BASELINES.md"]
         )
     ]
 )
