@@ -2,7 +2,7 @@ import Foundation
 
 public struct ReviewComment: Codable, Sendable, Equatable {
     public let id: UUID
-    public let file: GitFileReference
+    public let file: FileReference
     public let startLine: Int
     public let endLine: Int
     public let type: CommentType
@@ -16,7 +16,7 @@ public struct ReviewComment: Codable, Sendable, Equatable {
     
     public init(
         id: UUID = UUID(),
-        file: GitFileReference,
+        file: FileReference,
         startLine: Int,
         endLine: Int,
         type: CommentType,

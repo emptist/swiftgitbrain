@@ -75,12 +75,12 @@ public struct ReviewMessage: ReviewMessageProtocol {
     public let to: RoleType
     public let createdAt: Date
     public let priority: MessagePriority
-    public let taskId: String
+    public let taskId: WorkItemID
     public let approved: Bool
     public let reviewer: String
     public let comments: [ReviewComment]?
     public let feedback: String
-    public let filesReviewed: [GitFileReference]?
+    public let filesReviewed: [FileReference]?
     public let status: ReviewStatus
     
     public init(
@@ -89,12 +89,12 @@ public struct ReviewMessage: ReviewMessageProtocol {
         to: RoleType,
         createdAt: Date = Date(),
         priority: MessagePriority = .normal,
-        taskId: String,
+        taskId: WorkItemID,
         approved: Bool,
         reviewer: String,
         comments: [ReviewComment]? = nil,
         feedback: String = "",
-        filesReviewed: [GitFileReference]? = nil,
+        filesReviewed: [FileReference]? = nil,
         status: ReviewStatus = .pending
     ) {
         self.id = id

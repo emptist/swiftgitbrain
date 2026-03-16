@@ -65,10 +65,10 @@ public struct CodeMessage: CodeMessageProtocol {
     public let to: RoleType
     public let createdAt: Date
     public let priority: MessagePriority
-    public let codeId: String
+    public let codeId: WorkItemID
     public let title: String
     public let description: String
-    public let files: [GitFileReference]
+    public let files: [FileReference]
     public let branch: String?
     public let commitSha: String?
     public let status: CodeStatus
@@ -79,10 +79,10 @@ public struct CodeMessage: CodeMessageProtocol {
         to: RoleType,
         createdAt: Date = Date(),
         priority: MessagePriority = .normal,
-        codeId: String,
+        codeId: WorkItemID,
         title: String,
         description: String,
-        files: [GitFileReference],
+        files: [FileReference],
         branch: String? = nil,
         commitSha: String? = nil,
         status: CodeStatus = .pending

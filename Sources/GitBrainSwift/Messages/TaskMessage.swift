@@ -76,12 +76,12 @@ public struct TaskMessage: TaskMessageProtocol {
     public let to: RoleType
     public let createdAt: Date
     public let priority: MessagePriority
-    public let taskId: String
+    public let taskId: WorkItemID
     public let title: String
     public let description: String
-    public let taskType: TaskType
+    public let workType: WorkType
     public let status: TaskStatus
-    public let files: [GitFileReference]?
+    public let files: [FileReference]?
     public let deadline: Date?
     
     public init(
@@ -90,12 +90,12 @@ public struct TaskMessage: TaskMessageProtocol {
         to: RoleType,
         createdAt: Date = Date(),
         priority: MessagePriority = .normal,
-        taskId: String,
+        taskId: WorkItemID,
         title: String,
         description: String,
-        taskType: TaskType,
+        workType: WorkType,
         status: TaskStatus = .pending,
-        files: [GitFileReference]? = nil,
+        files: [FileReference]? = nil,
         deadline: Date? = nil
     ) {
         self.id = id
@@ -106,7 +106,7 @@ public struct TaskMessage: TaskMessageProtocol {
         self.taskId = taskId
         self.title = title
         self.description = description
-        self.taskType = taskType
+        self.workType = workType
         self.status = status
         self.files = files
         self.deadline = deadline

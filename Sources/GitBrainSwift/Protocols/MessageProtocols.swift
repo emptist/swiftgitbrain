@@ -23,12 +23,12 @@ public protocol MessageProtocol: Sendable, Codable {
 /// - taskId: Self-generated, identifies the task
 /// - No external references (root entity)
 public protocol TaskMessageProtocol: MessageProtocol {
-    var taskId: String { get }
+    var taskId: WorkItemID { get }
     var title: String { get }
     var description: String { get }
-    var taskType: TaskType { get }
+    var workType: WorkType { get }
     var status: TaskStatus { get }
-    var files: [GitFileReference]? { get }
+    var files: [FileReference]? { get }
     var deadline: Date? { get }
 }
 
@@ -40,10 +40,10 @@ public protocol TaskMessageProtocol: MessageProtocol {
 /// - codeId: Self-generated, identifies the code submission
 /// - No external references (self-contained)
 public protocol CodeMessageProtocol: MessageProtocol {
-    var codeId: String { get }
+    var codeId: WorkItemID { get }
     var title: String { get }
     var description: String { get }
-    var files: [GitFileReference] { get }
+    var files: [FileReference] { get }
     var branch: String? { get }
     var commitSha: String? { get }
     var status: CodeStatus { get }
@@ -57,12 +57,12 @@ public protocol CodeMessageProtocol: MessageProtocol {
 /// - taskId: References the task being reviewed
 /// - No reviewId (removed - redundant with taskId)
 public protocol ReviewMessageProtocol: MessageProtocol {
-    var taskId: String { get }
+    var taskId: WorkItemID { get }
     var approved: Bool { get }
     var reviewer: String { get }
     var comments: [ReviewComment]? { get }
     var feedback: String { get }
-    var filesReviewed: [GitFileReference]? { get }
+    var filesReviewed: [FileReference]? { get }
     var status: ReviewStatus { get }
 }
 
@@ -74,7 +74,7 @@ public protocol ReviewMessageProtocol: MessageProtocol {
 /// - taskId: References the task being scored
 /// - No scoreId (removed - redundant with taskId)
 public protocol ScoreMessageProtocol: MessageProtocol {
-    var taskId: String { get }
+    var taskId: WorkItemID { get }
     var requestedScore: Int { get }
     var justification: String { get }
     var awardedScore: Int? { get }

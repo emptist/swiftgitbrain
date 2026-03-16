@@ -10,15 +10,15 @@ struct MessageProtocolTests {
         let message = TaskMessage(
             from: .monitor,
             to: .creator,
-            taskId: "task-001",
+            taskId: WorkItemID("task-001"),
             title: "Implement feature",
             description: "Add user authentication",
-            taskType: .coding
+            workType: .coding
         )
         
         #expect(message.from == .monitor)
         #expect(message.to == .creator)
-        #expect(message.taskId == "task-001")
+        #expect(message.taskId == WorkItemID("task-001"))
         #expect(message.title == "Implement feature")
         #expect(message.status == .pending)
         #expect(message.priority == .normal)
@@ -29,7 +29,7 @@ struct MessageProtocolTests {
     @Test("TaskMessage with files and deadline")
     func testTaskMessageWithFiles() async throws {
         let files = [
-            GitFileReference(path: "Sources/Test.swift", commitHash: "abc123", branch: "main")
+            FileReference(path: "Sources/Test.swift", version: "abc123", metadata: ["branch": "main"])
         ]
         let deadline = Date().addingTimeInterval(3600)
         
@@ -37,10 +37,10 @@ struct MessageProtocolTests {
             from: .monitor,
             to: .creator,
             priority: .high,
-            taskId: "task-002",
+            taskId: WorkItemID("task-002"),
             title: "Fix bug",
             description: "Fix the critical bug",
-            taskType: .coding,
+            workType: .coding,
             status: .pending,
             files: files,
             deadline: deadline
@@ -55,13 +55,13 @@ struct MessageProtocolTests {
     @Test("CodeMessage creates with correct fields")
     func testCodeMessageCreation() async throws {
         let files = [
-            GitFileReference(path: "Sources/Auth.swift", commitHash: "def456")
+            FileReference(path: "Sources/Auth.swift", version: "def456")
         ]
         
         let message = CodeMessage(
             from: .creator,
             to: .monitor,
-            codeId: "code-001",
+            codeId: WorkItemID("code-001"),
             title: "Feature implementation",
             description: "Added authentication",
             files: files,
@@ -71,7 +71,7 @@ struct MessageProtocolTests {
         
         #expect(message.from == .creator)
         #expect(message.to == .monitor)
-        #expect(message.codeId == "code-001")
+        #expect(message.codeId == WorkItemID("code-001"))
         #expect(message.files.count == 1)
         #expect(message.branch == "feature/auth")
         #expect(message.commitSha == "def456")
@@ -83,7 +83,7 @@ struct MessageProtocolTests {
         let message = ReviewMessage(
             from: .monitor,
             to: .creator,
-            taskId: "task-001",
+            taskId: WorkItemID("task-001"),
             approved: true,
             reviewer: "Monitor-AI",
             feedback: "Great work!"
@@ -91,7 +91,7 @@ struct MessageProtocolTests {
         
         #expect(message.from == .monitor)
         #expect(message.to == .creator)
-        #expect(message.taskId == "task-001")
+        #expect(message.taskId == WorkItemID("task-001"))
         #expect(message.approved == true)
         #expect(message.reviewer == "Monitor-AI")
         #expect(message.feedback == "Great work!")
@@ -101,7 +101,7 @@ struct MessageProtocolTests {
     
     @Test("ReviewMessage with comments")
     func testReviewMessageWithComments() async throws {
-        let file = GitFileReference(path: "Sources/Test.swift", commitHash: "abc123")
+        let file = FileReference(path: "Sources/Test.swift", version: "abc123")
         let comments = [
             ReviewComment(
                 file: file,
@@ -116,7 +116,7 @@ struct MessageProtocolTests {
         let message = ReviewMessage(
             from: .monitor,
             to: .creator,
-            taskId: "task-001",
+            taskId: WorkItemID("task-001"),
             approved: false,
             reviewer: "Monitor-AI",
             comments: comments,
@@ -134,14 +134,14 @@ struct MessageProtocolTests {
         let message = ScoreMessage(
             from: .creator,
             to: .monitor,
-            taskId: "task-001",
+            taskId: WorkItemID("task-001"),
             requestedScore: 10,
             justification: "Completed all requirements"
         )
         
         #expect(message.from == .creator)
         #expect(message.to == .monitor)
-        #expect(message.taskId == "task-001")
+        #expect(message.taskId == WorkItemID("task-001"))
         #expect(message.requestedScore == 10)
         #expect(message.awardedScore == nil)
         #expect(message.awardReason == nil)
@@ -154,7 +154,7 @@ struct MessageProtocolTests {
         let message = ScoreMessage(
             from: .monitor,
             to: .creator,
-            taskId: "task-001",
+            taskId: WorkItemID("task-001"),
             requestedScore: 10,
             justification: "Completed all requirements",
             awardedScore: 8,
@@ -224,10 +224,10 @@ struct MessageProtocolTests {
         let message = TaskMessage(
             from: .monitor,
             to: .creator,
-            taskId: "task-002",
+            taskId: WorkItemID("task-002"),
             title: "Test",
             description: "Test",
-            taskType: .coding
+            workType: .coding
         )
         
         #expect(message.from == .monitor)
@@ -244,10 +244,10 @@ struct MessageProtocolTests {
         let original = TaskMessage(
             from: .monitor,
             to: .creator,
-            taskId: "task-003",
+            taskId: WorkItemID("task-003"),
             title: "Test",
             description: "Test description",
-            taskType: .coding
+            workType: .coding
         )
         
         let data = try JSONEncoder().encode(original)
@@ -264,10 +264,10 @@ struct MessageProtocolTests {
         let message = TaskMessage(
             from: .monitor,
             to: .creator,
-            taskId: "task-004",
+            taskId: WorkItemID("task-004"),
             title: "Test",
             description: "Test",
-            taskType: .coding
+            workType: .coding
         )
         
         Task {
@@ -275,24 +275,24 @@ struct MessageProtocolTests {
         }
     }
     
-    @Test("GitFileReference works correctly")
-    func testGitFileReference() async throws {
-        let ref1 = GitFileReference(path: "Test.swift", commitHash: "abc", branch: "main")
-        let ref2 = GitFileReference(path: "Test.swift", commitHash: "abc", branch: "main")
-        let ref3 = GitFileReference(path: "Other.swift")
+    @Test("FileReference works correctly")
+    func testFileReference() async throws {
+        let ref1 = FileReference(path: "Test.swift", version: "abc", metadata: ["branch": "main"])
+        let ref2 = FileReference(path: "Test.swift", version: "abc", metadata: ["branch": "main"])
+        let ref3 = FileReference(path: "Other.swift")
         
         #expect(ref1 == ref2)
         #expect(ref1 != ref3)
         #expect(ref1.path == "Test.swift")
-        #expect(ref1.commitHash == "abc")
-        #expect(ref1.branch == "main")
-        #expect(ref3.commitHash == nil)
-        #expect(ref3.branch == nil)
+        #expect(ref1.version == "abc")
+        #expect(ref1.metadata?["branch"] == "main")
+        #expect(ref3.version == nil)
+        #expect(ref3.metadata == nil)
     }
     
     @Test("ReviewComment works correctly")
     func testReviewComment() async throws {
-        let file = GitFileReference(path: "Test.swift")
+        let file = FileReference(path: "Test.swift")
         let comment = ReviewComment(
             file: file,
             startLine: 10,
@@ -318,5 +318,82 @@ struct MessageProtocolTests {
         #expect(allSeverities.contains(.major))
         #expect(allSeverities.contains(.minor))
         #expect(allSeverities.contains(.nitpick))
+    }
+
+    @Test("MessageID creates with correct fields")
+    func testMessageIDCreation() async throws {
+        let id1 = MessageID("msg-001")
+        let id2 = MessageID("msg-002")
+        
+        #expect(id1.rawValue == "msg-001")
+        #expect(id2.rawValue == "msg-002")
+        #expect(id1 != id2)
+    }
+
+    @Test("MessageID equality works correctly")
+    func testMessageIDEquality() async throws {
+        let id1 = MessageID("msg-001")
+        let id2 = MessageID("msg-001")
+        let id3 = MessageID("msg-002")
+        
+        #expect(id1 == id2)
+        #expect(id1 != id3)
+    }
+
+    @Test("WorkItemID creates with correct fields")
+    func testWorkItemIDCreation() async throws {
+        let id1 = WorkItemID("task-001")
+        let id2 = WorkItemID("code-001")
+        
+        #expect(id1.rawValue == "task-001")
+        #expect(id2.rawValue == "code-001")
+        #expect(id1 != id2)
+    }
+
+    @Test("WorkItemID equality works correctly")
+    func testWorkItemIDEquality() async throws {
+        let id1 = WorkItemID("task-001")
+        let id2 = WorkItemID("task-001")
+        let id3 = WorkItemID("task-002")
+        
+        #expect(id1 == id2)
+        #expect(id1 != id3)
+    }
+
+    @Test("FileReference creates with correct fields")
+    func testFileReferenceCreation() async throws {
+        let ref1 = FileReference(path: "Test.swift", version: "abc", metadata: ["branch": "main"])
+        let ref2 = FileReference(path: "Other.swift")
+        
+        #expect(ref1.path == "Test.swift")
+        #expect(ref1.version == "abc")
+        #expect(ref1.metadata?["branch"] == "main")
+        #expect(ref2.path == "Other.swift")
+        #expect(ref2.version == nil)
+        #expect(ref2.metadata == nil)
+    }
+
+    @Test("FileReference equality works correctly")
+    func testFileReferenceEquality() async throws {
+        let ref1 = FileReference(path: "Test.swift", version: "abc", metadata: ["branch": "main"])
+        let ref2 = FileReference(path: "Test.swift", version: "abc", metadata: ["branch": "main"])
+        let ref3 = FileReference(path: "Other.swift")
+        
+        #expect(ref1 == ref2)
+        #expect(ref1 != ref3)
+    }
+
+    @Test("WorkType enum values")
+    func testWorkTypeEnum() async throws {
+        let allTypes = WorkType.allCases
+        
+        #expect(allTypes.contains(.coding))
+        #expect(allTypes.contains(.review))
+        #expect(allTypes.contains(.testing))
+        #expect(allTypes.contains(.documentation))
+        #expect(allTypes.contains(.research))
+        #expect(allTypes.contains(.analysis))
+        #expect(allTypes.contains(.writing))
+        #expect(allTypes.contains(.translation))
     }
 }

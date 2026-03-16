@@ -60,7 +60,7 @@ public struct ScoreMessage: ScoreMessageProtocol {
     public let to: RoleType
     public let createdAt: Date
     public let priority: MessagePriority
-    public let taskId: String
+    public let taskId: WorkItemID
     public let requestedScore: Int
     public let justification: String
     public let awardedScore: Int?
@@ -74,7 +74,7 @@ public struct ScoreMessage: ScoreMessageProtocol {
         to: RoleType,
         createdAt: Date = Date(),
         priority: MessagePriority = .normal,
-        taskId: String,
+        taskId: WorkItemID,
         requestedScore: Int,
         justification: String,
         awardedScore: Int? = nil,
